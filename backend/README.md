@@ -1,58 +1,189 @@
-<p align="center"><a href="https://laravel.com" target="_blank"><img src="https://raw.githubusercontent.com/laravel/art/master/logo-lockup/5%20SVG/2%20CMYK/1%20Full%20Color/laravel-logolockup-cmyk-red.svg" width="400" alt="Laravel Logo"></a></p>
+# LedgerScope Backend
 
-<p align="center">
-<a href="https://github.com/laravel/framework/actions"><img src="https://github.com/laravel/framework/workflows/tests/badge.svg" alt="Build Status"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/dt/laravel/framework" alt="Total Downloads"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/v/laravel/framework" alt="Latest Stable Version"></a>
-<a href="https://packagist.org/packages/laravel/framework"><img src="https://img.shields.io/packagist/l/laravel/framework" alt="License"></a>
-</p>
+**Accounting, Financial Analysis & Audit Management Platform**
 
-## About Laravel
+Laravel 13 · PostgreSQL 17 · Redis 7 · PHP 8.4
 
-Laravel is a web application framework with expressive, elegant syntax. We believe development must be an enjoyable and creative experience to be truly fulfilling. Laravel takes the pain out of development by easing common tasks used in many web projects, such as:
+---
 
-- [Simple, fast routing engine](https://laravel.com/docs/routing).
-- [Powerful dependency injection container](https://laravel.com/docs/container).
-- Multiple back-ends for [session](https://laravel.com/docs/session) and [cache](https://laravel.com/docs/cache) storage.
-- Expressive, intuitive [database ORM](https://laravel.com/docs/eloquent).
-- Database agnostic [schema migrations](https://laravel.com/docs/migrations).
-- [Robust background job processing](https://laravel.com/docs/queues).
-- [Real-time event broadcasting](https://laravel.com/docs/broadcasting).
+## Tech Stack
 
-Laravel is accessible, powerful, and provides tools required for large, robust applications.
+| Layer | Technology |
+|-------|-----------|
+| Framework | Laravel 13 |
+| Language | PHP 8.4 |
+| Database | PostgreSQL 17 |
+| Cache / Queue | Redis 7 |
+| Queue Monitor | Laravel Horizon (Linux / Docker) |
+| Auth | Laravel Sanctum (SPA session) |
+| Testing | Pest PHP 3 |
+| Static Analysis | Larastan 2 (level 8) |
+| Code Style | Laravel Pint (PSR-12) |
 
-## Learning Laravel
+---
 
-Laravel has the most extensive and thorough [documentation](https://laravel.com/docs) and video tutorial library of all modern web application frameworks, making it a breeze to get started with the framework.
-
-In addition, [Laracasts](https://laracasts.com) contains thousands of video tutorials on a range of topics including Laravel, modern PHP, unit testing, and JavaScript. Boost your skills by digging into our comprehensive video library.
-
-You can also watch bite-sized lessons with real-world projects on [Laravel Learn](https://laravel.com/learn), where you will be guided through building a Laravel application from scratch while learning PHP fundamentals.
-
-## Agentic Development
-
-Laravel's predictable structure and conventions make it ideal for AI coding agents like Claude Code, Cursor, and GitHub Copilot. Install [Laravel Boost](https://laravel.com/docs/ai) to supercharge your AI workflow:
+## Local Development (Docker)
 
 ```bash
-composer require laravel/boost --dev
+# 1. Clone and enter backend directory
+git clone <repo>
+cd LedgerScope/backend
 
-php artisan boost:install
+# 2. Copy env
+cp .env.example .env
+
+# 3. Start services
+docker compose up -d
+
+# 4. Install dependencies (inside container or locally with PHP 8.4)
+composer install
+
+# 5. Generate app key
+php artisan key:generate
+
+# 6. Run migrations + seeders
+php artisan migrate --seed
+
+# 7. Start dev server
+php artisan serve
 ```
 
-Boost provides your agent 15+ tools and skills that help agents build Laravel applications while following best practices.
+> Test DB runs on port **5433** — matches `phpunit.xml` config.
 
-## Contributing
+---
 
-Thank you for considering contributing to the Laravel framework! The contribution guide can be found in the [Laravel documentation](https://laravel.com/docs/contributions).
+## Development Workflow (RTK AI + Caveman)
 
-## Code of Conduct
+Follow the **Red → Ticket → Keep** cycle:
 
-In order to ensure that the Laravel community is welcoming to all, please review and abide by the [Code of Conduct](https://laravel.com/docs/contributions#code-of-conduct).
+1. **RED** — Write a failing Pest test first
+2. **GREEN** — Implement minimum code to pass
+3. **KEEP** — Run gate before committing:
 
-## Security Vulnerabilities
+```bash
+# Code style
+./vendor/bin/pint
 
-If you discover a security vulnerability within Laravel, please send an e-mail to Taylor Otwell via [taylor@laravel.com](mailto:taylor@laravel.com). All security vulnerabilities will be promptly addressed.
+# Static analysis
+./vendor/bin/phpstan analyse
 
-## License
+# Tests
+php artisan test --parallel
+```
 
-The Laravel framework is open-sourced software licensed under the [MIT license](https://opensource.org/licenses/MIT).
+---
+
+## Architecture
+
+```
+app/
+├── Actions/          # Single-purpose action classes
+├── Enums/            # Backed PHP enums (Accounting, Audit, Common, Reporting)
+├── Events/           # Domain events → WriteAuditLog listener
+├── Http/
+│   ├── Controllers/Api/V1/   # Thin controllers — call Services only
+│   ├── Middleware/
+│   └── Requests/             # Form Request validation
+├── Models/           # Eloquent models (no business logic)
+├── Services/
+│   ├── Accounting/   # JournalService, TrialBalanceService, StatementBuilderService
+│   ├── Audit/        # EngagementService, WorkingPaperService, FindingService
+│   └── Reporting/    # ReportGeneratorService
+├── Support/
+└── ValueObjects/     # Money (bcmath — never float)
+```
+
+### Absolute Rules (from AGENTS.md)
+- **Never use `float` for money** — use `Money` ValueObject with bcmath
+- **No business logic in Controllers** — delegate to Services/Actions
+- **Every financial mutation** → `DB::transaction()`
+- **Posted journals are immutable** — reversal only
+- **Audit logs are append-only** — no update/delete
+
+---
+
+## API Endpoints (v1)
+
+| Domain | Prefix |
+|--------|--------|
+| Auth | `POST /api/v1/auth/{login,logout,me,...}` |
+| Company | `GET/POST/PUT/DELETE /api/v1/companies` |
+| Fiscal Year | `/api/v1/companies/{id}/fiscal-years` |
+| Accounts (COA) | `/api/v1/companies/{id}/accounts` |
+| Journals | `/api/v1/companies/{id}/journals` |
+| Trial Balance | `/api/v1/companies/{id}/trial-balances` |
+| Financial Statements | `/api/v1/companies/{id}/financial-statements` |
+| Engagements | `/api/v1/engagements` |
+| Reports | `/api/v1/companies/{id}/reports` |
+
+---
+
+## Queue Segments (Horizon)
+
+| Queue | Purpose | Timeout |
+|-------|---------|---------|
+| `imports` | COA & Journal import jobs | 300s |
+| `reports` | PDF/XLSX report generation | 600s |
+| `notifications` | Email / push notifications | 30s |
+| `default` | General tasks | 60s |
+
+---
+
+## Production Deployment
+
+```bash
+# Build and push image (automated via GitHub Actions on main)
+docker compose -f docker-compose.prod.yml up -d
+
+# Run migrations in production
+docker exec ledgerscope_app php artisan migrate --force
+
+# Run seeders (first deploy only)
+docker exec ledgerscope_app php artisan db:seed
+```
+
+### Required GitHub Secrets
+
+```
+DB_DATABASE
+DB_USERNAME
+DB_PASSWORD
+APP_KEY
+```
+
+---
+
+## Testing
+
+```bash
+# Run all tests
+php artisan test --parallel
+
+# Run specific feature group
+php artisan test tests/Feature/Accounting/
+php artisan test tests/Feature/Audit/
+php artisan test tests/Feature/Reporting/
+
+# Run with filter
+php artisan test --filter JournalServiceTest
+```
+
+Current test coverage: **57 tests / 57 passed**
+
+---
+
+## Build Phases
+
+| Phase | Status | Description |
+|-------|--------|-------------|
+| 1 Auth & RBAC | ✅ Done | Login, roles, permissions, audit log |
+| 2 Company | ✅ Done | Multi-company workspace, user assignment |
+| 3 Fiscal Year | ✅ Done | Periods, quarters, checklists, period lock |
+| 4 Chart of Accounts | ✅ Done | Hierarchical COA, import |
+| 5 Journal Engine | ✅ Done | Double-entry, lifecycle, reversal, Money VO |
+| 6 Trial Balance | ✅ Done | Posted-line aggregation, balanced check |
+| 7 Financial Statements | ✅ Done | Income statement, balance sheet |
+| 8 Audit & Engagement | ✅ Done | Engagement lifecycle, working papers, findings |
+| 9 Reporting | ✅ Done | Report queue, status tracking |
+| 10 Horizon / Infra | ✅ Done | Queue config, supervisor, nginx, opcache |
+| 11 CI/CD | ✅ Done | GitHub Actions — lint → test → Docker build |

@@ -1,0 +1,235 @@
+name: LedgerScope Backend CI
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - '.github/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'backend/**'
+      - '.github/**'
+
+# DevSecOps: Limit default GITHUB_TOKEN permissions
+permissions:
+  contents: read
+
+defaults:
+  run:
+    working-directory: backend
+
+env:
+  PHP_VERSION: '8.4'
+
+jobs:
+  # ─── Security & Compliance ──────────────────────────────────────────────────
+  security:
+    name: Security Scans (Secrets & Deps)
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # Required for secret scanning of all commits in the push
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: pdo, pdo_pgsql, bcmath, pcntl, zip, gd, redis
+          coverage: none
+
+      # 1. Secret Scanning (DevSecOps Best Practice)
+      - name: Gitleaks (Secret Detection)
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        # Gitleaks will fail the build if credentials/secrets are found in the code
+
+      # 2. Dependency Vulnerability Scanning
+      - name: Check Composer Dependencies for Vulnerabilities
+        run: |
+          composer install --prefer-dist --no-progress --no-interaction
+          composer audit
+
+  # ─── Lint & Static Analysis ─────────────────────────────────────────────────
+  lint:
+    name: Pint + Larastan
+    runs-on: ubuntu-latest
+    needs: security
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: pdo, pdo_pgsql, bcmath, pcntl, zip, gd, redis
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Run Pint (style check)
+        run: ./vendor/bin/pint --test
+
+      - name: Run Larastan (static analysis)
+        run: ./vendor/bin/phpstan analyse --no-progress
+
+  # ─── Test Suite ─────────────────────────────────────────────────────────────
+  test:
+    name: Pest Tests
+    runs-on: ubuntu-latest
+    needs: lint
+
+    services:
+      postgres:
+        image: postgres:17-alpine
+        env:
+          POSTGRES_DB: ledgerscope_test
+          POSTGRES_USER: ledgerscope_user
+          POSTGRES_PASSWORD: secret
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      redis:
+        image: redis:7-alpine
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 3
+        ports:
+          - 6379:6379
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: ${{ env.PHP_VERSION }}
+          extensions: pdo, pdo_pgsql, bcmath, pcntl, zip, gd, redis
+          coverage: none
+
+      - name: Cache Composer dependencies
+        uses: actions/cache@v4
+        with:
+          path: backend/vendor
+          key: ${{ runner.os }}-composer-${{ hashFiles('backend/composer.lock') }}
+          restore-keys: ${{ runner.os }}-composer-
+
+      - name: Install dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Copy .env for testing
+        run: |
+          cp .env.example .env.testing
+          echo "DB_CONNECTION=pgsql" >> .env.testing
+          echo "DB_HOST=127.0.0.1" >> .env.testing
+          echo "DB_PORT=5432" >> .env.testing
+          echo "DB_DATABASE=ledgerscope_test" >> .env.testing
+          echo "DB_USERNAME=ledgerscope_user" >> .env.testing
+          echo "DB_PASSWORD=secret" >> .env.testing
+          echo "REDIS_HOST=127.0.0.1" >> .env.testing
+          echo "CACHE_STORE=array" >> .env.testing
+          echo "QUEUE_CONNECTION=sync" >> .env.testing
+
+      - name: Generate app key
+        run: php artisan key:generate --env=testing
+
+      - name: Run migrations
+        run: php artisan migrate --force --env=testing
+
+      - name: Run Pest tests
+        run: php artisan test --parallel
+
+  # ─── Docker Build & Image Security Scan ──────────────────────────────────────
+  docker-build:
+    name: Docker Build & Trivy Scan
+    runs-on: ubuntu-latest
+    needs: test
+    if: github.ref == 'refs/heads/main'
+
+    # Need packages:write to push to GHCR
+    permissions:
+      contents: read
+      packages: write
+      security-events: write # Required for Trivy to upload SARIF results to GitHub Security tab
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v5
+        with:
+          images: ghcr.io/${{ github.repository }}/backend
+          tags: |
+            type=sha
+            type=ref,event=branch
+
+      - name: Build local image for scanning
+        uses: docker/build-push-action@v5
+        with:
+          context: backend
+          file: backend/Dockerfile
+          target: production
+          push: false # Do not push until scanned
+          load: true
+          tags: local-backend:test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      # 3. Docker Image Scanning (Trivy)
+      - name: Run Trivy vulnerability scanner
+        uses: aquasecurity/trivy-action@master
+        with:
+          image-ref: 'local-backend:test'
+          format: 'sarif'
+          output: 'trivy-results.sarif'
+          severity: 'CRITICAL,HIGH'
+          exit-code: '1' # Fail build if critical/high vulnerabilities found
+          ignore-unfixed: true
+
+      - name: Upload Trivy scan results to GitHub Security tab
+        uses: github/codeql-action/upload-sarif@v3
+        if: always() # Upload results even if the previous step failed
+        with:
+          sarif_file: 'trivy-results.sarif'
+
+      # Only push if the scan passed
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Push to GHCR
+        uses: docker/build-push-action@v5
+        with:
+          context: backend
+          file: backend/Dockerfile
+          target: production
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
+          cache-to: type=gha,mode=max

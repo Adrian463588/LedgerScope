@@ -1,0 +1,72 @@
+services:
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: build
+    image: ledgerscope-dev:latest
+    container_name: ledgerscope_dev_app
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ledgerscope
+      DB_USERNAME: ledgerscope_user
+      DB_PASSWORD: secret
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+    command: php artisan serve --host=0.0.0.0 --port=8000
+    depends_on:
+      - postgres
+      - redis
+    volumes:
+      - .:/var/www/html
+      - /var/www/html/vendor
+
+  postgres:
+    image: postgres:17-alpine
+    container_name: ledgerscope_dev_postgres
+    restart: unless-stopped
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_DB: ledgerscope
+      POSTGRES_USER: ledgerscope_user
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - postgres_dev_data:/var/lib/postgresql/data
+
+  postgres_test:
+    image: postgres:17-alpine
+    container_name: ledgerscope_test_postgres
+    restart: unless-stopped
+    ports:
+      - "5433:5432"
+    environment:
+      POSTGRES_DB: ledgerscope_test
+      POSTGRES_USER: ledgerscope_user
+      POSTGRES_PASSWORD: secret
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7-alpine
+    container_name: ledgerscope_dev_redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - redis_dev_data:/data
+
+volumes:
+  postgres_dev_data:
+  postgres_test_data:
+  redis_dev_data:

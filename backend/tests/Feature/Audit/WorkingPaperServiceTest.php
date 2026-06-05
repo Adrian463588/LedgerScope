@@ -2,27 +2,27 @@
 
 declare(strict_types=1);
 
+use App\Enums\Audit\EngagementStatus;
 use App\Models\Company;
 use App\Models\Engagement;
 use App\Models\User;
 use App\Models\WorkingPaper;
 use App\Services\Audit\WorkingPaperService;
-use App\Enums\Audit\EngagementStatus;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    $this->lead    = User::factory()->create();
+    $this->lead = User::factory()->create();
     $this->company = Company::factory()->create();
 
     $this->engagement = Engagement::create([
-        'company_id'      => $this->company->id,
-        'name'            => 'Audit 2024',
+        'company_id' => $this->company->id,
+        'name' => 'Audit 2024',
         'engagement_type' => 'audit',
-        'status'          => EngagementStatus::InProgress,
-        'start_date'      => '2024-01-01',
-        'end_date'        => '2024-12-31',
+        'status' => EngagementStatus::InProgress,
+        'start_date' => '2024-01-01',
+        'end_date' => '2024-12-31',
         'lead_auditor_id' => $this->lead->id,
     ]);
 
@@ -31,9 +31,9 @@ beforeEach(function (): void {
 
 it('creates working paper in draft status', function (): void {
     $wp = $this->service->create([
-        'title'     => 'Cash Walkthrough',
+        'title' => 'Cash Walkthrough',
         'paper_ref' => 'A-1',
-        'content'   => 'Procedures applied...',
+        'content' => 'Procedures applied...',
     ], $this->engagement, $this->lead);
 
     expect($wp)->toBeInstanceOf(WorkingPaper::class);
@@ -45,10 +45,10 @@ it('creates working paper in draft status', function (): void {
 it('submits working paper for review', function (): void {
     $wp = WorkingPaper::create([
         'engagement_id' => $this->engagement->id,
-        'title'         => 'Bank Confirm',
-        'paper_ref'     => 'A-2',
-        'status'        => 'draft',
-        'prepared_by'   => $this->lead->id,
+        'title' => 'Bank Confirm',
+        'paper_ref' => 'A-2',
+        'status' => 'draft',
+        'prepared_by' => $this->lead->id,
     ]);
 
     $this->service->submitForReview($wp, $this->lead);
@@ -59,14 +59,14 @@ it('submits working paper for review', function (): void {
 it('cannot submit already reviewed paper', function (): void {
     $wp = WorkingPaper::create([
         'engagement_id' => $this->engagement->id,
-        'title'         => 'AR Confirm',
-        'paper_ref'     => 'B-1',
-        'status'        => 'reviewed',
-        'prepared_by'   => $this->lead->id,
+        'title' => 'AR Confirm',
+        'paper_ref' => 'B-1',
+        'status' => 'reviewed',
+        'prepared_by' => $this->lead->id,
     ]);
 
     expect(fn () => $this->service->submitForReview($wp, $this->lead))
-        ->toThrow(\DomainException::class, 'already reviewed');
+        ->toThrow(DomainException::class, 'already reviewed');
 });
 
 it('approves working paper and sets reviewed_at', function (): void {
@@ -74,10 +74,10 @@ it('approves working paper and sets reviewed_at', function (): void {
 
     $wp = WorkingPaper::create([
         'engagement_id' => $this->engagement->id,
-        'title'         => 'Inventory Count',
-        'paper_ref'     => 'C-1',
-        'status'        => 'in_review',
-        'prepared_by'   => $this->lead->id,
+        'title' => 'Inventory Count',
+        'paper_ref' => 'C-1',
+        'status' => 'in_review',
+        'prepared_by' => $this->lead->id,
     ]);
 
     $this->service->approve($wp, $reviewer);

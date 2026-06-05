@@ -18,12 +18,12 @@ beforeEach(function (): void {
     $this->company = Company::factory()->create();
 
     $this->engagement = Engagement::create([
-        'company_id'      => $this->company->id,
-        'name'            => 'Audit FY2024',
+        'company_id' => $this->company->id,
+        'name' => 'Audit FY2024',
         'engagement_type' => 'audit',
-        'status'          => EngagementStatus::InProgress,
-        'start_date'      => '2024-01-01',
-        'end_date'        => '2024-12-31',
+        'status' => EngagementStatus::InProgress,
+        'start_date' => '2024-01-01',
+        'end_date' => '2024-12-31',
         'lead_auditor_id' => $this->auditor->id,
     ]);
 
@@ -32,9 +32,9 @@ beforeEach(function (): void {
 
 it('creates a finding on open status', function (): void {
     $finding = $this->service->create([
-        'title'          => 'Weak Access Controls',
-        'description'    => 'Users share passwords.',
-        'severity'       => FindingSeverity::High,
+        'title' => 'Weak Access Controls',
+        'description' => 'Users share passwords.',
+        'severity' => FindingSeverity::High,
         'recommendation' => 'Enforce MFA.',
     ], $this->engagement, $this->auditor);
 
@@ -47,10 +47,10 @@ it('creates a finding on open status', function (): void {
 it('records management response on finding', function (): void {
     $finding = Finding::create([
         'engagement_id' => $this->engagement->id,
-        'title'         => 'Missing Segregation',
-        'description'   => 'Same person approves and posts.',
-        'severity'      => FindingSeverity::Medium->value,
-        'status'        => 'open',
+        'title' => 'Missing Segregation',
+        'description' => 'Same person approves and posts.',
+        'severity' => FindingSeverity::Medium->value,
+        'status' => 'open',
     ]);
 
     $this->service->recordManagementResponse($finding, 'We will hire additional staff by Q3.', $this->auditor);
@@ -61,10 +61,10 @@ it('records management response on finding', function (): void {
 it('closes finding when resolved', function (): void {
     $finding = Finding::create([
         'engagement_id' => $this->engagement->id,
-        'title'         => 'Expired Licenses',
-        'description'   => 'Software licenses expired.',
-        'severity'      => FindingSeverity::Low->value,
-        'status'        => 'open',
+        'title' => 'Expired Licenses',
+        'description' => 'Software licenses expired.',
+        'severity' => FindingSeverity::Low->value,
+        'status' => 'open',
     ]);
 
     $this->service->resolve($finding, $this->auditor);
@@ -75,12 +75,12 @@ it('closes finding when resolved', function (): void {
 it('cannot resolve an already resolved finding', function (): void {
     $finding = Finding::create([
         'engagement_id' => $this->engagement->id,
-        'title'         => 'Already Fixed',
-        'description'   => 'Fixed last quarter.',
-        'severity'      => FindingSeverity::Low->value,
-        'status'        => 'resolved',
+        'title' => 'Already Fixed',
+        'description' => 'Fixed last quarter.',
+        'severity' => FindingSeverity::Low->value,
+        'status' => 'resolved',
     ]);
 
     expect(fn () => $this->service->resolve($finding, $this->auditor))
-        ->toThrow(\DomainException::class, 'already resolved');
+        ->toThrow(DomainException::class, 'already resolved');
 });

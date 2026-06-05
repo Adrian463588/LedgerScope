@@ -20,25 +20,25 @@ final class ReconciliationService
      */
     public function create(array $data, Company $company, User $by): Reconciliation
     {
-        return DB::transaction(function () use ($data, $company, $by): Reconciliation {
-            $currency    = $company->currency;
+        return DB::transaction(function () use ($data, $company): Reconciliation {
+            $currency = $company->currency;
             $bookBalance = new Money((string) $data['book_balance'], $currency);
             $bankBalance = new Money((string) $data['bank_balance'], $currency);
-            $difference  = $bookBalance->subtract($bankBalance);
+            $difference = $bookBalance->subtract($bankBalance);
 
             // Store absolute difference (sign preserved for audit)
             $diffAmount = $difference->getAmount();
 
             /** @var Reconciliation $rec */
             $rec = Reconciliation::create([
-                'company_id'           => $company->id,
-                'account_id'           => $data['account_id'],
+                'company_id' => $company->id,
+                'account_id' => $data['account_id'],
                 'accounting_period_id' => $data['accounting_period_id'],
-                'reconciliation_type'  => $data['reconciliation_type'],
-                'status'               => 'draft',
-                'book_balance'         => $bookBalance->getAmount(),
-                'bank_balance'         => $bankBalance->getAmount(),
-                'difference'           => $diffAmount,
+                'reconciliation_type' => $data['reconciliation_type'],
+                'status' => 'draft',
+                'book_balance' => $bookBalance->getAmount(),
+                'bank_balance' => $bankBalance->getAmount(),
+                'difference' => $diffAmount,
             ]);
 
             return $rec;
@@ -56,7 +56,7 @@ final class ReconciliationService
 
         DB::transaction(function () use ($rec, $approver): void {
             $rec->update([
-                'status'      => 'approved',
+                'status' => 'approved',
                 'approved_by' => $approver->id,
                 'approved_at' => now(),
             ]);

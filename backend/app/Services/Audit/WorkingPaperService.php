@@ -22,8 +22,8 @@ final class WorkingPaperService
             /** @var WorkingPaper $wp */
             $wp = WorkingPaper::create(array_merge($data, [
                 'engagement_id' => $engagement->id,
-                'prepared_by'   => $preparedBy->id,
-                'status'        => 'draft',
+                'prepared_by' => $preparedBy->id,
+                'status' => 'draft',
             ]));
 
             return $wp;
@@ -55,7 +55,7 @@ final class WorkingPaperService
 
         DB::transaction(function () use ($wp, $reviewer): void {
             $wp->update([
-                'status'      => 'reviewed',
+                'status' => 'reviewed',
                 'reviewed_by' => $reviewer->id,
                 'reviewed_at' => now(),
             ]);
@@ -73,8 +73,8 @@ final class WorkingPaperService
 
         DB::transaction(function () use ($wp, $note): void {
             $wp->update([
-                'status'  => 'draft',
-                'content' => $wp->content . "\n[REJECTED] {$note}",
+                'status' => 'draft',
+                'content' => $wp->content."\n[REJECTED] {$note}",
             ]);
         });
     }

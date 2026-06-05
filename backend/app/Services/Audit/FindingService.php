@@ -27,8 +27,8 @@ final class FindingService
             /** @var Finding $finding */
             $finding = Finding::create(array_merge($data, [
                 'engagement_id' => $engagement->id,
-                'severity'      => $severity,
-                'status'        => 'open',
+                'severity' => $severity,
+                'status' => 'open',
             ]));
 
             return $finding;
@@ -68,8 +68,8 @@ final class FindingService
 
         DB::transaction(function () use ($finding, $reason): void {
             $finding->update([
-                'status'      => 'open',
-                'description' => $finding->description . "\n[REOPENED] {$reason}",
+                'status' => 'open',
+                'description' => $finding->description."\n[REOPENED] {$reason}",
             ]);
         });
     }
