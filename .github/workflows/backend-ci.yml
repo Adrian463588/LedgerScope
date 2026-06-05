@@ -104,7 +104,7 @@ jobs:
           --health-timeout 5s
           --health-retries 5
         ports:
-          - 5432:5432
+          - 5433:5432
 
       redis:
         image: redis:7-alpine
@@ -141,7 +141,7 @@ jobs:
           cp .env.example .env.testing
           echo "DB_CONNECTION=pgsql" >> .env.testing
           echo "DB_HOST=127.0.0.1" >> .env.testing
-          echo "DB_PORT=5432" >> .env.testing
+          echo "DB_PORT=5433" >> .env.testing
           echo "DB_DATABASE=ledgerscope_test" >> .env.testing
           echo "DB_USERNAME=ledgerscope_user" >> .env.testing
           echo "DB_PASSWORD=secret" >> .env.testing
