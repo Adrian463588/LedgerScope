@@ -17,7 +17,7 @@ final class Engagement extends Model
     protected $fillable = [
         'company_id', 'name', 'engagement_type', 'status',
         'start_date', 'end_date', 'lead_auditor_id', 'manager_id', 'partner_id',
-        'scope', 'objectives',
+        'scope', 'objectives', 'completed_at',
     ];
 
     protected function casts(): array
