@@ -1,5 +1,5 @@
 # ─── Stage 1: Base image ──────────────────────────────────────────────────────
-FROM php:8.4-fpm-alpine AS base
+FROM php:8.5-fpm-alpine AS base
 
 WORKDIR /var/www/html
 
