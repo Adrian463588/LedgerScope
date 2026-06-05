@@ -4,14 +4,13 @@ declare(strict_types=1);
 
 namespace App\Services\Accounting;
 
+use App\Enums\Accounting\JournalStatus;
 use App\Models\AccountingPeriod;
-use App\Models\ChartOfAccount;
 use App\Models\Company;
 use App\Models\FinancialStatement;
 use App\Models\JournalEntryLine;
 use App\Models\User;
 use App\ValueObjects\Money;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 final class StatementBuilderService
@@ -33,20 +32,20 @@ final class StatementBuilderService
         return DB::transaction(function () use ($company, $period, $type, $generatedBy): FinancialStatement {
             $data = match ($type) {
                 'income_statement' => $this->buildIncomeStatement($company, $period),
-                'balance_sheet'    => $this->buildBalanceSheet($company, $period),
-                default            => ['message' => 'Statement type not yet implemented.'],
+                'balance_sheet' => $this->buildBalanceSheet($company, $period),
+                default => ['message' => 'Statement type not yet implemented.'],
             };
 
             /** @var FinancialStatement $statement */
             $statement = FinancialStatement::create([
-                'company_id'           => $company->id,
+                'company_id' => $company->id,
                 'accounting_period_id' => $period->id,
-                'statement_type'       => $type,
-                'status'               => 'draft',
-                'version'              => 1,
-                'is_locked'            => false,
-                'data'                 => $data,
-                'generated_by'         => $generatedBy->id,
+                'statement_type' => $type,
+                'status' => 'draft',
+                'version' => 1,
+                'is_locked' => false,
+                'data' => $data,
+                'generated_by' => $generatedBy->id,
             ]);
 
             return $statement;
@@ -59,44 +58,44 @@ final class StatementBuilderService
         $currency = $company->currency;
         $balances = $this->aggregatePostedBalances($company, $period);
 
-        $revenue  = Money::zero($currency);
-        $cogs     = Money::zero($currency);
-        $expense  = Money::zero($currency);
+        $revenue = Money::zero($currency);
+        $cogs = Money::zero($currency);
+        $expense = Money::zero($currency);
         $otherInc = Money::zero($currency);
         $otherExp = Money::zero($currency);
 
-        $revenueLines   = [];
-        $cogsLines      = [];
-        $expenseLines   = [];
-        $otherIncLines  = [];
-        $otherExpLines  = [];
+        $revenueLines = [];
+        $cogsLines = [];
+        $expenseLines = [];
+        $otherIncLines = [];
+        $otherExpLines = [];
 
         foreach ($balances as $accountId => $data) {
-            $net      = new Money($data['net'], $currency);
+            $net = new Money($data['net'], $currency);
             $acctType = $data['account_type'];
-            $line     = ['account_id' => $accountId, 'account_code' => $data['account_code'], 'account_name' => $data['account_name'], 'amount' => $data['net']];
+            $line = ['account_id' => $accountId, 'account_code' => $data['account_code'], 'account_name' => $data['account_name'], 'amount' => $data['net']];
 
             match ($acctType) {
-                'revenue'             => [$revenueLines[] = $line,  $revenue  = $revenue->add(new Money(ltrim($data['net'], '-'), $currency))],
-                'cost_of_goods_sold'  => [$cogsLines[] = $line,     $cogs     = $cogs->add($net)],
-                'expense'             => [$expenseLines[] = $line,   $expense  = $expense->add($net)],
-                'other_income'        => [$otherIncLines[] = $line,  $otherInc = $otherInc->add(new Money(ltrim($data['net'], '-'), $currency))],
-                'other_expense'       => [$otherExpLines[] = $line,  $otherExp = $otherExp->add($net)],
-                default               => null,
+                'revenue' => [$revenueLines[] = $line,  $revenue = $revenue->add(new Money(ltrim($data['net'], '-'), $currency))],
+                'cost_of_goods_sold' => [$cogsLines[] = $line,     $cogs = $cogs->add($net)],
+                'expense' => [$expenseLines[] = $line,   $expense = $expense->add($net)],
+                'other_income' => [$otherIncLines[] = $line,  $otherInc = $otherInc->add(new Money(ltrim($data['net'], '-'), $currency))],
+                'other_expense' => [$otherExpLines[] = $line,  $otherExp = $otherExp->add($net)],
+                default => null,
             };
         }
 
         $grossProfit = $revenue->subtract($cogs);
-        $netIncome   = $grossProfit->subtract($expense)->add($otherInc)->subtract($otherExp);
+        $netIncome = $grossProfit->subtract($expense)->add($otherInc)->subtract($otherExp);
 
         return [
-            'revenue'         => ['lines' => $revenueLines,  'total' => $revenue->getAmount()],
-            'cogs'            => ['lines' => $cogsLines,     'total' => $cogs->getAmount()],
-            'gross_profit'    => $grossProfit->getAmount(),
-            'expenses'        => ['lines' => $expenseLines,  'total' => $expense->getAmount()],
-            'other_income'    => ['lines' => $otherIncLines, 'total' => $otherInc->getAmount()],
-            'other_expenses'  => ['lines' => $otherExpLines, 'total' => $otherExp->getAmount()],
-            'net_income'      => $netIncome->getAmount(),
+            'revenue' => ['lines' => $revenueLines,  'total' => $revenue->getAmount()],
+            'cogs' => ['lines' => $cogsLines,     'total' => $cogs->getAmount()],
+            'gross_profit' => $grossProfit->getAmount(),
+            'expenses' => ['lines' => $expenseLines,  'total' => $expense->getAmount()],
+            'other_income' => ['lines' => $otherIncLines, 'total' => $otherInc->getAmount()],
+            'other_expenses' => ['lines' => $otherExpLines, 'total' => $otherExp->getAmount()],
+            'net_income' => $netIncome->getAmount(),
         ];
     }
 
@@ -106,23 +105,23 @@ final class StatementBuilderService
         $currency = $company->currency;
         $balances = $this->aggregatePostedBalances($company, $period);
 
-        $assets      = Money::zero($currency);
+        $assets = Money::zero($currency);
         $liabilities = Money::zero($currency);
-        $equity      = Money::zero($currency);
+        $equity = Money::zero($currency);
 
         $assetLines = [];
-        $leqLines   = [];
+        $leqLines = [];
 
         foreach ($balances as $accountId => $data) {
-            $net      = new Money($data['net'], $currency);
+            $net = new Money($data['net'], $currency);
             $acctType = $data['account_type'];
-            $line     = ['account_id' => $accountId, 'account_code' => $data['account_code'], 'account_name' => $data['account_name'], 'amount' => $data['net']];
+            $line = ['account_id' => $accountId, 'account_code' => $data['account_code'], 'account_name' => $data['account_name'], 'amount' => $data['net']];
 
             if ($acctType === 'asset') {
                 $assetLines[] = $line;
                 $assets = $assets->add($net);
             } elseif ($acctType === 'liability') {
-                $leqLines[]  = $line;
+                $leqLines[] = $line;
                 $liabilities = $liabilities->add($net);
             } elseif ($acctType === 'equity') {
                 $leqLines[] = $line;
@@ -133,9 +132,9 @@ final class StatementBuilderService
         $totalLeq = $liabilities->add($equity);
 
         return [
-            'assets'                  => ['lines' => $assetLines, 'total' => $assets->getAmount()],
-            'liabilities_and_equity'  => ['lines' => $leqLines,   'total' => $totalLeq->getAmount()],
-            'is_balanced'             => $assets->equals($totalLeq),
+            'assets' => ['lines' => $assetLines, 'total' => $assets->getAmount()],
+            'liabilities_and_equity' => ['lines' => $leqLines,   'total' => $totalLeq->getAmount()],
+            'is_balanced' => $assets->equals($totalLeq),
         ];
     }
 
@@ -152,7 +151,7 @@ final class StatementBuilderService
             ->join('chart_of_accounts as coa', 'coa.id', '=', 'journal_entry_lines.account_id')
             ->where('je.company_id', $company->id)
             ->where('je.accounting_period_id', $period->id)
-            ->where('je.status', \App\Enums\Accounting\JournalStatus::Posted->value)
+            ->where('je.status', JournalStatus::Posted->value)
             ->selectRaw('
                 journal_entry_lines.account_id,
                 coa.account_code,
@@ -168,13 +167,13 @@ final class StatementBuilderService
 
         foreach ($rows as $row) {
             $net = bcsub(
-                bcadd((string) $row->total_debit,  '0', 2),
+                bcadd((string) $row->total_debit, '0', 2),
                 bcadd((string) $row->total_credit, '0', 2),
-                2
+                2,
             );
 
             $result[$row->account_id] = [
-                'net'          => $net,
+                'net' => $net,
                 'account_code' => $row->account_code,
                 'account_name' => $row->account_name,
                 'account_type' => $row->account_type,

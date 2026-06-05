@@ -22,9 +22,9 @@ final class EngagementService
         return DB::transaction(function () use ($data, $company, $lead): Engagement {
             /** @var Engagement $engagement */
             $engagement = Engagement::create(array_merge($data, [
-                'company_id'      => $company->id,
+                'company_id' => $company->id,
                 'lead_auditor_id' => $lead->id,
-                'status'          => EngagementStatus::Planning,
+                'status' => EngagementStatus::Planning,
             ]));
 
             return $engagement;
@@ -56,7 +56,7 @@ final class EngagementService
 
         DB::transaction(function () use ($engagement): void {
             $engagement->update([
-                'status'       => EngagementStatus::Completed,
+                'status' => EngagementStatus::Completed,
                 'completed_at' => now(),
             ]);
         });
@@ -74,7 +74,7 @@ final class EngagementService
         DB::transaction(function () use ($engagement, $reason): void {
             $engagement->update([
                 'status' => EngagementStatus::Cancelled,
-                'scope'  => $engagement->scope . "\n[CANCELLED] {$reason}",
+                'scope' => $engagement->scope."\n[CANCELLED] {$reason}",
             ]);
         });
     }

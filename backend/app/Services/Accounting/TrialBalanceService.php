@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Services\Accounting;
 
+use App\Enums\Accounting\JournalStatus;
 use App\Models\AccountingPeriod;
 use App\Models\Company;
 use App\Models\JournalEntryLine;
@@ -28,7 +29,7 @@ final class TrialBalanceService
                 ->join('journal_entries', 'journal_entries.id', '=', 'journal_entry_lines.journal_entry_id')
                 ->where('journal_entries.company_id', $company->id)
                 ->where('journal_entries.accounting_period_id', $period->id)
-                ->where('journal_entries.status', \App\Enums\Accounting\JournalStatus::Posted->value)
+                ->where('journal_entries.status', JournalStatus::Posted->value)
                 ->selectRaw('
                     journal_entry_lines.account_id,
                     SUM(journal_entry_lines.debit)  AS total_debit,
@@ -37,12 +38,12 @@ final class TrialBalanceService
                 ->groupBy('journal_entry_lines.account_id')
                 ->get();
 
-            $currency    = $company->currency;
-            $totalDebit  = Money::zero($currency);
+            $currency = $company->currency;
+            $totalDebit = Money::zero($currency);
             $totalCredit = Money::zero($currency);
 
             foreach ($lines as $line) {
-                $totalDebit  = $totalDebit->add(new Money((string) $line->total_debit, $currency));
+                $totalDebit = $totalDebit->add(new Money((string) $line->total_debit, $currency));
                 $totalCredit = $totalCredit->add(new Money((string) $line->total_credit, $currency));
             }
 
@@ -50,34 +51,34 @@ final class TrialBalanceService
 
             /** @var TrialBalance $trialBalance */
             $trialBalance = TrialBalance::create([
-                'company_id'           => $company->id,
+                'company_id' => $company->id,
                 'accounting_period_id' => $period->id,
-                'total_debit'          => $totalDebit->getAmount(),
-                'total_credit'         => $totalCredit->getAmount(),
-                'is_balanced'          => $isBalanced,
-                'status'               => $isBalanced ? 'balanced' : 'unbalanced',
-                'generated_at'         => now(),
-                'generated_by'         => $generatedBy->id,
+                'total_debit' => $totalDebit->getAmount(),
+                'total_credit' => $totalCredit->getAmount(),
+                'is_balanced' => $isBalanced,
+                'status' => $isBalanced ? 'balanced' : 'unbalanced',
+                'generated_at' => now(),
+                'generated_by' => $generatedBy->id,
             ]);
 
             // Insert per-account lines
             foreach ($lines as $line) {
-                $debit  = bcadd((string) $line->total_debit, '0', 2);
+                $debit = bcadd((string) $line->total_debit, '0', 2);
                 $credit = bcadd((string) $line->total_credit, '0', 2);
 
                 $closing = bcsub($debit, $credit, 2);
-                $closingDebit  = bccomp($closing, '0', 2) >= 0 ? $closing : '0.00';
+                $closingDebit = bccomp($closing, '0', 2) >= 0 ? $closing : '0.00';
                 $closingCredit = bccomp($closing, '0', 2) < 0 ? ltrim($closing, '-') : '0.00';
 
                 TrialBalanceLine::create([
                     'trial_balance_id' => $trialBalance->id,
-                    'account_id'       => $line->account_id,
-                    'opening_debit'    => '0.00',
-                    'opening_credit'   => '0.00',
-                    'period_debit'     => $debit,
-                    'period_credit'    => $credit,
-                    'closing_debit'    => $closingDebit,
-                    'closing_credit'   => $closingCredit,
+                    'account_id' => $line->account_id,
+                    'opening_debit' => '0.00',
+                    'opening_credit' => '0.00',
+                    'period_debit' => $debit,
+                    'period_credit' => $credit,
+                    'closing_debit' => $closingDebit,
+                    'closing_credit' => $closingCredit,
                 ]);
             }
 

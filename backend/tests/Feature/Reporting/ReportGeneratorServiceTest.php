@@ -12,7 +12,7 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    $this->user    = User::factory()->create();
+    $this->user = User::factory()->create();
     $this->company = Company::factory()->create();
     $this->service = app(ReportGeneratorService::class);
 });
@@ -20,9 +20,9 @@ beforeEach(function (): void {
 it('queues a report and returns pending record', function (): void {
     $report = $this->service->queue([
         'report_type' => 'trial_balance',
-        'title'       => 'TB Jan 2024',
-        'format'      => 'pdf',
-        'parameters'  => ['accounting_period_id' => 1],
+        'title' => 'TB Jan 2024',
+        'format' => 'pdf',
+        'parameters' => ['accounting_period_id' => 1],
     ], $this->company, $this->user);
 
     expect($report)->toBeInstanceOf(Report::class);
@@ -33,27 +33,27 @@ it('queues a report and returns pending record', function (): void {
 
 it('pending report cannot be re-queued', function (): void {
     $report = Report::create([
-        'company_id'   => $this->company->id,
-        'report_type'  => 'trial_balance',
-        'title'        => 'TB Jan 2024',
-        'status'       => ReportStatus::Pending,
-        'format'       => 'pdf',
+        'company_id' => $this->company->id,
+        'report_type' => 'trial_balance',
+        'title' => 'TB Jan 2024',
+        'status' => ReportStatus::Pending,
+        'format' => 'pdf',
         'requested_by' => $this->user->id,
     ]);
 
     expect(fn () => $this->service->markFailed($report, 'Test error'))
-        ->not->toThrow(\Exception::class);
+        ->not->toThrow(Exception::class);
 
     expect($report->fresh()->status)->toBe(ReportStatus::Failed);
 });
 
 it('marks report completed with file path', function (): void {
     $report = Report::create([
-        'company_id'   => $this->company->id,
-        'report_type'  => 'trial_balance',
-        'title'        => 'TB',
-        'status'       => ReportStatus::Generating,
-        'format'       => 'pdf',
+        'company_id' => $this->company->id,
+        'report_type' => 'trial_balance',
+        'title' => 'TB',
+        'status' => ReportStatus::Generating,
+        'format' => 'pdf',
         'requested_by' => $this->user->id,
     ]);
 

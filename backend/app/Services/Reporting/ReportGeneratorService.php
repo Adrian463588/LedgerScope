@@ -23,12 +23,12 @@ final class ReportGeneratorService
         return DB::transaction(function () use ($data, $company, $requestedBy): Report {
             /** @var Report $report */
             $report = Report::create([
-                'company_id'   => $company->id,
-                'report_type'  => $data['report_type'],
-                'title'        => $data['title'],
-                'format'       => $data['format'] ?? 'pdf',
-                'parameters'   => $data['parameters'] ?? null,
-                'status'       => ReportStatus::Pending,
+                'company_id' => $company->id,
+                'report_type' => $data['report_type'],
+                'title' => $data['title'],
+                'format' => $data['format'] ?? 'pdf',
+                'parameters' => $data['parameters'] ?? null,
+                'status' => ReportStatus::Pending,
                 'requested_by' => $requestedBy->id,
             ]);
 
@@ -45,8 +45,8 @@ final class ReportGeneratorService
     public function markCompleted(Report $report, string $filePath): void
     {
         $report->update([
-            'status'       => ReportStatus::Completed,
-            'file_path'    => $filePath,
+            'status' => ReportStatus::Completed,
+            'file_path' => $filePath,
             'generated_at' => now(),
         ]);
     }
@@ -57,7 +57,7 @@ final class ReportGeneratorService
     public function markFailed(Report $report, string $errorMessage): void
     {
         $report->update([
-            'status'        => ReportStatus::Failed,
+            'status' => ReportStatus::Failed,
             'error_message' => $errorMessage,
         ]);
     }

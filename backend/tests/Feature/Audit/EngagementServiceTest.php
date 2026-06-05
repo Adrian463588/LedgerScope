@@ -12,17 +12,17 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    $this->lead    = User::factory()->create();
+    $this->lead = User::factory()->create();
     $this->company = Company::factory()->create();
     $this->service = app(EngagementService::class);
 });
 
 it('creates an engagement in draft status', function (): void {
     $engagement = $this->service->create([
-        'name'            => 'Audit 2024',
+        'name' => 'Audit 2024',
         'engagement_type' => 'audit',
-        'start_date'      => '2024-01-01',
-        'end_date'        => '2024-12-31',
+        'start_date' => '2024-01-01',
+        'end_date' => '2024-12-31',
     ], $this->company, $this->lead);
 
     expect($engagement->status)->toBe(EngagementStatus::Planning);
@@ -32,12 +32,12 @@ it('creates an engagement in draft status', function (): void {
 
 it('activates engagement from planning status', function (): void {
     $engagement = Engagement::create([
-        'company_id'      => $this->company->id,
-        'name'            => 'Audit 2024',
+        'company_id' => $this->company->id,
+        'name' => 'Audit 2024',
         'engagement_type' => 'audit',
-        'status'          => EngagementStatus::Planning,
-        'start_date'      => '2024-01-01',
-        'end_date'        => '2024-12-31',
+        'status' => EngagementStatus::Planning,
+        'start_date' => '2024-01-01',
+        'end_date' => '2024-12-31',
         'lead_auditor_id' => $this->lead->id,
     ]);
 
@@ -48,27 +48,27 @@ it('activates engagement from planning status', function (): void {
 
 it('cannot activate already active engagement', function (): void {
     $engagement = Engagement::create([
-        'company_id'      => $this->company->id,
-        'name'            => 'Active',
+        'company_id' => $this->company->id,
+        'name' => 'Active',
         'engagement_type' => 'audit',
-        'status'          => EngagementStatus::InProgress,
-        'start_date'      => '2024-01-01',
-        'end_date'        => '2024-12-31',
+        'status' => EngagementStatus::InProgress,
+        'start_date' => '2024-01-01',
+        'end_date' => '2024-12-31',
         'lead_auditor_id' => $this->lead->id,
     ]);
 
     expect(fn () => $this->service->activate($engagement, $this->lead))
-        ->toThrow(\DomainException::class, 'already active');
+        ->toThrow(DomainException::class, 'already active');
 });
 
 it('closes engagement and sets completed_at', function (): void {
     $engagement = Engagement::create([
-        'company_id'      => $this->company->id,
-        'name'            => 'Closing',
+        'company_id' => $this->company->id,
+        'name' => 'Closing',
         'engagement_type' => 'audit',
-        'status'          => EngagementStatus::InProgress,
-        'start_date'      => '2024-01-01',
-        'end_date'        => '2024-12-31',
+        'status' => EngagementStatus::InProgress,
+        'start_date' => '2024-01-01',
+        'end_date' => '2024-12-31',
         'lead_auditor_id' => $this->lead->id,
     ]);
 
