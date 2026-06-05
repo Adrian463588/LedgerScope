@@ -6,7 +6,7 @@ parameters:
     paths:
         - app
     excludePaths:
-        - app/Http/Middleware/TrustProxies.php
+        - app/Http/Middleware/TrustProxies.php (?)
     ignoreErrors:
         - '#Unsafe usage of new static#'
         - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder#'
