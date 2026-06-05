@@ -1,21 +1,22 @@
-# ─── Stage 1: Build dependencies ─────────────────────────────────────────────
-FROM php:8.4-fpm-alpine AS build
+# ─── Stage 1: Base image ──────────────────────────────────────────────────────
+FROM php:8.4-fpm-alpine AS base
 
 WORKDIR /var/www/html
 
-# Install system dependencies
+# Runtime system dependencies
 RUN apk add --no-cache \
-    git \
-    curl \
-    libpng-dev \
-    libzip-dev \
-    postgresql-dev \
-    zip \
-    unzip \
-    supervisor
+    libpng \
+    libzip \
+    libpq \
+    supervisor \
+    nginx \
+    bash
 
-# Install PHP extensions
-RUN docker-php-ext-install \
+# Download and use php-extension-installer for robust extension compilation
+# This automatically installs -dev packages for compiling and removes them afterwards
+COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
+
+RUN install-php-extensions \
     pdo \
     pdo_pgsql \
     opcache \
@@ -23,6 +24,9 @@ RUN docker-php-ext-install \
     bcmath \
     zip \
     gd
+
+# ─── Stage 2: Build dependencies ─────────────────────────────────────────────
+FROM base AS build
 
 # Install Composer
 COPY --from=composer:2.7 /usr/bin/composer /usr/bin/composer
@@ -43,22 +47,8 @@ COPY . .
 # Generate optimized autoloader
 RUN composer dump-autoload --optimize --no-dev
 
-# ─── Stage 2: Production image ────────────────────────────────────────────────
-FROM php:8.4-fpm-alpine AS production
-
-WORKDIR /var/www/html
-
-# Runtime system dependencies
-RUN apk add --no-cache \
-    libpng \
-    libzip \
-    libpq \
-    supervisor \
-    nginx \
-    bash
-
-# PHP extensions (runtime)
-RUN docker-php-ext-install pdo pdo_pgsql opcache pcntl bcmath zip gd
+# ─── Stage 3: Production image ────────────────────────────────────────────────
+FROM base AS production
 
 # Copy build artifacts
 COPY --from=build /var/www/html /var/www/html
