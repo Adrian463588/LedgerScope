@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Quarterly Closing — Q1 2026 | LedgerScope</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&amp;family=IBM+Plex+Mono&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "text-secondary": "#4A5261",
+                        "on-tertiary-container": "#9aefb6",
+                        "brand-red-press": "#8B1208",
+                        "primary-fixed": "#ffdad4",
+                        "shell-border": "#252830",
+                        "outline-variant": "#e5bdb7",
+                        "border-default": "#E3E5E9",
+                        "inverse-surface": "#2e3132",
+                        "on-secondary-fixed": "#1b1b1f",
+                        "on-tertiary-fixed-variant": "#00522d",
+                        "text-primary": "#0F1114",
+                        "surface-container-low": "#f3f4f6",
+                        "inverse-primary": "#ffb4a7",
+                        "status-danger": "#DC2626",
+                        "on-surface-variant": "#5c403b",
+                        "on-secondary-fixed-variant": "#46464a",
+                        "surface": "#f8f9fb",
+                        "on-primary": "#ffffff",
+                        "outline": "#916f6a",
+                        "brand-red-border": "#EBBAB7",
+                        "on-tertiary": "#ffffff",
+                        "on-tertiary-fixed": "#00210f",
+                        "primary-container": "#c0190a",
+                        "on-background": "#191c1e",
+                        "on-secondary": "#ffffff",
+                        "on-primary-fixed-variant": "#920600",
+                        "on-secondary-container": "#626266",
+                        "on-error-container": "#93000a",
+                        "tertiary": "#00552f",
+                        "status-warning": "#B45309",
+                        "secondary-fixed": "#e3e2e6",
+                        "primary": "#970600",
+                        "on-primary-fixed": "#400100",
+                        "secondary-container": "#e0dfe3",
+                        "surface-container-lowest": "#ffffff",
+                        "surface-bright": "#f8f9fb",
+                        "inverse-on-surface": "#f0f1f3",
+                        "tertiary-container": "#156f42",
+                        "error-container": "#ffdad6",
+                        "surface-dim": "#d9dadc",
+                        "on-surface": "#191c1e",
+                        "tertiary-fixed": "#a0f5bb",
+                        "text-muted": "#8C93A0",
+                        "border-strong": "#CDD0D6",
+                        "surface-container-high": "#e7e8ea",
+                        "surface-container-highest": "#e1e2e4",
+                        "surface-tint": "#bc1507",
+                        "error": "#ba1a1a",
+                        "on-primary-container": "#ffd3cb",
+                        "primary-fixed-dim": "#ffb4a7",
+                        "brand-red-hover": "#A31508",
+                        "secondary-fixed-dim": "#c7c6ca",
+                        "surface-variant": "#e1e2e4",
+                        "brand-red-muted": "#F8E8E7",
+                        "on-error": "#ffffff",
+                        "background": "#f8f9fb",
+                        "shell-surface": "#13141A",
+                        "secondary": "#5e5e62",
+                        "shell-elevated": "#1A1C23",
+                        "tertiary-fixed-dim": "#84d8a1",
+                        "surface-container": "#edeef0",
+                        "status-success": "#16a34a"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter-tablet": "24px",
+                        "card-padding": "24px",
+                        "gutter-desktop": "32px",
+                        "table-cell-h": "16px",
+                        "form-gap": "20px",
+                        "table-cell-v": "12px",
+                        "sub-unit": "4px",
+                        "baseline": "8px"
+                    },
+                    "fontFamily": {
+                        "heading-lg": ["IBM Plex Sans", "sans-serif"],
+                        "display-md": ["DM Serif Display", "serif"],
+                        "display-lg": ["DM Serif Display", "serif"],
+                        "body-md": ["IBM Plex Sans", "sans-serif"],
+                        "label-lg": ["IBM Plex Sans", "sans-serif"],
+                        "mono-md": ["IBM Plex Mono", "monospace"],
+                        "label-sm": ["IBM Plex Sans", "sans-serif"]
+                    },
+                    "fontSize": {
+                        "heading-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "display-md": ["30px", {"lineHeight": "36px", "fontWeight": "600"}],
+                        "display-lg": ["36px", {"lineHeight": "40px", "fontWeight": "600"}],
+                        "body-md": ["14px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-lg": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                        "mono-md": ["14px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "500"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .shadow-card {
+                box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.1);
+            }
+            .focus-ring-brand {
+                @apply focus:outline-none focus:ring-[3px] focus:ring-primary-container/20;
+            }
+        }
+    </style>
+</head>
+<body class="bg-background text-text-primary font-body-md text-body-md antialiased min-h-screen flex flex-col md:flex-row">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col z-40 bg-shell-surface w-[240px] border-r border-shell-border fixed left-0 top-0 h-full shrink-0">
+<div class="px-6 pt-6 pb-4 border-b border-shell-border">
+<div class="flex items-center gap-3">
+<img alt="Company Logo" class="w-8 h-8 rounded bg-white object-cover" data-alt="A clean, minimalist abstract logo for a corporate entity. The design features sharp geometric shapes in stark black and white, conveying authority and precision. The lighting is neutral, highlighting the sleek lines of the symbol. Set against a pure white background, the image evokes a high-stakes financial or legal environment." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDtNBhKXcldd934tlwi6yzMs5RTDk0pCr6cbeXmCQx4xQR2Eggacnk4JdnAMv7rQnKdWOsbv75_UIEtUTFlINqSALymYJS8sPiK3gZCIKd_QsziNmoNI_HarpXIHa9Lu2zt_WR4eOqcEkqalb3FBmdsW0-PAa5jNlxr-FvlkJh810aAkZog6UWS4HDte-Ss5cw8PMAg461us70cuqDZBuI90CXlrolJR_n9yEW5FU1DXLIbjPAoFuGeSsL41FY69m_H_ZHSAU1G6SFk"/>
+<div>
+<h1 class="font-display-md text-display-md text-white !text-[20px] !leading-[24px]">Acme Corp</h1>
+<p class="font-label-sm text-label-sm text-text-muted mt-1">FY 2024 Audit</p>
+</div>
+</div>
+<button class="mt-4 w-full py-2 px-3 border border-shell-border rounded text-text-muted font-label-lg text-label-lg hover:bg-shell-elevated hover:text-white transition-all flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">swap_horiz</span>
+                Switch Entity
+            </button>
+</div>
+<div class="flex-1 overflow-y-auto py-4">
+<ul class="space-y-1">
+<li>
+<a class="text-text-muted px-6 py-3 flex items-center gap-3 font-label-lg text-label-lg hover:bg-shell-elevated hover:text-white transition-all active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]">business_center</span>
+                        Entities
+                    </a>
+</li>
+<li>
+<a class="bg-shell-elevated text-white border-l-[4px] border-primary px-6 py-3 flex items-center gap-3 font-label-lg text-label-lg hover:bg-shell-elevated hover:text-white transition-all active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]">account_balance</span>
+                        Accounts
+                    </a>
+</li>
+<li>
+<a class="text-text-muted px-6 py-3 flex items-center gap-3 font-label-lg text-label-lg hover:bg-shell-elevated hover:text-white transition-all active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]">receipt_long</span>
+                        Transactions
+                    </a>
+</li>
+<li>
+<a class="text-text-muted px-6 py-3 flex items-center gap-3 font-label-lg text-label-lg hover:bg-shell-elevated hover:text-white transition-all active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]">account_tree</span>
+                        Reconciliation
+                    </a>
+</li>
+<li>
+<a class="text-text-muted px-6 py-3 flex items-center gap-3 font-label-lg text-label-lg hover:bg-shell-elevated hover:text-white transition-all active:scale-[0.98]" href="#">
+<span class="material-symbols-outlined text-[20px]">settings</span>
+                        Settings
+                    </a>
+</li>
+</ul>
+</div>
+<div class="border-t border-shell-border py-4">
+<ul class="space-y-1">
+<li>
+<a class="text-text-muted px-6 py-2 flex items-center gap-3 font-label-lg text-label-lg hover:bg-shell-elevated hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]">help</span>
+                        Support
+                    </a>
+</li>
+<li>
+<a class="text-text-muted px-6 py-2 flex items-center gap-3 font-label-lg text-label-lg hover:bg-shell-elevated hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined text-[18px]">history</span>
+                        Logs
+                    </a>
+</li>
+</ul>
+</div>
+</nav>
+<!-- Main Content Wrapper -->
+<div class="flex-1 flex flex-col min-w-0 md:ml-[240px]">
+<!-- TopNavBar -->
+<header class="sticky top-0 z-30 flex items-center justify-between px-gutter-desktop h-14 w-full bg-surface-container-lowest border-b border-border-default shadow-sm shrink-0">
+<div class="flex items-center gap-6 h-full">
+<span class="font-display-md text-display-md text-primary !text-[24px]">LedgerScope</span>
+<nav class="hidden md:flex h-full gap-1 ml-4">
+<a class="h-full flex items-center px-3 text-text-secondary font-label-lg text-label-lg hover:text-brand-red-hover transition-colors active:opacity-80" href="#">Dashboard</a>
+<a class="h-full flex items-center px-3 text-primary border-b-2 border-primary mb-[-1px] font-label-lg text-label-lg hover:text-brand-red-hover transition-colors active:opacity-80" href="#">Ledgers</a>
+<a class="h-full flex items-center px-3 text-text-secondary font-label-lg text-label-lg hover:text-brand-red-hover transition-colors active:opacity-80" href="#">Audit Trail</a>
+<a class="h-full flex items-center px-3 text-text-secondary font-label-lg text-label-lg hover:text-brand-red-hover transition-colors active:opacity-80" href="#">Reporting</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative hidden sm:block">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">search</span>
+<input class="pl-9 pr-3 py-1.5 bg-surface-container border border-border-default rounded focus-ring-brand text-body-md font-body-md w-64 placeholder:text-text-muted" placeholder="Search..." type="text"/>
+</div>
+<button class="text-text-secondary hover:text-primary transition-colors flex">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="text-text-secondary hover:text-primary transition-colors flex">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-8 h-8 rounded overflow-hidden border border-border-default shrink-0 ml-2">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="A professional headshot of an individual in a sharp business suit, set against a neutral, softly lit gray background. The lighting is even and flat, emphasizing clarity and formal presentation. The style is strictly corporate, devoid of vibrant colors, relying instead on high contrast and crisp focus. The atmosphere is serious and authoritative." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAf6c1OrvpbVfhqm3ZmgJJX4bq4t2qenPwljX0QFOj4OZzcI_ScqAkbThnw93JfxtZbH4xignD75NZGJKY8b0bXTG4vn3YT0KvMYLQV1aogX1dRAoLslYFBBQ97peFmDWkH3pzXKkq4l9YbM8bU8qwG4bOQouxc2CisAPTBrVJ1Y4oEfkfJONNIOfOBXf38sRndVV5mH_-o2aAX1u7AGNtAvQwQT0Eb5D8DeIJhn-o8TbgD1Xb2YQh7RcjodW54AloDDkPZAIpRiqrQ"/>
+</div>
+</div>
+</header>
+<!-- Page Canvas -->
+<main class="flex-1 p-gutter-tablet md:p-gutter-desktop">
+<div class="max-w-[1200px] mx-auto w-full">
+<!-- Page Header -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-8">
+<div>
+<h1 class="font-display-lg text-display-lg text-text-primary">Quarterly Closing — Q1 2026</h1>
+</div>
+<div>
+<span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-[3px] bg-status-warning/10 text-status-warning font-label-sm text-label-sm uppercase border border-status-warning/20">
+<span class="w-1.5 h-1.5 rounded-full bg-status-warning"></span>
+                            IN PROGRESS
+                        </span>
+</div>
+</div>
+<!-- Grid Layout -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+<!-- Left Column: Checklist -->
+<div class="lg:col-span-1 space-y-6">
+<div class="bg-surface-container-lowest border border-border-default rounded shadow-card overflow-hidden">
+<div class="p-4 border-b border-border-strong bg-surface">
+<h2 class="font-heading-lg text-heading-lg text-text-primary">Progress Tracker</h2>
+</div>
+<div class="p-4">
+<ul class="space-y-4">
+<li class="flex items-start gap-3">
+<div class="w-5 h-5 rounded-full bg-status-success/10 border border-status-success text-status-success flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[14px]">check</span>
+</div>
+<div>
+<p class="font-label-lg text-label-lg text-text-primary">Journals posted</p>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<div class="w-5 h-5 rounded-full bg-status-success/10 border border-status-success text-status-success flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[14px]">check</span>
+</div>
+<div>
+<p class="font-label-lg text-label-lg text-text-primary">Trial balanced</p>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<div class="w-5 h-5 rounded-full bg-status-success/10 border border-status-success text-status-success flex items-center justify-center shrink-0 mt-0.5">
+<span class="material-symbols-outlined text-[14px]">check</span>
+</div>
+<div>
+<p class="font-label-lg text-label-lg text-text-primary">Bank reconciled</p>
+</div>
+</li>
+<li class="flex items-start gap-3 bg-brand-red-muted p-2 -mx-2 rounded">
+<div class="w-5 h-5 rounded-full border-2 border-primary-container shrink-0 mt-0.5 relative">
+<div class="absolute inset-1 rounded-full bg-primary-container"></div>
+</div>
+<div class="flex-1">
+<div class="flex items-center justify-between">
+<p class="font-label-lg text-label-lg text-primary-container">AR reconciled</p>
+<span class="text-[10px] uppercase tracking-wider font-semibold text-primary-container">In Progress</span>
+</div>
+</div>
+</li>
+<li class="flex items-start gap-3 opacity-60">
+<div class="w-5 h-5 rounded-full border border-text-muted shrink-0 mt-0.5"></div>
+<div>
+<p class="font-body-md text-body-md text-text-secondary">Accruals posted</p>
+</div>
+</li>
+<li class="flex items-start gap-3 opacity-60">
+<div class="w-5 h-5 rounded-full border border-text-muted shrink-0 mt-0.5"></div>
+<div>
+<p class="font-body-md text-body-md text-text-secondary">Manager review</p>
+</div>
+</li>
+<li class="flex items-start gap-3 opacity-60">
+<div class="w-5 h-5 rounded-full border border-text-muted shrink-0 mt-0.5"></div>
+<div>
+<p class="font-body-md text-body-md text-text-secondary">Quarter lock</p>
+</div>
+</li>
+</ul>
+<div class="mt-8 pt-4 border-t border-border-default">
+<div class="flex justify-between items-center mb-2">
+<span class="font-label-sm text-label-sm text-text-secondary uppercase">Overall Progress</span>
+<span class="font-mono-md text-mono-md text-text-primary">38% (3/8)</span>
+</div>
+<div class="h-2 w-full bg-surface-container-high rounded-full overflow-hidden">
+<div class="h-full bg-primary-container w-[38%]"></div>
+</div>
+</div>
+</div>
+</div>
+<button class="w-full bg-primary-container/50 text-white font-label-lg text-label-lg py-3 px-4 rounded cursor-not-allowed border border-primary-container/20 flex justify-center items-center gap-2" disabled="">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+                            Approve &amp; Lock
+                        </button>
+</div>
+<!-- Right Column: Summary & Notes -->
+<div class="lg:col-span-2 space-y-6">
+<!-- Summary Card -->
+<div class="bg-surface-container-lowest border border-border-default rounded shadow-card p-6">
+<div class="flex items-center justify-between mb-6 pb-4 border-b border-border-strong">
+<h2 class="font-heading-lg text-heading-lg text-text-primary uppercase tracking-wide">Quarterly Summary</h2>
+<button class="px-3 py-1.5 border border-border-strong rounded text-text-primary font-label-lg text-label-lg hover:bg-surface transition-colors focus-ring-brand">
+                                    View Financial Statement
+                                </button>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
+<div>
+<p class="font-label-sm text-label-sm text-text-secondary uppercase mb-1">Revenue</p>
+<p class="font-mono-md text-mono-md text-[20px] text-text-primary">IDR 2,450,000</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-text-secondary uppercase mb-1">Expenses</p>
+<p class="font-mono-md text-mono-md text-[20px] text-status-danger">IDR 1,890,000</p>
+</div>
+<div class="col-span-1 md:col-span-2 pt-4 border-t border-border-default flex justify-between items-end">
+<div>
+<p class="font-label-sm text-label-sm text-text-secondary uppercase mb-1">Net Profit</p>
+<p class="font-mono-md text-mono-md text-[28px] font-semibold text-text-primary">IDR 560,000</p>
+</div>
+<div class="text-right">
+<p class="font-label-sm text-label-sm text-text-secondary uppercase mb-1">Margin</p>
+<p class="font-mono-md text-mono-md text-[20px] text-text-primary">22.9%</p>
+</div>
+</div>
+</div>
+</div>
+<!-- Review Notes Card -->
+<div class="bg-surface-container-lowest border border-border-default rounded shadow-card p-6">
+<div class="flex items-center justify-between mb-4 pb-2 border-b border-border-strong">
+<h2 class="font-heading-lg text-heading-lg text-text-primary uppercase tracking-wide flex items-center gap-2">
+                                    Review Notes
+                                    <span class="inline-flex items-center justify-center px-2 py-0.5 rounded-[3px] bg-primary-container/10 text-primary-container font-mono-md text-[12px]">3 open</span>
+</h2>
+</div>
+<ul class="space-y-3">
+<li class="p-3 bg-surface rounded border border-border-default flex items-start gap-3">
+<div class="w-2 h-2 rounded-full bg-primary-container shrink-0 mt-2"></div>
+<p class="font-body-md text-body-md text-text-primary">Depreciation entry needs adjustment for office assets.</p>
+</li>
+<li class="p-3 bg-surface rounded border border-border-default flex items-start gap-3">
+<div class="w-2 h-2 rounded-full bg-primary-container shrink-0 mt-2"></div>
+<p class="font-body-md text-body-md text-text-primary">AR balance doesn't match December bank statement.</p>
+</li>
+<li class="p-3 bg-surface rounded border border-border-default flex items-start gap-3">
+<div class="w-2 h-2 rounded-full bg-primary-container shrink-0 mt-2"></div>
+<p class="font-body-md text-body-md text-text-primary">Tax provision calculation is unclear.</p>
+</li>
+</ul>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LedgerScope | Audit Program &amp; Procedures</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=DM+Serif+Display:wght@400;600&amp;family=IBM+Plex+Mono:wght@400&amp;family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:wght@100..900&amp;family=IBM+Plex+Sans:wght@100..900&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "shell-surface": "#13141A",
+                "secondary-fixed-dim": "#c7c6ca",
+                "status-warning": "#B45309",
+                "on-secondary-fixed": "#1b1b1f",
+                "tertiary-fixed": "#a0f5bb",
+                "surface-container-lowest": "#ffffff",
+                "on-surface-variant": "#5c403b",
+                "on-primary-fixed-variant": "#920600",
+                "brand-red-hover": "#A31508",
+                "surface-dim": "#d9dadc",
+                "status-danger": "#DC2626",
+                "surface-variant": "#e1e2e4",
+                "brand-red-muted": "#F8E8E7",
+                "surface": "#f8f9fb",
+                "inverse-on-surface": "#f0f1f3",
+                "inverse-surface": "#2e3132",
+                "text-muted": "#8C93A0",
+                "on-surface": "#191c1e",
+                "tertiary": "#00552f",
+                "primary-fixed-dim": "#ffb4a7",
+                "surface-container": "#edeef0",
+                "on-tertiary": "#ffffff",
+                "shell-elevated": "#1A1C23",
+                "on-primary-fixed": "#400100",
+                "primary-container": "#c0190a",
+                "shell-border": "#252830",
+                "on-secondary-fixed-variant": "#46464a",
+                "on-primary": "#ffffff",
+                "on-tertiary-container": "#9aefb6",
+                "secondary-container": "#e0dfe3",
+                "on-error": "#ffffff",
+                "error": "#ba1a1a",
+                "surface-container-low": "#f3f4f6",
+                "tertiary-fixed-dim": "#84d8a1",
+                "outline": "#916f6a",
+                "surface-container-high": "#e7e8ea",
+                "surface-bright": "#f8f9fb",
+                "on-background": "#191c1e",
+                "on-secondary-container": "#626266",
+                "error-container": "#ffdad6",
+                "text-primary": "#0F1114",
+                "primary": "#970600",
+                "brand-red-press": "#8B1208",
+                "secondary": "#5e5e62",
+                "background": "#f8f9fb",
+                "primary-fixed": "#ffdad4",
+                "tertiary-container": "#156f42",
+                "on-secondary": "#ffffff",
+                "on-tertiary-fixed-variant": "#00522d",
+                "surface-container-highest": "#e1e2e4",
+                "border-strong": "#CDD0D6",
+                "inverse-primary": "#ffb4a7",
+                "on-error-container": "#93000a",
+                "surface-tint": "#bc1507",
+                "on-primary-container": "#ffd3cb",
+                "outline-variant": "#e5bdb7",
+                "on-tertiary-fixed": "#00210f",
+                "text-secondary": "#4A5261",
+                "secondary-fixed": "#e3e2e6",
+                "border-default": "#E3E5E9",
+                "brand-red-border": "#EBBAB7"
+            },
+            "borderRadius": {
+                "DEFAULT": "0.25rem",
+                "lg": "0.5rem",
+                "xl": "0.75rem",
+                "full": "9999px"
+            },
+            "spacing": {
+                "table-cell-v": "12px",
+                "sub-unit": "4px",
+                "baseline": "8px",
+                "gutter-desktop": "32px",
+                "form-gap": "20px",
+                "table-cell-h": "16px",
+                "gutter-tablet": "24px",
+                "card-padding": "24px"
+            },
+            "fontFamily": {
+                "label-lg": ["IBM Plex Sans"],
+                "label-sm": ["IBM Plex Sans"],
+                "display-lg": ["DM Serif Display"],
+                "mono-md": ["IBM Plex Mono"],
+                "heading-lg": ["IBM Plex Sans"],
+                "display-md": ["DM Serif Display"],
+                "body-md": ["IBM Plex Sans"]
+            },
+            "fontSize": {
+                "label-lg": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "500"}],
+                "display-lg": ["36px", {"lineHeight": "40px", "fontWeight": "600"}],
+                "mono-md": ["14px", {"lineHeight": "24px", "fontWeight": "400"}],
+                "heading-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                "display-md": ["30px", {"lineHeight": "36px", "fontWeight": "600"}],
+                "body-md": ["14px", {"lineHeight": "24px", "fontWeight": "400"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            vertical-align: middle;
+        }
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .shake-animation:active {
+            animation: shake 0.3s cubic-bezier(.36,.07,.19,.97) both;
+        }
+        @keyframes shake {
+            10%, 90% { transform: translate3d(-1px, 0, 0); }
+            20%, 80% { transform: translate3d(2px, 0, 0); }
+            30%, 50%, 70% { transform: translate3d(-4px, 0, 0); }
+            40%, 60% { transform: translate3d(4px, 0, 0); }
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 6px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-track {
+            background: #f1f1f1;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #CDD0D6;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md overflow-x-hidden">
+<!-- TopNavBar -->
+<header class="sticky top-0 z-50 flex items-center justify-between px-gutter-desktop h-14 w-full bg-surface-container-lowest border-b border-border-default shadow-sm">
+<div class="flex items-center gap-8">
+<span class="font-display-md text-display-md text-primary tracking-tight">LedgerScope</span>
+<nav class="hidden md:flex items-center gap-6">
+<a class="font-body-md text-body-md text-text-secondary hover:text-brand-red-hover transition-colors" href="#">Dashboard</a>
+<a class="font-body-md text-body-md text-primary border-b-2 border-primary pb-1" href="#">Ledgers</a>
+<a class="font-body-md text-body-md text-text-secondary hover:text-brand-red-hover transition-colors" href="#">Audit Trail</a>
+<a class="font-body-md text-body-md text-text-secondary hover:text-brand-red-hover transition-colors" href="#">Reporting</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<button class="material-symbols-outlined text-text-secondary hover:text-primary transition-colors">notifications</button>
+<button class="material-symbols-outlined text-text-secondary hover:text-primary transition-colors">settings</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-border-strong bg-surface-container">
+<img alt="User" data-alt="A professional headshot of a senior financial auditor in a minimalist office setting. The lighting is bright and clean, emphasizing a modern light-mode aesthetic. The individual has a serious and disciplined expression, conveying authority and precision. The background is slightly blurred with soft grey and white tones, reflecting the brand's editorial minimalism." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCLeg1HmgDne04aqxVrEi4d3pdpf1vKw9VwVmJacHkcqZyl7J9beDFVXN9gzrlMvApkbXo_dIZ-_aipC1q-lTbhHSUWxOsLVsxkOe6cepCQlz-iXI47id5fwUEIHiNYeuUla7SgF1VVxi5pHUZJRj7RV4nDiYIW48oJwH5-kTiAeyPrMOKHnuppHmDybxZ4TWw1cP1xGW-2y28UXlaR-qtbw7Jm1pg23bSFoQSD50LuNsI8tlcMR3sdPOTks2UI1ddkpRgy-IkY3IoH"/>
+</div>
+</div>
+</header>
+<div class="flex min-h-[calc(100vh-56px)]">
+<!-- SideNavBar -->
+<aside class="hidden md:flex flex-col w-60 bg-shell-surface border-r border-shell-border fixed left-0 top-14 bottom-0 z-40">
+<div class="p-4 border-b border-shell-border flex items-center gap-3">
+<div class="w-8 h-8 bg-primary-container rounded flex items-center justify-center">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">business_center</span>
+</div>
+<div>
+<h3 class="font-label-lg text-label-lg text-white">Acme Corp</h3>
+<p class="text-[10px] text-text-muted uppercase tracking-wider font-semibold">FY 2024 Audit</p>
+</div>
+</div>
+<nav class="flex-1 py-4 overflow-y-auto custom-scrollbar">
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">business_center</span>
+<span class="font-label-lg text-label-lg">Entities</span>
+</a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">account_balance</span>
+<span class="font-label-lg text-label-lg">Accounts</span>
+</a>
+<a class="bg-shell-elevated text-white border-l-4 border-primary px-4 py-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-label-lg text-label-lg">Transactions</span>
+</a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">account_tree</span>
+<span class="font-label-lg text-label-lg">Reconciliation</span>
+</a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-lg text-label-lg">Settings</span>
+</a>
+</nav>
+<div class="p-4 border-t border-shell-border space-y-2">
+<button class="w-full py-2 bg-primary hover:bg-brand-red-hover text-white rounded text-sm font-semibold transition-colors active:scale-95">
+                    Switch Entity
+                </button>
+<a class="text-text-muted px-4 py-2 flex items-center gap-3 hover:text-white transition-all text-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">help</span>
+                    Support
+                </a>
+<a class="text-text-muted px-4 py-2 flex items-center gap-3 hover:text-white transition-all text-sm" href="#">
+<span class="material-symbols-outlined text-[18px]">history</span>
+                    Logs
+                </a>
+</div>
+</aside>
+<!-- Main Content -->
+<main class="flex-1 ml-0 md:ml-60 p-gutter-desktop max-w-[1440px] mx-auto">
+<!-- Page Header & Progress -->
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-8 mb-8 items-end">
+<div class="lg:col-span-2">
+<div class="flex items-center gap-2 text-text-muted mb-2">
+<span class="font-label-sm text-label-sm uppercase tracking-widest">Audit Program</span>
+<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+<span class="font-label-sm text-label-sm uppercase tracking-widest text-primary">Procedures Checklist</span>
+</div>
+<h1 class="font-display-lg text-display-lg text-text-primary">Substantive Testing Matrix</h1>
+<p class="text-text-secondary max-w-2xl mt-2">Detailed audit procedures for verifying the existence, completeness, and valuation of balance sheet items for Acme Corp FY 2024.</p>
+</div>
+<div class="bg-white border border-border-default p-5 rounded-lg shadow-card">
+<div class="flex justify-between items-center mb-3">
+<span class="font-label-lg text-label-lg text-text-primary">Engagement Progress</span>
+<span class="font-mono-md text-mono-md text-primary">68%</span>
+</div>
+<div class="w-full bg-surface-container-high h-2 rounded-full overflow-hidden">
+<div class="bg-primary h-full rounded-full" style="width: 68%"></div>
+</div>
+<div class="flex justify-between mt-3 text-[11px] font-semibold text-text-muted uppercase tracking-wider">
+<span>42 Completed</span>
+<span>18 Pending</span>
+</div>
+</div>
+</div>
+<!-- Dashboard Stats Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+<div class="bg-white p-4 border border-border-default rounded flex flex-col justify-between">
+<span class="text-text-muted font-label-sm uppercase tracking-wider">Total Procedures</span>
+<span class="font-display-md text-display-md text-text-primary">60</span>
+</div>
+<div class="bg-white p-4 border border-border-default rounded flex flex-col justify-between">
+<span class="text-text-muted font-label-sm uppercase tracking-wider">Review Required</span>
+<span class="font-display-md text-display-md text-status-warning">12</span>
+</div>
+<div class="bg-white p-4 border border-border-default rounded flex flex-col justify-between">
+<span class="text-text-muted font-label-sm uppercase tracking-wider">Critical Failures</span>
+<span class="font-display-md text-display-md text-status-danger">02</span>
+</div>
+<div class="bg-white p-4 border border-border-default rounded flex flex-col justify-between">
+<span class="text-text-muted font-label-sm uppercase tracking-wider">Days to Closing</span>
+<span class="font-display-md text-display-md text-primary">14</span>
+</div>
+</div>
+<!-- Audit Procedures Table -->
+<div class="bg-white border border-border-default rounded-lg shadow-card overflow-hidden">
+<div class="px-gutter-desktop py-4 bg-surface border-b border-border-strong flex justify-between items-center">
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 material-symbols-outlined text-text-muted text-[20px]">search</span>
+<input class="pl-10 pr-4 py-1.5 border border-border-strong rounded text-sm focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none min-w-[300px]" placeholder="Search procedures..." type="text"/>
+</div>
+<button class="flex items-center gap-2 px-3 py-1.5 border border-border-strong rounded text-sm font-semibold hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[18px]">filter_list</span>
+                            Filter
+                        </button>
+</div>
+<button class="bg-primary text-white px-4 py-1.5 rounded text-sm font-semibold hover:bg-brand-red-hover transition-colors flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        New Procedure
+                    </button>
+</div>
+<div class="overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-container-low border-b border-border-strong">
+<th class="px-table-cell-h py-table-cell-v font-label-lg text-label-lg text-text-primary uppercase tracking-wider w-12 text-center">Ref</th>
+<th class="px-table-cell-h py-table-cell-v font-label-lg text-label-lg text-text-primary uppercase tracking-wider min-w-[400px]">Audit Procedure &amp; Objective</th>
+<th class="px-table-cell-h py-table-cell-v font-label-lg text-label-lg text-text-primary uppercase tracking-wider">Assignee</th>
+<th class="px-table-cell-h py-table-cell-v font-label-lg text-label-lg text-text-primary uppercase tracking-wider">Status</th>
+<th class="px-table-cell-h py-table-cell-v font-label-lg text-label-lg text-text-primary uppercase tracking-wider text-right">Evidence</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-default">
+<!-- Category Header: Cash & Bank -->
+<tr class="bg-surface">
+<td class="px-table-cell-h py-2 border-y border-border-strong" colspan="5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">account_balance</span>
+<span class="font-heading-lg text-heading-lg text-text-primary">1000 - Cash &amp; Bank Balances</span>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors group">
+<td class="px-table-cell-h py-table-cell-v font-mono-md text-mono-md text-text-muted text-center">1001</td>
+<td class="px-table-cell-h py-table-cell-v">
+<div class="font-body-md font-semibold text-text-primary">Direct Bank Confirmation</div>
+<p class="text-xs text-text-secondary mt-1">Obtain direct confirmation from all banks regarding balances, loans, and contingent liabilities.</p>
+</td>
+<td class="px-table-cell-h py-table-cell-v">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-700">MS</div>
+<span class="text-sm">Marcus S.</span>
+</div>
+</td>
+<td class="px-table-cell-h py-table-cell-v">
+<span class="status-badge bg-green-100 text-green-700">Completed</span>
+</td>
+<td class="px-table-cell-h py-table-cell-v text-right">
+<a class="text-primary hover:underline text-sm font-semibold flex items-center justify-end gap-1" href="#">
+<span class="material-symbols-outlined text-[16px]">attachment</span>
+                                        BC-2024-01.pdf
+                                    </a>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors group">
+<td class="px-table-cell-h py-table-cell-v font-mono-md text-mono-md text-text-muted text-center">1002</td>
+<td class="px-table-cell-h py-table-cell-v">
+<div class="font-body-md font-semibold text-text-primary">Bank Reconciliation Review</div>
+<p class="text-xs text-text-secondary mt-1">Review year-end bank reconciliations and test reconciling items for validity and timing.</p>
+</td>
+<td class="px-table-cell-h py-table-cell-v">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center text-[10px] font-bold text-red-700">JL</div>
+<span class="text-sm">Jane L.</span>
+</div>
+</td>
+<td class="px-table-cell-h py-table-cell-v">
+<span class="status-badge bg-amber-100 text-status-warning">In Progress</span>
+</td>
+<td class="px-table-cell-h py-table-cell-v text-right">
+<button class="text-text-muted hover:text-primary text-xs uppercase font-bold tracking-wider">Upload</button>
+</td>
+</tr>
+<!-- Category Header: Revenue -->
+<tr class="bg-surface">
+<td class="px-table-cell-h py-2 border-y border-border-strong" colspan="5">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-[20px]">payments</span>
+<span class="font-heading-lg text-heading-lg text-text-primary">2000 - Revenue &amp; Receivables</span>
+</div>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors group">
+<td class="px-table-cell-h py-table-cell-v font-mono-md text-mono-md text-text-muted text-center">2001</td>
+<td class="px-table-cell-h py-table-cell-v">
+<div class="font-body-md font-semibold text-text-primary">Revenue Cut-off Testing</div>
+<p class="text-xs text-text-secondary mt-1">Test sales transactions 5 days before and after year-end to ensure proper period recognition.</p>
+</td>
+<td class="px-table-cell-h py-table-cell-v">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center text-[10px] font-bold text-gray-700">UA</div>
+<span class="text-sm">Unassigned</span>
+</div>
+</td>
+<td class="px-table-cell-h py-table-cell-v">
+<span class="status-badge bg-gray-100 text-text-muted">Not Started</span>
+</td>
+<td class="px-table-cell-h py-table-cell-v text-right">
+<span class="text-text-muted text-xs">—</span>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors group">
+<td class="px-table-cell-h py-table-cell-v font-mono-md text-mono-md text-text-muted text-center">2002</td>
+<td class="px-table-cell-h py-table-cell-v">
+<div class="font-body-md font-semibold text-text-primary">Accounts Receivable Aging Review</div>
+<p class="text-xs text-text-secondary mt-1">Assess the adequacy of the allowance for doubtful accounts by reviewing aging reports.</p>
+</td>
+<td class="px-table-cell-h py-table-cell-v">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-red-100 flex items-center justify-center text-[10px] font-bold text-red-700">JL</div>
+<span class="text-sm">Jane L.</span>
+</div>
+</td>
+<td class="px-table-cell-h py-table-cell-v">
+<span class="status-badge bg-green-100 text-green-700">Completed</span>
+</td>
+<td class="px-table-cell-h py-table-cell-v text-right">
+<a class="text-primary hover:underline text-sm font-semibold flex items-center justify-end gap-1" href="#">
+<span class="material-symbols-outlined text-[16px]">description</span>
+                                        AR-Analysis.xlsx
+                                    </a>
+</td>
+</tr>
+<tr class="hover:bg-surface-container-lowest transition-colors group bg-red-50/30">
+<td class="px-table-cell-h py-table-cell-v font-mono-md text-mono-md text-status-danger text-center">2003</td>
+<td class="px-table-cell-h py-table-cell-v">
+<div class="font-body-md font-semibold text-text-primary flex items-center gap-2">
+                                        Sample Testing of Invoices
+                                        <span class="material-symbols-outlined text-status-danger text-[16px] shake-animation">error</span>
+</div>
+<p class="text-xs text-text-secondary mt-1">Vouch a sample of 25 sales invoices to shipping documents and customer orders.</p>
+</td>
+<td class="px-table-cell-h py-table-cell-v">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded-full bg-blue-100 flex items-center justify-center text-[10px] font-bold text-blue-700">MS</div>
+<span class="text-sm">Marcus S.</span>
+</div>
+</td>
+<td class="px-table-cell-h py-table-cell-v">
+<span class="status-badge bg-red-100 text-status-danger">Unbalanced</span>
+</td>
+<td class="px-table-cell-h py-table-cell-v text-right">
+<button class="text-primary hover:underline text-sm font-semibold">Review Findings</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination / Table Footer -->
+<div class="px-gutter-desktop py-3 bg-surface-container-low flex justify-between items-center text-xs text-text-secondary border-t border-border-strong">
+<span>Showing 5 of 60 procedures</span>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2">
+<span>Rows per page:</span>
+<select class="bg-transparent border-none focus:ring-0 text-xs font-bold p-0">
+<option>15</option>
+<option>25</option>
+<option>50</option>
+</select>
+</div>
+<div class="flex gap-2">
+<button class="w-8 h-8 flex items-center justify-center border border-border-strong rounded hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center border border-border-strong rounded bg-white font-bold text-primary">1</button>
+<button class="w-8 h-8 flex items-center justify-center border border-border-strong rounded hover:bg-white transition-colors">2</button>
+<button class="w-8 h-8 flex items-center justify-center border border-border-strong rounded hover:bg-white transition-colors">3</button>
+<button class="w-8 h-8 flex items-center justify-center border border-border-strong rounded hover:bg-white transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Contextual Insights Section -->
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-8">
+<div class="bg-white border border-border-default rounded-lg p-6">
+<h3 class="font-heading-lg text-heading-lg mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">analytics</span>
+                        Evidence Coverage Matrix
+                    </h3>
+<div class="space-y-4">
+<div class="flex items-center gap-4">
+<span class="w-24 text-xs font-semibold text-text-secondary uppercase">Existence</span>
+<div class="flex-1 bg-surface-container-high h-4 rounded-sm overflow-hidden flex">
+<div class="bg-primary w-4/5"></div>
+</div>
+<span class="w-8 text-right font-mono-md text-xs">80%</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="w-24 text-xs font-semibold text-text-secondary uppercase">Completeness</span>
+<div class="flex-1 bg-surface-container-high h-4 rounded-sm overflow-hidden flex">
+<div class="bg-primary w-2/3"></div>
+</div>
+<span class="w-8 text-right font-mono-md text-xs">66%</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="w-24 text-xs font-semibold text-text-secondary uppercase">Valuation</span>
+<div class="flex-1 bg-surface-container-high h-4 rounded-sm overflow-hidden flex">
+<div class="bg-primary w-1/2"></div>
+</div>
+<span class="w-8 text-right font-mono-md text-xs">50%</span>
+</div>
+<div class="flex items-center gap-4">
+<span class="w-24 text-xs font-semibold text-text-secondary uppercase">Rights</span>
+<div class="flex-1 bg-surface-container-high h-4 rounded-sm overflow-hidden flex">
+<div class="bg-primary w-3/4"></div>
+</div>
+<span class="w-8 text-right font-mono-md text-xs">75%</span>
+</div>
+</div>
+</div>
+<div class="bg-shell-surface border border-shell-border rounded-lg p-6 relative overflow-hidden group">
+<div class="absolute -right-12 -bottom-12 opacity-5 group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-[200px] text-white">gavel</span>
+</div>
+<h3 class="font-heading-lg text-heading-lg mb-2 text-white flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">priority_high</span>
+                        Audit Risk Monitor
+                    </h3>
+<p class="text-text-muted text-sm mb-6">Real-time assessment of detection risk based on pending procedures and findings.</p>
+<div class="flex items-center gap-8">
+<div class="relative w-24 h-24 flex items-center justify-center">
+<svg class="w-full h-full transform -rotate-90">
+<circle class="text-shell-border" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" stroke-width="8"></circle>
+<circle class="text-primary" cx="48" cy="48" fill="transparent" r="40" stroke="currentColor" stroke-dasharray="251.2" stroke-dashoffset="62.8" stroke-width="8"></circle>
+</svg>
+<span class="absolute font-display-md text-display-md text-white">75%</span>
+</div>
+<div>
+<div class="text-status-danger font-bold text-lg">High Detection Risk</div>
+<p class="text-text-muted text-xs leading-relaxed mt-1">Unresolved procedures in high-risk categories (Revenue, Fixed Assets) are driving current risk levels. Prioritize Ref 2003.</p>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+<!-- Mobile Navigation Toggle (Bottom Bar as per design rules) -->
+<footer class="md:hidden fixed bottom-0 left-0 right-0 h-16 bg-surface-container-lowest shadow-2xl flex items-center justify-around z-50">
+<button class="flex flex-col items-center text-text-muted">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="text-[10px] font-bold uppercase mt-1">Dash</span>
+</button>
+<button class="flex flex-col items-center text-primary">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">receipt_long</span>
+<span class="text-[10px] font-bold uppercase mt-1">Audit</span>
+</button>
+<button class="flex flex-col items-center text-text-muted">
+<span class="material-symbols-outlined">account_tree</span>
+<span class="text-[10px] font-bold uppercase mt-1">Map</span>
+</button>
+<button class="flex flex-col items-center text-text-muted">
+<span class="material-symbols-outlined">settings</span>
+<span class="text-[10px] font-bold uppercase mt-1">Set</span>
+</button>
+</footer>
+<script>
+        // Simple interactivity for demonstration
+        document.querySelectorAll('tr.hover\\:bg-surface-container-lowest').forEach(row => {
+            row.addEventListener('mouseenter', () => {
+                row.style.boxShadow = 'inset 4px 0 0 0 #970600';
+            });
+            row.addEventListener('mouseleave', () => {
+                row.style.boxShadow = 'none';
+            });
+        });
+    </script>
+</body></html>

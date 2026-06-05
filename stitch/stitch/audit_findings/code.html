@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LedgerScope - Audit Findings</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital,wght@0,400;0,600;1,400&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style type="text/tailwindcss">
+        @layer utilities {
+            .material-symbols-outlined {
+                font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            }
+            .material-symbols-outlined.filled {
+                font-variation-settings: 'FILL' 1, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            }
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "outline-variant": "#e5bdb7",
+                        "surface-container-highest": "#e1e2e4",
+                        "background": "#f8f9fb",
+                        "surface-tint": "#bc1507",
+                        "tertiary-fixed": "#a0f5bb",
+                        "on-tertiary": "#ffffff",
+                        "border-default": "#E3E5E9",
+                        "secondary-fixed-dim": "#c7c6ca",
+                        "surface-bright": "#f8f9fb",
+                        "on-primary-container": "#ffd3cb",
+                        "shell-surface": "#13141A",
+                        "primary-fixed": "#ffdad4",
+                        "brand-red-press": "#8B1208",
+                        "brand-red-border": "#EBBAB7",
+                        "on-primary-fixed-variant": "#920600",
+                        "text-secondary": "#4A5261",
+                        "secondary-fixed": "#e3e2e6",
+                        "surface-dim": "#d9dadc",
+                        "on-tertiary-fixed": "#00210f",
+                        "brand-red-muted": "#F8E8E7",
+                        "outline": "#916f6a",
+                        "on-tertiary-container": "#9aefb6",
+                        "shell-border": "#252830",
+                        "surface-container-high": "#e7e8ea",
+                        "text-muted": "#8C93A0",
+                        "status-warning": "#B45309",
+                        "border-strong": "#CDD0D6",
+                        "error-container": "#ffdad6",
+                        "on-surface-variant": "#5c403b",
+                        "primary-container": "#c0190a",
+                        "on-secondary-fixed-variant": "#46464a",
+                        "primary-fixed-dim": "#ffb4a7",
+                        "text-primary": "#0F1114",
+                        "tertiary-fixed-dim": "#84d8a1",
+                        "on-primary": "#ffffff",
+                        "on-secondary-container": "#626266",
+                        "tertiary-container": "#156f42",
+                        "surface": "#f8f9fb",
+                        "surface-container": "#edeef0",
+                        "inverse-surface": "#2e3132",
+                        "brand-red-hover": "#A31508",
+                        "on-secondary": "#ffffff",
+                        "on-error-container": "#93000a",
+                        "inverse-primary": "#ffb4a7",
+                        "error": "#ba1a1a",
+                        "shell-elevated": "#1A1C23",
+                        "surface-container-lowest": "#ffffff",
+                        "inverse-on-surface": "#f0f1f3",
+                        "on-surface": "#191c1e",
+                        "surface-variant": "#e1e2e4",
+                        "on-secondary-fixed": "#1b1b1f",
+                        "secondary-container": "#e0dfe3",
+                        "tertiary": "#00552f",
+                        "on-primary-fixed": "#400100",
+                        "surface-container-low": "#f3f4f6",
+                        "status-danger": "#DC2626",
+                        "primary": "#970600",
+                        "on-tertiary-fixed-variant": "#00522d",
+                        "on-error": "#ffffff",
+                        "on-background": "#191c1e",
+                        "secondary": "#5e5e62"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "gutter-desktop": "32px",
+                        "table-cell-v": "12px",
+                        "baseline": "8px",
+                        "card-padding": "24px",
+                        "sub-unit": "4px",
+                        "form-gap": "20px",
+                        "gutter-tablet": "24px",
+                        "table-cell-h": "16px"
+                    },
+                    "fontFamily": {
+                        "body-md": ["IBM Plex Sans"],
+                        "display-md": ["DM Serif Display"],
+                        "display-lg": ["DM Serif Display"],
+                        "heading-lg": ["IBM Plex Sans"],
+                        "mono-md": ["IBM Plex Mono"],
+                        "label-sm": ["IBM Plex Sans"],
+                        "label-lg": ["IBM Plex Sans"]
+                    },
+                    "fontSize": {
+                        "body-md": ["14px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-md": ["30px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "display-lg": ["36px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "heading-lg": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "mono-md": ["14px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "500" }],
+                        "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body class="bg-background font-body-md text-text-primary antialiased min-h-screen flex flex-col md:flex-row w-full overflow-x-hidden">
+<!-- SideNavBar (Desktop) -->
+<nav class="hidden md:flex fixed left-0 top-0 h-full flex-col z-40 bg-shell-surface w-60 border-r border-shell-border">
+<!-- Header -->
+<div class="p-6 border-b border-shell-border">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-8 h-8 rounded bg-surface-container flex items-center justify-center shrink-0">
+<span class="font-display-md text-body-md text-text-primary">AC</span>
+</div>
+<div>
+<h2 class="font-label-lg text-label-lg text-on-primary">Acme Corp</h2>
+<p class="font-label-sm text-label-sm text-text-muted mt-1">FY 2024 Audit</p>
+</div>
+</div>
+<button class="w-full border border-shell-border rounded py-1.5 px-3 font-label-sm text-label-sm text-on-primary hover:bg-shell-elevated transition-colors flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[16px]">swap_horiz</span>
+                Switch Entity
+            </button>
+</div>
+<!-- Main Nav -->
+<div class="flex-1 py-4 flex flex-col gap-1 overflow-y-auto">
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all active:scale-98 font-label-lg text-label-lg group" href="#">
+<span class="material-symbols-outlined text-text-muted group-hover:text-white transition-colors" data-icon="business_center">business_center</span>
+                Entities
+            </a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all active:scale-98 font-label-lg text-label-lg group" href="#">
+<span class="material-symbols-outlined text-text-muted group-hover:text-white transition-colors" data-icon="account_balance">account_balance</span>
+                Accounts
+            </a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all active:scale-98 font-label-lg text-label-lg group" href="#">
+<span class="material-symbols-outlined text-text-muted group-hover:text-white transition-colors" data-icon="receipt_long">receipt_long</span>
+                Transactions
+            </a>
+<a class="bg-shell-elevated text-white border-l-4 border-primary px-4 py-3 flex items-center gap-3 active:scale-98 font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined text-white" data-icon="account_tree">account_tree</span>
+                Reconciliation
+            </a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all active:scale-98 font-label-lg text-label-lg group" href="#">
+<span class="material-symbols-outlined text-text-muted group-hover:text-white transition-colors" data-icon="settings">settings</span>
+                Settings
+            </a>
+</div>
+<!-- Footer Nav -->
+<div class="border-t border-shell-border p-4 flex flex-col gap-1">
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all active:scale-98 font-label-lg text-label-lg group" href="#">
+<span class="material-symbols-outlined text-text-muted group-hover:text-white transition-colors" data-icon="help">help</span>
+                Support
+            </a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all active:scale-98 font-label-lg text-label-lg group" href="#">
+<span class="material-symbols-outlined text-text-muted group-hover:text-white transition-colors" data-icon="history">history</span>
+                Logs
+            </a>
+</div>
+</nav>
+<!-- TopNavBar (Mobile) - Hidden on desktop since intent is a focused sub-page but acting as a main view for now, usually we'd hide this based on rules but keeping it minimal for structural integrity if needed. Actually, per rules, mobile uses bottom nav, desktop uses top/side. Let's provide the Top AppBar structure as requested by JSON for "LedgerScope" brand. -->
+<div class="md:hidden sticky top-0 z-50 flex items-center justify-between px-gutter-desktop h-14 w-full bg-surface-container-lowest border-b border-border-default shadow-sm">
+<div class="font-display-md text-display-md text-primary">LedgerScope</div>
+<div class="flex items-center gap-4 text-text-secondary">
+<span class="material-symbols-outlined cursor-pointer hover:text-brand-red-hover transition-colors" data-icon="search">search</span>
+<span class="material-symbols-outlined cursor-pointer hover:text-brand-red-hover transition-colors" data-icon="menu">menu</span>
+</div>
+</div>
+<!-- Main Canvas -->
+<main class="flex-1 md:ml-60 min-h-screen bg-background flex flex-col relative w-full max-w-[1440px] mx-auto">
+<!-- Header Section -->
+<header class="px-gutter-desktop py-8 border-b border-border-default bg-surface-container-lowest sticky top-0 z-30 shadow-sm md:shadow-none">
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-4">
+<div>
+<div class="flex items-center gap-3 mb-2">
+<h1 class="font-display-lg text-display-lg text-text-primary tracking-tight">Audit Findings</h1>
+<span class="bg-surface-container text-text-secondary font-mono-md text-mono-md px-2.5 py-0.5 rounded-full border border-border-default">12</span>
+</div>
+<p class="font-body-md text-body-md text-text-secondary max-w-2xl">Review and manage identified discrepancies, compliance violations, and procedural anomalies across the current fiscal period.</p>
+</div>
+<div class="flex items-center gap-3 shrink-0 mt-4 md:mt-0">
+<button class="h-10 px-4 py-2 border border-border-default rounded bg-surface-container-lowest text-text-primary font-label-lg text-label-lg hover:bg-surface-container-low transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-brand-red-border focus:ring-offset-1">
+<span class="material-symbols-outlined text-[18px]">download</span>
+                        Export CSV
+                    </button>
+<button class="h-10 px-4 py-2 bg-primary-container text-on-primary rounded font-label-lg text-label-lg hover:bg-brand-red-hover transition-colors flex items-center gap-2 focus:outline-none focus:ring-2 focus:ring-brand-red-border focus:ring-offset-1 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">add</span>
+                        New Finding
+                    </button>
+</div>
+</div>
+<!-- Filters & Controls -->
+<div class="mt-8 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+<div class="flex flex-wrap gap-2">
+<button class="px-3 py-1.5 rounded-full border border-border-strong bg-surface-container-lowest text-text-primary font-label-sm text-label-sm hover:bg-surface-container-low transition-colors flex items-center gap-1.5 focus:outline-none ring-2 ring-brand-red-border ring-offset-1">
+                        All Findings
+                    </button>
+<button class="px-3 py-1.5 rounded-full border border-border-default bg-surface-container-lowest text-status-danger font-label-sm text-label-sm hover:bg-brand-red-muted transition-colors flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-status-danger"></span>
+                        CRITICAL
+                    </button>
+<button class="px-3 py-1.5 rounded-full border border-border-default bg-surface-container-lowest text-status-warning font-label-sm text-label-sm hover:bg-surface-container-low transition-colors flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-status-warning"></span>
+                        HIGH
+                    </button>
+<button class="px-3 py-1.5 rounded-full border border-border-default bg-surface-container-lowest text-text-secondary font-label-sm text-label-sm hover:bg-surface-container-low transition-colors flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-surface-variant"></span>
+                        MEDIUM
+                    </button>
+<button class="px-3 py-1.5 rounded-full border border-border-default bg-surface-container-lowest text-text-muted font-label-sm text-label-sm hover:bg-surface-container-low transition-colors flex items-center gap-1.5">
+<span class="w-1.5 h-1.5 rounded-full bg-surface-container"></span>
+                        LOW
+                    </button>
+</div>
+<div class="relative w-full sm:w-64">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[18px]">search</span>
+<input class="w-full h-9 pl-9 pr-3 rounded border border-border-strong bg-surface-container-lowest text-body-md font-body-md text-text-primary placeholder:text-text-muted focus:outline-none focus:border-brand-red-border focus:ring-1 focus:ring-brand-red-border transition-shadow" placeholder="Search REF or description..." type="text"/>
+</div>
+</div>
+</header>
+<!-- Content Area -->
+<div class="flex-1 p-gutter-desktop overflow-x-auto">
+<div class="bg-surface-container-lowest border border-border-default rounded-lg shadow-sm overflow-hidden min-w-[800px]">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-surface-bright border-b border-border-strong">
+<th class="py-table-cell-v px-table-cell-h font-label-sm text-label-sm text-text-secondary w-24">REF</th>
+<th class="py-table-cell-v px-table-cell-h font-label-sm text-label-sm text-text-secondary w-32">SEVERITY</th>
+<th class="py-table-cell-v px-table-cell-h font-label-sm text-label-sm text-text-secondary">FINDING DESCRIPTION</th>
+<th class="py-table-cell-v px-table-cell-h font-label-sm text-label-sm text-text-secondary w-40">DATE LOGGED</th>
+<th class="py-table-cell-v px-table-cell-h font-label-sm text-label-sm text-text-secondary w-32">STATUS</th>
+<th class="py-table-cell-v px-table-cell-h font-label-sm text-label-sm text-text-secondary w-12"></th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-text-primary divide-y divide-border-default">
+<!-- Critical Finding Row -->
+<tr class="group hover:bg-surface-bright transition-colors relative">
+<!-- Subtle red left border for critical -->
+<td class="absolute left-0 top-0 bottom-0 w-1 bg-status-danger"></td>
+<td class="py-table-cell-v px-table-cell-h font-mono-md text-mono-md text-text-secondary group-hover:text-text-primary pl-table-cell-h">AUD-7492</td>
+<td class="py-table-cell-v px-table-cell-h">
+<span class="inline-flex items-center px-2 py-0.5 rounded-[3px] bg-brand-red-muted text-status-danger font-label-sm text-label-sm border border-brand-red-border">
+                                    CRITICAL
+                                </span>
+</td>
+<td class="py-table-cell-v px-table-cell-h max-w-md">
+<p class="font-heading-lg text-heading-lg text-text-primary mb-1">Unreconciled wire transfer batch</p>
+<p class="text-text-secondary truncate">Discrepancy of $1.4M identified between operating account and sub-ledger batch ID 992-A.</p>
+</td>
+<td class="py-table-cell-v px-table-cell-h font-mono-md text-text-secondary">2024-10-14</td>
+<td class="py-table-cell-v px-table-cell-h">
+<span class="inline-flex items-center px-2 py-0.5 rounded-[3px] bg-surface-container-high text-text-primary font-label-sm text-label-sm">
+                                    OPEN
+                                </span>
+</td>
+<td class="py-table-cell-v px-table-cell-h text-right">
+<button class="text-text-muted hover:text-text-primary transition-colors focus:outline-none">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- High Finding Row -->
+<tr class="group hover:bg-surface-bright transition-colors bg-surface-bright">
+<td class="py-table-cell-v px-table-cell-h font-mono-md text-mono-md text-text-secondary group-hover:text-text-primary">AUD-7488</td>
+<td class="py-table-cell-v px-table-cell-h">
+<span class="inline-flex items-center px-2 py-0.5 rounded-[3px] bg-[#FEF3C7] text-status-warning font-label-sm text-label-sm border border-[#FDE68A]">
+                                    HIGH
+                                </span>
+</td>
+<td class="py-table-cell-v px-table-cell-h max-w-md">
+<p class="font-heading-lg text-heading-lg text-text-primary mb-1">Missing countersignatures on CapEx</p>
+<p class="text-text-secondary truncate">Three capital expenditure requests exceeding $50k threshold lack required VP approval.</p>
+</td>
+<td class="py-table-cell-v px-table-cell-h font-mono-md text-text-secondary">2024-10-12</td>
+<td class="py-table-cell-v px-table-cell-h">
+<span class="inline-flex items-center px-2 py-0.5 rounded-[3px] bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm border border-tertiary-fixed-dim">
+                                    IN REVIEW
+                                </span>
+</td>
+<td class="py-table-cell-v px-table-cell-h text-right">
+<button class="text-text-muted hover:text-text-primary transition-colors focus:outline-none">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Medium Finding Row -->
+<tr class="group hover:bg-surface-bright transition-colors">
+<td class="py-table-cell-v px-table-cell-h font-mono-md text-mono-md text-text-secondary group-hover:text-text-primary">AUD-7451</td>
+<td class="py-table-cell-v px-table-cell-h">
+<span class="inline-flex items-center px-2 py-0.5 rounded-[3px] bg-surface-container text-text-secondary font-label-sm text-label-sm border border-border-default">
+                                    MEDIUM
+                                </span>
+</td>
+<td class="py-table-cell-v px-table-cell-h max-w-md">
+<p class="font-heading-lg text-heading-lg text-text-primary mb-1">Stale vendor profiles</p>
+<p class="text-text-secondary truncate">14 vendor profiles active in AP system with no activity in the trailing 24 months.</p>
+</td>
+<td class="py-table-cell-v px-table-cell-h font-mono-md text-text-secondary">2024-10-09</td>
+<td class="py-table-cell-v px-table-cell-h">
+<span class="inline-flex items-center px-2 py-0.5 rounded-[3px] bg-surface-container-high text-text-primary font-label-sm text-label-sm">
+                                    OPEN
+                                </span>
+</td>
+<td class="py-table-cell-v px-table-cell-h text-right">
+<button class="text-text-muted hover:text-text-primary transition-colors focus:outline-none">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Low Finding Row -->
+<tr class="group hover:bg-surface-bright transition-colors bg-surface-bright">
+<td class="py-table-cell-v px-table-cell-h font-mono-md text-mono-md text-text-secondary group-hover:text-text-primary">AUD-7442</td>
+<td class="py-table-cell-v px-table-cell-h">
+<span class="inline-flex items-center px-2 py-0.5 rounded-[3px] bg-surface-container-lowest text-text-muted font-label-sm text-label-sm border border-border-default">
+                                    LOW
+                                </span>
+</td>
+<td class="py-table-cell-v px-table-cell-h max-w-md">
+<p class="font-heading-lg text-heading-lg text-text-primary mb-1">Inconsistent receipt formatting</p>
+<p class="text-text-secondary truncate">T&amp;E department submissions show varied date formats causing minor parsing errors.</p>
+</td>
+<td class="py-table-cell-v px-table-cell-h font-mono-md text-text-secondary">2024-10-05</td>
+<td class="py-table-cell-v px-table-cell-h">
+<span class="inline-flex items-center px-2 py-0.5 rounded-[3px] bg-tertiary-fixed text-on-tertiary-fixed font-label-sm text-label-sm border border-tertiary-fixed-dim">
+                                    RESOLVED
+                                </span>
+</td>
+<td class="py-table-cell-v px-table-cell-h text-right">
+<button class="text-text-muted hover:text-text-primary transition-colors focus:outline-none">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+<!-- Pagination Footer -->
+<div class="px-6 py-4 border-t border-border-default bg-surface-container-lowest flex items-center justify-between">
+<span class="font-label-sm text-label-sm text-text-secondary">Showing 1-4 of 12 entries</span>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 rounded border border-border-default flex items-center justify-center text-text-muted hover:bg-surface-container-low transition-colors focus:outline-none focus:ring-1 focus:ring-brand-red-border disabled:opacity-50" disabled="">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="w-8 h-8 rounded bg-surface-container-high text-text-primary font-label-sm text-label-sm flex items-center justify-center focus:outline-none">1</button>
+<button class="w-8 h-8 rounded hover:bg-surface-container-low text-text-secondary font-label-sm text-label-sm flex items-center justify-center focus:outline-none transition-colors">2</button>
+<button class="w-8 h-8 rounded hover:bg-surface-container-low text-text-secondary font-label-sm text-label-sm flex items-center justify-center focus:outline-none transition-colors">3</button>
+<button class="w-8 h-8 rounded border border-border-default flex items-center justify-center text-text-primary hover:bg-surface-container-low transition-colors focus:outline-none focus:ring-1 focus:ring-brand-red-border">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

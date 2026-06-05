@@ -1,0 +1,431 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Financial Statement Builder - LedgerScope</title>
+<!-- Google Fonts: IBM Plex Sans, IBM Plex Mono, DM Serif Display -->
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<!-- Tailwind Config from Brand Anchors -->
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed-variant": "#46464a",
+                      "on-background": "#191c1e",
+                      "text-muted": "#8C93A0",
+                      "on-tertiary-container": "#9aefb6",
+                      "surface-container-high": "#e7e8ea",
+                      "border-strong": "#CDD0D6",
+                      "status-warning": "#B45309",
+                      "primary-fixed": "#ffdad4",
+                      "on-secondary-fixed": "#1b1b1f",
+                      "tertiary-fixed": "#a0f5bb",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-container": "#626266",
+                      "brand-red-muted": "#F8E8E7",
+                      "text-primary": "#0F1114",
+                      "tertiary-container": "#156f42",
+                      "secondary-fixed-dim": "#c7c6ca",
+                      "text-secondary": "#4A5261",
+                      "on-surface": "#191c1e",
+                      "shell-border": "#252830",
+                      "on-error": "#ffffff",
+                      "on-primary-container": "#ffd3cb",
+                      "on-primary-fixed-variant": "#920600",
+                      "on-tertiary-fixed": "#00210f",
+                      "on-surface-variant": "#5c403b",
+                      "on-error-container": "#93000a",
+                      "shell-surface": "#13141A",
+                      "error-container": "#ffdad6",
+                      "background": "#f8f9fb",
+                      "surface-tint": "#bc1507",
+                      "surface-dim": "#d9dadc",
+                      "surface-container": "#edeef0",
+                      "on-tertiary-fixed-variant": "#00522d",
+                      "outline": "#916f6a",
+                      "tertiary-fixed-dim": "#84d8a1",
+                      "secondary-container": "#e0dfe3",
+                      "brand-red-press": "#8B1208",
+                      "on-primary-fixed": "#400100",
+                      "inverse-surface": "#2e3132",
+                      "outline-variant": "#e5bdb7",
+                      "on-primary": "#ffffff",
+                      "surface": "#f8f9fb",
+                      "primary-fixed-dim": "#ffb4a7",
+                      "surface-container-low": "#f3f4f6",
+                      "secondary-fixed": "#e3e2e6",
+                      "brand-red-hover": "#A31508",
+                      "surface-container-lowest": "#ffffff",
+                      "tertiary": "#00552f",
+                      "on-secondary": "#ffffff",
+                      "status-danger": "#DC2626",
+                      "shell-elevated": "#1A1C23",
+                      "border-default": "#E3E5E9",
+                      "surface-variant": "#e1e2e4",
+                      "surface-bright": "#f8f9fb",
+                      "inverse-on-surface": "#f0f1f3",
+                      "brand-red-border": "#EBBAB7",
+                      "primary-container": "#c0190a",
+                      "surface-container-highest": "#e1e2e4",
+                      "error": "#ba1a1a",
+                      "secondary": "#5e5e62",
+                      "inverse-primary": "#ffb4a7",
+                      "primary": "#970600"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sub-unit": "4px",
+                      "baseline": "8px",
+                      "table-cell-v": "12px",
+                      "gutter-tablet": "24px",
+                      "gutter-desktop": "32px",
+                      "form-gap": "20px",
+                      "table-cell-h": "16px",
+                      "card-padding": "24px"
+              },
+              "fontFamily": {
+                      "heading-lg": ["IBM Plex Sans"],
+                      "label-sm": ["IBM Plex Sans"],
+                      "mono-md": ["IBM Plex Mono"],
+                      "display-lg": ["DM Serif Display"],
+                      "display-md": ["DM Serif Display"],
+                      "body-md": ["IBM Plex Sans"],
+                      "label-lg": ["IBM Plex Sans"]
+              },
+              "fontSize": {
+                      "heading-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "500"}],
+                      "mono-md": ["14px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "display-lg": ["36px", {"lineHeight": "40px", "fontWeight": "600"}],
+                      "display-md": ["30px", {"lineHeight": "36px", "fontWeight": "600"}],
+                      "body-md": ["14px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "label-lg": ["14px", {"lineHeight": "20px", "fontWeight": "500"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        /* Base typography defaults based on config */
+        body {
+            font-family: 'IBM Plex Sans', sans-serif;
+        }
+        /* Custom scrollbar for tables */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f8f9fb;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CDD0D6;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #8C93A0;
+        }
+        /* Tree view connector lines */
+        .tree-line::before {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 0;
+            bottom: 0;
+            width: 1px;
+            background-color: #E3E5E9;
+        }
+        .tree-node::after {
+            content: '';
+            position: absolute;
+            left: -12px;
+            top: 12px;
+            width: 8px;
+            height: 1px;
+            background-color: #E3E5E9;
+        }
+    </style>
+</head>
+<body class="bg-background text-text-primary antialiased flex h-screen overflow-hidden">
+<!-- JSON: SideNavBar Component -->
+<nav class="fixed left-0 top-0 h-full w-60 bg-shell-surface dark:bg-shell-surface border-r border-shell-border z-40 flex flex-col hidden md:flex">
+<div class="px-6 py-6 border-b border-shell-border">
+<h2 class="font-display-md text-display-md text-white mb-1">Acme Corp</h2>
+<p class="font-label-sm text-label-sm text-text-muted uppercase tracking-wider">FY 2024 Audit</p>
+<button class="mt-4 w-full py-2 px-3 bg-transparent border border-shell-border text-white rounded hover:bg-shell-elevated transition-colors flex items-center justify-center gap-2 font-label-lg text-label-lg">
+<span>Switch Entity</span>
+<span class="material-symbols-outlined text-[16px]">swap_horiz</span>
+</button>
+</div>
+<div class="flex-1 overflow-y-auto py-4 flex flex-col gap-1">
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">business_center</span>
+<span class="font-label-lg text-label-lg">Entities</span>
+</a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">account_balance</span>
+<span class="font-label-lg text-label-lg">Accounts</span>
+</a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span class="font-label-lg text-label-lg">Transactions</span>
+</a>
+<!-- Active State semantic match for Statement Builder: Reconciliation/Reporting flow -->
+<a class="bg-shell-elevated text-white border-l-4 border-primary px-4 py-3 flex items-center gap-3 active:scale-98" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_tree</span>
+<span class="font-label-lg text-label-lg">Reconciliation</span>
+</a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span class="font-label-lg text-label-lg">Settings</span>
+</a>
+</div>
+<div class="border-t border-shell-border py-4 flex flex-col gap-1">
+<a class="text-text-muted px-4 py-2 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">help</span>
+<span class="font-label-lg text-label-lg">Support</span>
+</a>
+<a class="text-text-muted px-4 py-2 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all" href="#">
+<span class="material-symbols-outlined">history</span>
+<span class="font-label-lg text-label-lg">Logs</span>
+</a>
+</div>
+</nav>
+<!-- Main Workspace -->
+<main class="ml-0 md:ml-60 flex-1 flex flex-col h-full overflow-hidden">
+<!-- JSON: TopNavBar Component -->
+<header class="sticky top-0 z-50 flex items-center justify-between px-gutter-desktop h-14 w-full bg-surface-container-lowest dark:bg-shell-surface shadow-sm border-b border-border-default dark:border-shell-border shrink-0">
+<div class="flex items-center gap-8">
+<span class="font-display-md text-display-md text-primary dark:text-primary-fixed-dim">LedgerScope</span>
+<nav class="hidden md:flex items-center gap-6 h-14">
+<a class="text-text-secondary dark:text-secondary-fixed-dim hover:text-brand-red-hover transition-colors font-body-md text-body-md" href="#">Dashboard</a>
+<a class="text-text-secondary dark:text-secondary-fixed-dim hover:text-brand-red-hover transition-colors font-body-md text-body-md" href="#">Ledgers</a>
+<a class="text-text-secondary dark:text-secondary-fixed-dim hover:text-brand-red-hover transition-colors font-body-md text-body-md" href="#">Audit Trail</a>
+<!-- Active in local context -->
+<a class="text-primary dark:text-primary-fixed-dim border-b-2 border-primary pb-1 font-body-md text-body-md font-medium h-full flex items-center mt-[2px]" href="#">Reporting</a>
+</nav>
+</div>
+<div class="flex items-center gap-4 text-text-secondary">
+<button class="hover:text-primary transition-colors"><span class="material-symbols-outlined">search</span></button>
+<button class="hover:text-primary transition-colors"><span class="material-symbols-outlined">notifications</span></button>
+<div class="h-8 w-8 bg-surface-container-high rounded-full border border-border-strong overflow-hidden flex items-center justify-center">
+<span class="material-symbols-outlined text-text-muted">person</span>
+</div>
+</div>
+</header>
+<!-- Page Canvas -->
+<div class="flex-1 overflow-auto bg-background p-gutter-desktop flex flex-col gap-6">
+<!-- Page Header area -->
+<div class="flex items-end justify-between border-b border-border-strong pb-4">
+<div>
+<h1 class="font-display-lg text-display-lg text-text-primary mb-2">Statement of Profit or Loss</h1>
+<p class="font-body-md text-body-md text-text-secondary flex items-center gap-2">
+                        Draft Version · Period ending Dec 31, 2024
+                        <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-surface-container-high text-text-secondary border border-border-default">
+                            Unsaved Changes
+                        </span>
+</p>
+</div>
+<div class="flex items-center gap-3">
+<button class="px-4 py-2 border border-border-strong rounded bg-surface-container-lowest text-text-primary hover:bg-surface transition-colors font-label-lg text-label-lg flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px]">add_comment</span>
+                        Add Note
+                    </button>
+<button class="px-4 py-2 bg-primary-container text-on-primary-container rounded hover:bg-brand-red-hover transition-colors font-label-lg text-label-lg flex items-center gap-2 shadow-sm">
+<span class="material-symbols-outlined text-[18px]">lock</span>
+                        Lock Final Version
+                    </button>
+</div>
+</div>
+<!-- Bento/Split Layout Content -->
+<div class="flex flex-1 gap-gutter-tablet min-h-[500px]">
+<!-- Left Panel: Line-item Mapping -->
+<aside class="w-80 flex flex-col bg-surface-container-lowest border border-border-default rounded-lg shadow-[0_1px_2px_rgba(0,0,0,0.05)] overflow-hidden shrink-0">
+<div class="p-4 border-b border-border-strong bg-surface">
+<h3 class="font-heading-lg text-heading-lg text-text-primary">Line-Item Mapping</h3>
+<div class="mt-3 relative">
+<span class="material-symbols-outlined absolute left-3 top-2.5 text-text-muted text-[18px]">search</span>
+<input class="w-full pl-9 pr-3 py-2 bg-surface-container-lowest border border-border-strong rounded text-body-md focus:outline-none focus:border-primary focus:ring-1 focus:ring-primary/20 transition-all" placeholder="Search accounts..." type="text"/>
+</div>
+</div>
+<div class="flex-1 overflow-y-auto p-4 font-body-md text-body-md">
+<!-- Structural Tree -->
+<div class="relative pl-4 tree-line">
+<div class="relative tree-node py-1 flex items-center justify-between group cursor-pointer">
+<div class="flex items-center gap-2 font-medium text-text-primary">
+<span class="material-symbols-outlined text-[16px] text-text-muted">folder_open</span>
+                                    Operating Revenue
+                                </div>
+<span class="text-text-muted text-xs opacity-0 group-hover:opacity-100 transition-opacity">Edit</span>
+</div>
+<div class="relative pl-6 tree-line mt-1">
+<div class="relative tree-node py-1.5 flex items-center justify-between text-text-secondary hover:bg-surface-container-high px-2 rounded -ml-2 cursor-pointer transition-colors">
+<span>4000 - Product Sales</span>
+<span class="material-symbols-outlined text-[14px] text-text-muted">drag_indicator</span>
+</div>
+<div class="relative tree-node py-1.5 flex items-center justify-between text-text-secondary hover:bg-surface-container-high px-2 rounded -ml-2 cursor-pointer transition-colors">
+<span>4010 - Service Revenue</span>
+<span class="material-symbols-outlined text-[14px] text-text-muted">drag_indicator</span>
+</div>
+</div>
+<div class="relative tree-node py-1 mt-3 flex items-center justify-between group cursor-pointer">
+<div class="flex items-center gap-2 font-medium text-text-primary">
+<span class="material-symbols-outlined text-[16px] text-text-muted">folder_open</span>
+                                    Cost of Sales
+                                </div>
+</div>
+<div class="relative pl-6 tree-line mt-1">
+<div class="relative tree-node py-1.5 flex items-center justify-between text-text-secondary hover:bg-surface-container-high px-2 rounded -ml-2 cursor-pointer transition-colors">
+<span>5000 - Direct Materials</span>
+<span class="material-symbols-outlined text-[14px] text-text-muted">drag_indicator</span>
+</div>
+<div class="relative tree-node py-1.5 flex items-center justify-between text-text-secondary hover:bg-surface-container-high px-2 rounded -ml-2 cursor-pointer transition-colors border border-primary/30 bg-brand-red-muted/20">
+<span>5020 - Direct Labor</span>
+<span class="material-symbols-outlined text-[14px] text-text-muted">drag_indicator</span>
+</div>
+</div>
+<div class="relative tree-node py-1 mt-3 flex items-center justify-between group cursor-pointer">
+<div class="flex items-center gap-2 font-medium text-text-primary">
+<span class="material-symbols-outlined text-[16px] text-text-muted">folder</span>
+                                    Operating Expenses
+                                </div>
+</div>
+</div>
+</div>
+<div class="p-4 border-t border-border-strong bg-surface">
+<button class="w-full py-2 bg-surface-container-lowest border border-border-strong text-text-primary rounded hover:bg-surface-container-high transition-colors font-label-lg text-label-lg flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[18px]">sync_alt</span>
+                            Update Mapping
+                        </button>
+</div>
+</aside>
+<!-- Right Panel: Data Table View -->
+<div class="flex-1 flex flex-col bg-surface-container-lowest border border-border-default rounded-lg shadow-[0_1px_2px_rgba(0,0,0,0.05)] overflow-hidden">
+<!-- Table Header Controls -->
+<div class="flex items-center justify-between p-4 border-b border-border-strong bg-surface-bright">
+<div class="flex gap-2">
+<button class="px-3 py-1.5 bg-surface border border-border-strong rounded text-label-sm font-label-sm text-text-primary hover:bg-surface-container-high">Collapse All</button>
+<button class="px-3 py-1.5 bg-surface border border-border-strong rounded text-label-sm font-label-sm text-text-primary hover:bg-surface-container-high">Expand All</button>
+</div>
+<div class="font-mono-md text-mono-md text-text-secondary text-sm">
+                            USD ($) · In Thousands
+                        </div>
+</div>
+<!-- The Data Table -->
+<div class="flex-1 overflow-auto">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 bg-surface z-10 shadow-[0_1px_0_#CDD0D6]">
+<tr>
+<th class="py-table-cell-v px-table-cell-h font-label-sm text-label-sm text-text-muted uppercase tracking-wider w-[40%]">Line Item</th>
+<th class="py-table-cell-v px-table-cell-h font-label-sm text-label-sm text-text-muted uppercase tracking-wider text-right">Current Period<br/><span class="text-xs font-normal">Dec 2024</span></th>
+<th class="py-table-cell-v px-table-cell-h font-label-sm text-label-sm text-text-muted uppercase tracking-wider text-right">Prior Period<br/><span class="text-xs font-normal">Dec 2023</span></th>
+<th class="py-table-cell-v px-table-cell-h font-label-sm text-label-sm text-text-muted uppercase tracking-wider text-right">Variance</th>
+<th class="py-table-cell-v px-table-cell-h font-label-sm text-label-sm text-text-muted uppercase tracking-wider text-right">Variance %</th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md text-text-primary divide-y divide-border-default">
+<!-- Category Row -->
+<tr class="bg-surface-container-high/50 font-medium border-t-2 border-border-strong">
+<td class="py-table-cell-v px-table-cell-h flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] cursor-pointer">expand_more</span>
+                                        Operating Revenue
+                                    </td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md">14,250.00</td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md">12,100.00</td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md text-tertiary-container">+2,150.00</td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md text-tertiary-container">+17.8%</td>
+</tr>
+<!-- Detail Rows -->
+<tr class="even:bg-surface hover:bg-surface-container-low transition-colors group">
+<td class="py-[8px] px-table-cell-h pl-10 text-text-secondary">Product Sales</td>
+<td class="py-[8px] px-table-cell-h text-right font-mono-md text-mono-md">10,500.00</td>
+<td class="py-[8px] px-table-cell-h text-right font-mono-md text-mono-md">9,200.00</td>
+<td class="py-[8px] px-table-cell-h text-right font-mono-md text-mono-md">+1,300.00</td>
+<td class="py-[8px] px-table-cell-h text-right font-mono-md text-mono-md">+14.1%</td>
+</tr>
+<tr class="even:bg-surface hover:bg-surface-container-low transition-colors group">
+<td class="py-[8px] px-table-cell-h pl-10 text-text-secondary">Service Revenue</td>
+<td class="py-[8px] px-table-cell-h text-right font-mono-md text-mono-md">3,750.00</td>
+<td class="py-[8px] px-table-cell-h text-right font-mono-md text-mono-md">2,900.00</td>
+<td class="py-[8px] px-table-cell-h text-right font-mono-md text-mono-md">+850.00</td>
+<td class="py-[8px] px-table-cell-h text-right font-mono-md text-mono-md">+29.3%</td>
+</tr>
+<!-- Category Row -->
+<tr class="bg-surface-container-high/50 font-medium border-t-2 border-border-strong">
+<td class="py-table-cell-v px-table-cell-h flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] cursor-pointer">expand_more</span>
+                                        Cost of Sales
+                                    </td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md">(6,800.00)</td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md">(5,400.00)</td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md text-status-danger">(1,400.00)</td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md text-status-danger">+25.9%</td>
+</tr>
+<!-- Detail Rows -->
+<tr class="even:bg-surface hover:bg-surface-container-low transition-colors">
+<td class="py-[8px] px-table-cell-h pl-10 text-text-secondary">Direct Materials</td>
+<td class="py-[8px] px-table-cell-h text-right font-mono-md text-mono-md">(4,100.00)</td>
+<td class="py-[8px] px-table-cell-h text-right font-mono-md text-mono-md">(3,200.00)</td>
+<td class="py-[8px] px-table-cell-h text-right font-mono-md text-mono-md text-status-danger">(900.00)</td>
+<td class="py-[8px] px-table-cell-h text-right font-mono-md text-mono-md text-status-danger">+28.1%</td>
+</tr>
+<tr class="even:bg-surface hover:bg-surface-container-low transition-colors relative">
+<td class="py-[8px] px-table-cell-h pl-10 text-text-secondary flex items-center gap-2">
+                                        Direct Labor
+                                        <div class="h-2 w-2 rounded-full bg-status-warning" title="Mapping updated recently"></div>
+</td>
+<td class="py-[8px] px-table-cell-h text-right font-mono-md text-mono-md">(2,700.00)</td>
+<td class="py-[8px] px-table-cell-h text-right font-mono-md text-mono-md">(2,200.00)</td>
+<td class="py-[8px] px-table-cell-h text-right font-mono-md text-mono-md text-status-danger">(500.00)</td>
+<td class="py-[8px] px-table-cell-h text-right font-mono-md text-mono-md text-status-danger">+22.7%</td>
+</tr>
+<!-- Subtotal Row -->
+<tr class="bg-surface font-semibold border-y-2 border-border-strong">
+<td class="py-table-cell-v px-table-cell-h">Gross Profit</td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md">7,450.00</td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md">6,700.00</td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md text-tertiary-container">+750.00</td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md text-tertiary-container">+11.2%</td>
+</tr>
+<!-- Category Row -->
+<tr class="bg-surface-container-high/50 font-medium border-t border-border-strong">
+<td class="py-table-cell-v px-table-cell-h flex items-center gap-2">
+<span class="material-symbols-outlined text-[16px] text-text-muted">chevron_right</span>
+                                        Operating Expenses
+                                    </td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md">(3,200.00)</td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md">(2,950.00)</td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md text-status-danger">(250.00)</td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md text-status-danger">+8.5%</td>
+</tr>
+<!-- Final Total Row -->
+<tr class="bg-surface-container-low font-bold border-t-[3px] border-border-strong text-[15px]">
+<td class="py-table-cell-v px-table-cell-h">Net Income</td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md border-b-[3px] border-text-primary double-underline">4,250.00</td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md border-b-[3px] border-text-primary">3,750.00</td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md text-tertiary-container">+500.00</td>
+<td class="py-table-cell-v px-table-cell-h text-right font-mono-md text-mono-md text-tertiary-container">+13.3%</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</div>
+</div>
+</main>
+</body></html>

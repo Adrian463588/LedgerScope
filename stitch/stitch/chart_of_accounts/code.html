@@ -1,0 +1,504 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LedgerScope | Chart of Accounts</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                "tertiary-container": "#156f42",
+                "shell-surface": "#13141A",
+                "error": "#ba1a1a",
+                "surface-dim": "#d9dadc",
+                "text-secondary": "#4A5261",
+                "surface-container": "#edeef0",
+                "brand-red-border": "#EBBAB7",
+                "outline": "#916f6a",
+                "on-primary-fixed": "#400100",
+                "on-primary-container": "#ffd3cb",
+                "shell-elevated": "#1A1C23",
+                "on-error-container": "#93000a",
+                "shell-border": "#252830",
+                "secondary": "#5e5e62",
+                "on-surface-variant": "#5c403b",
+                "surface": "#f8f9fb",
+                "border-strong": "#CDD0D6",
+                "on-tertiary-fixed": "#00210f",
+                "surface-tint": "#bc1507",
+                "on-surface": "#191c1e",
+                "tertiary": "#00552f",
+                "brand-red-hover": "#A31508",
+                "on-secondary": "#ffffff",
+                "on-primary": "#ffffff",
+                "brand-red-press": "#8B1208",
+                "status-danger": "#DC2626",
+                "status-warning": "#B45309",
+                "background": "#f8f9fb",
+                "surface-container-low": "#f3f4f6",
+                "primary": "#970600",
+                "inverse-primary": "#ffb4a7",
+                "primary-container": "#c0190a",
+                "surface-container-high": "#e7e8ea",
+                "surface-bright": "#f8f9fb",
+                "primary-fixed-dim": "#ffb4a7",
+                "error-container": "#ffdad6",
+                "on-tertiary-container": "#9aefb6",
+                "on-error": "#ffffff",
+                "outline-variant": "#e5bdb7",
+                "text-muted": "#8C93A0",
+                "text-primary": "#0F1114",
+                "tertiary-fixed-dim": "#84d8a1",
+                "on-tertiary": "#ffffff",
+                "tertiary-fixed": "#a0f5bb",
+                "secondary-fixed-dim": "#c7c6ca",
+                "surface-container-highest": "#e1e2e4",
+                "on-primary-fixed-variant": "#920600",
+                "secondary-container": "#e0dfe3",
+                "on-secondary-container": "#626266",
+                "on-background": "#191c1e",
+                "inverse-surface": "#2e3132",
+                "border-default": "#E3E5E9",
+                "surface-container-lowest": "#ffffff",
+                "secondary-fixed": "#e3e2e6",
+                "primary-fixed": "#ffdad4",
+                "on-tertiary-fixed-variant": "#00522d",
+                "on-secondary-fixed-variant": "#46464a",
+                "surface-variant": "#e1e2e4",
+                "brand-red-muted": "#F8E8E7",
+                "on-secondary-fixed": "#1b1b1f",
+                "inverse-on-surface": "#f0f1f3"
+            },
+            "borderRadius": {
+                "DEFAULT": "4px",
+                "lg": "8px",
+                "xl": "12px",
+                "full": "9999px"
+            },
+            "spacing": {
+                "table-cell-v": "12px",
+                "card-padding": "24px",
+                "table-cell-h": "16px",
+                "gutter-tablet": "24px",
+                "gutter-desktop": "32px",
+                "form-gap": "20px",
+                "sub-unit": "4px",
+                "baseline": "8px"
+            },
+            "fontFamily": {
+                "mono-md": ["IBM Plex Mono"],
+                "label-sm": ["IBM Plex Sans"],
+                "heading-lg": ["IBM Plex Sans"],
+                "body-md": ["IBM Plex Sans"],
+                "display-lg": ["DM Serif Display"],
+                "label-lg": ["IBM Plex Sans"],
+                "display-md": ["DM Serif Display"]
+            },
+            "fontSize": {
+                "mono-md": ["14px", {"lineHeight": "24px", "fontWeight": "400"}],
+                "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "500"}],
+                "heading-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                "body-md": ["14px", {"lineHeight": "24px", "fontWeight": "400"}],
+                "display-lg": ["36px", {"lineHeight": "40px", "fontWeight": "600"}],
+                "label-lg": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                "display-md": ["30px", {"lineHeight": "36px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .shadow-card {
+            box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+        }
+        .zebra-striping tr:nth-child(even) {
+            background-color: #F9FAFB;
+        }
+        .brand-red-glow:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(192, 25, 10, 0.20);
+        }
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #F4F5F7;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #CDD0D6;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #916f6a;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md text-body-md overflow-x-hidden">
+<!-- Top Navigation Bar -->
+<header class="sticky top-0 z-50 flex items-center justify-between px-gutter-desktop h-14 w-full bg-surface-container-lowest dark:bg-shell-surface border-b border-border-default dark:border-shell-border shadow-sm">
+<div class="flex items-center gap-8">
+<span class="font-display-md text-display-md text-primary dark:text-primary-fixed-dim">LedgerScope</span>
+<nav class="hidden md:flex items-center gap-6">
+<a class="text-text-secondary dark:text-secondary-fixed-dim hover:text-brand-red-hover transition-colors font-body-md text-body-md" href="#">Dashboard</a>
+<a class="text-primary dark:text-primary-fixed-dim border-b-2 border-primary pb-1 font-body-md text-body-md" href="#">Ledgers</a>
+<a class="text-text-secondary dark:text-secondary-fixed-dim hover:text-brand-red-hover transition-colors font-body-md text-body-md" href="#">Audit Trail</a>
+<a class="text-text-secondary dark:text-secondary-fixed-dim hover:text-brand-red-hover transition-colors font-body-md text-body-md" href="#">Reporting</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative group">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted">search</span>
+<input class="pl-10 pr-4 py-1.5 bg-surface-container-low border border-border-default rounded focus:ring-1 focus:ring-primary focus:border-primary w-64 text-body-md font-body-md" placeholder="Search across ledgers..." type="text"/>
+</div>
+<button class="p-2 text-text-secondary hover:bg-surface-container-high rounded transition-colors relative">
+<span class="material-symbols-outlined">notifications</span>
+<span class="absolute top-2 right-2 w-2 h-2 bg-primary rounded-full"></span>
+</button>
+<button class="p-2 text-text-secondary hover:bg-surface-container-high rounded transition-colors">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-border-default">
+<img alt="User profile" class="w-full h-full object-cover" data-alt="A professional headshot of a financial auditor in a minimalist studio setting. High-contrast lighting highlights a serious, focused expression. The background is a clean, cool gray, aligning with an authoritative and disciplined professional environment. The image is crisp and editorial in style." src="https://lh3.googleusercontent.com/aida-public/AB6AXuCeZY3cgwgWr_1XwSP7daIBkjK_z5as3yjKysBdXVoOMbPh1NL5-Pi9kiI8kLUsVDKXmp5uP_U9NxEjZBfkz6AhVqRU_8_1Xiyt7e4hTgOCjxiAilpzolbiNyvckcEs5hhqSstomXLvIOSDjklB70x4ixEgfKscahobsjFSwS0YzUcT2PjlHH49E7XnTZTuWZGbGxXEuuy6RBi2wR281NWHrc_iqhDVQ62AR3qB3icQpwdzfBsDLUVukD1uPziUmV17eth-bacx4HSf"/>
+</div>
+</div>
+</header>
+<div class="flex min-h-[calc(100vh-56px)]">
+<!-- Side Navigation Bar -->
+<aside class="fixed left-0 top-14 h-[calc(100vh-56px)] w-60 z-40 bg-shell-surface border-r border-shell-border hidden md:flex flex-col">
+<div class="p-6 border-b border-shell-border">
+<div class="flex items-center gap-3 mb-4">
+<div class="w-10 h-10 bg-shell-elevated rounded flex items-center justify-center border border-shell-border">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">business</span>
+</div>
+<div>
+<div class="text-white font-label-lg text-label-lg">Acme Corp</div>
+<div class="text-text-muted text-[11px] uppercase tracking-wider">FY 2024 Audit</div>
+</div>
+</div>
+<button class="w-full py-2 bg-shell-elevated text-white border border-shell-border rounded hover:bg-shell-border transition-all text-label-lg font-label-lg active:scale-98">
+                    Switch Entity
+                </button>
+</div>
+<nav class="flex-1 py-4 overflow-y-auto">
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined">business_center</span>
+<span>Entities</span>
+</a>
+<a class="bg-shell-elevated text-white border-l-4 border-primary px-4 py-3 flex items-center gap-3 font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_balance</span>
+<span>Accounts</span>
+</a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span>Transactions</span>
+</a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined">account_tree</span>
+<span>Reconciliation</span>
+</a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all font-label-lg text-label-lg mt-4 border-t border-shell-border pt-4" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="p-4 border-t border-shell-border bg-shell-elevated/20">
+<a class="text-text-muted px-4 py-2 flex items-center gap-3 hover:text-white transition-colors font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined text-body-md">help</span>
+<span>Support</span>
+</a>
+<a class="text-text-muted px-4 py-2 flex items-center gap-3 hover:text-white transition-colors font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined text-body-md">history</span>
+<span>Logs</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="flex-1 md:ml-60 p-gutter-desktop max-w-[1440px] mx-auto w-full">
+<!-- Header Section -->
+<div class="flex flex-col md:flex-row md:items-end justify-between gap-6 mb-8">
+<div>
+<h1 class="font-display-lg text-display-lg text-text-primary mb-2">Chart of Accounts</h1>
+<p class="text-text-secondary max-w-2xl font-body-md text-body-md">
+                        Maintain the authoritative structural hierarchy of your general ledger. Define account mapping, categorization, and reporting flow for compliance.
+                    </p>
+</div>
+<div class="flex gap-3">
+<button class="px-5 py-2.5 border border-border-strong text-text-primary bg-white hover:bg-surface-container-low transition-colors rounded font-label-lg text-label-lg flex items-center gap-2 brand-red-glow">
+<span class="material-symbols-outlined">upload_file</span>
+                        Import COA
+                    </button>
+<button class="px-5 py-2.5 bg-primary text-white hover:bg-brand-red-hover transition-colors rounded font-label-lg text-label-lg flex items-center gap-2 shadow-sm brand-red-glow">
+<span class="material-symbols-outlined text-[20px]">add</span>
+                        New Account
+                    </button>
+</div>
+</div>
+<!-- Dashboard Stats Grid (Bento Style) -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+<div class="md:col-span-1 p-card-padding bg-white border border-border-default rounded-lg shadow-card flex flex-col justify-between hover:border-border-strong transition-colors">
+<span class="text-text-muted font-label-sm text-label-sm uppercase tracking-wider">Total Accounts</span>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-display-md text-display-md">482</span>
+<span class="text-tertiary font-label-sm text-label-sm">+12 this month</span>
+</div>
+</div>
+<div class="md:col-span-1 p-card-padding bg-white border border-border-default rounded-lg shadow-card flex flex-col justify-between hover:border-border-strong transition-colors">
+<span class="text-text-muted font-label-sm text-label-sm uppercase tracking-wider">Unmapped Items</span>
+<div class="mt-2 flex items-baseline gap-2">
+<span class="font-display-md text-display-md text-status-danger">0</span>
+<span class="material-symbols-outlined text-tertiary" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+</div>
+<div class="md:col-span-2 p-card-padding bg-white border border-border-default rounded-lg shadow-card relative overflow-hidden group">
+<div class="relative z-10 h-full flex flex-col justify-between">
+<div>
+<span class="text-text-muted font-label-sm text-label-sm uppercase tracking-wider">Audit Integrity Status</span>
+<div class="text-tertiary font-heading-lg text-heading-lg mt-1">Immutable &amp; Verified</div>
+</div>
+<div class="flex items-center gap-4 mt-4">
+<div class="flex -space-x-2">
+<div class="w-6 h-6 rounded-full border-2 border-white bg-surface-container"></div>
+<div class="w-6 h-6 rounded-full border-2 border-white bg-surface-container-high"></div>
+<div class="w-6 h-6 rounded-full border-2 border-white bg-primary-fixed"></div>
+</div>
+<span class="text-text-secondary font-label-sm text-label-sm">3 Auditors signed off on COA v2.4</span>
+</div>
+</div>
+<div class="absolute right-0 top-0 h-full w-1/3 opacity-5 pointer-events-none group-hover:opacity-10 transition-opacity">
+<span class="material-symbols-outlined text-[120px] absolute -right-4 -top-4">verified_user</span>
+</div>
+</div>
+</div>
+<!-- Main Table Container -->
+<div class="bg-white border border-border-default rounded-lg overflow-hidden shadow-card">
+<!-- Table Filters -->
+<div class="p-4 border-b border-border-default bg-surface-container-lowest flex flex-wrap items-center justify-between gap-4">
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted text-[20px]">filter_list</span>
+<select class="pl-10 pr-8 py-2 border-border-strong bg-white rounded font-label-lg text-label-lg focus:ring-primary focus:border-primary appearance-none cursor-pointer">
+<option>All Account Types</option>
+<option>Assets</option>
+<option>Liabilities</option>
+<option>Equity</option>
+<option>Revenue</option>
+<option>Expense</option>
+</select>
+</div>
+<div class="flex border border-border-strong rounded overflow-hidden">
+<button class="px-4 py-2 bg-surface-container text-text-primary font-label-lg text-label-lg border-r border-border-strong">Active</button>
+<button class="px-4 py-2 bg-white text-text-secondary hover:bg-surface-container-low transition-colors font-label-lg text-label-lg">Archived</button>
+</div>
+</div>
+<div class="flex items-center gap-2 text-text-muted text-label-sm font-label-sm">
+<span>Last modified: 2 hours ago by admin_jdoe</span>
+</div>
+</div>
+<!-- Hierarchical Table -->
+<div class="overflow-x-auto">
+<table class="w-full border-collapse zebra-striping">
+<thead>
+<tr class="bg-white border-b border-border-strong text-left">
+<th class="py-table-cell-v px-table-cell-h font-label-lg text-label-lg text-text-primary w-40">Code</th>
+<th class="py-table-cell-v px-table-cell-h font-label-lg text-label-lg text-text-primary">Account Name</th>
+<th class="py-table-cell-v px-table-cell-h font-label-lg text-label-lg text-text-primary">Type</th>
+<th class="py-table-cell-v px-table-cell-h font-label-lg text-label-lg text-text-primary">Financial Statement</th>
+<th class="py-table-cell-v px-table-cell-h font-label-lg text-label-lg text-text-primary text-right">Balance</th>
+<th class="py-table-cell-v px-table-cell-h font-label-lg text-label-lg text-text-primary w-20"></th>
+</tr>
+</thead>
+<tbody class="font-body-md text-body-md">
+<!-- Header Row: Assets -->
+<tr class="bg-surface-container-low/50 font-semibold group cursor-pointer hover:bg-surface-container-high transition-colors">
+<td class="py-3 px-table-cell-h font-mono-md text-mono-md">1000</td>
+<td class="py-3 px-table-cell-h flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-text-muted">keyboard_arrow_down</span>
+                                    ASSETS
+                                </td>
+<td class="py-3 px-table-cell-h"><span class="px-2 py-0.5 bg-tertiary/10 text-tertiary rounded-sm text-[11px] uppercase tracking-wide font-bold">Category</span></td>
+<td class="py-3 px-table-cell-h text-text-muted">—</td>
+<td class="py-3 px-table-cell-h font-mono-md text-mono-md text-right text-text-primary">$1,245,600.00</td>
+<td class="py-3 px-table-cell-h text-right">
+<button class="opacity-0 group-hover:opacity-100 p-1 hover:bg-white rounded transition-all">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<!-- Sub Row -->
+<tr class="group hover:bg-surface-container-low transition-colors">
+<td class="py-table-cell-v px-table-cell-h pl-8 font-mono-md text-mono-md text-text-secondary">1100</td>
+<td class="py-table-cell-v px-table-cell-h pl-12">Cash and Cash Equivalents</td>
+<td class="py-table-cell-v px-table-cell-h">Asset</td>
+<td class="py-table-cell-v px-table-cell-h">Balance Sheet</td>
+<td class="py-table-cell-v px-table-cell-h font-mono-md text-mono-md text-right">$450,200.00</td>
+<td class="py-table-cell-v px-table-cell-h text-right">
+<button class="opacity-0 group-hover:opacity-100 p-1 hover:bg-surface-container-high rounded transition-all">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</td>
+</tr>
+<tr class="group hover:bg-surface-container-low transition-colors">
+<td class="py-table-cell-v px-table-cell-h pl-8 font-mono-md text-mono-md text-text-secondary">1200</td>
+<td class="py-table-cell-v px-table-cell-h pl-12">Accounts Receivable</td>
+<td class="py-table-cell-v px-table-cell-h">Asset</td>
+<td class="py-table-cell-v px-table-cell-h">Balance Sheet</td>
+<td class="py-table-cell-v px-table-cell-h font-mono-md text-mono-md text-right">$795,400.00</td>
+<td class="py-table-cell-v px-table-cell-h text-right">
+<button class="opacity-0 group-hover:opacity-100 p-1 hover:bg-surface-container-high rounded transition-all">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</td>
+</tr>
+<!-- Header Row: Liabilities -->
+<tr class="bg-surface-container-low/50 font-semibold group cursor-pointer hover:bg-surface-container-high transition-colors">
+<td class="py-3 px-table-cell-h font-mono-md text-mono-md">2000</td>
+<td class="py-3 px-table-cell-h flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-text-muted">keyboard_arrow_down</span>
+                                    LIABILITIES
+                                </td>
+<td class="py-3 px-table-cell-h"><span class="px-2 py-0.5 bg-tertiary/10 text-tertiary rounded-sm text-[11px] uppercase tracking-wide font-bold">Category</span></td>
+<td class="py-3 px-table-cell-h text-text-muted">—</td>
+<td class="py-3 px-table-cell-h font-mono-md text-mono-md text-right text-text-primary">$842,000.00</td>
+<td class="py-3 px-table-cell-h text-right">
+<button class="opacity-0 group-hover:opacity-100 p-1 hover:bg-white rounded transition-all">
+<span class="material-symbols-outlined text-[20px]">more_vert</span>
+</button>
+</td>
+</tr>
+<tr class="group hover:bg-surface-container-low transition-colors">
+<td class="py-table-cell-v px-table-cell-h pl-8 font-mono-md text-mono-md text-text-secondary">2100</td>
+<td class="py-table-cell-v px-table-cell-h pl-12">Accounts Payable</td>
+<td class="py-table-cell-v px-table-cell-h">Liability</td>
+<td class="py-table-cell-v px-table-cell-h">Balance Sheet</td>
+<td class="py-table-cell-v px-table-cell-h font-mono-md text-mono-md text-right">$125,000.00</td>
+<td class="py-table-cell-v px-table-cell-h text-right">
+<button class="opacity-0 group-hover:opacity-100 p-1 hover:bg-surface-container-high rounded transition-all">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</td>
+</tr>
+<!-- Unbalanced Error Example -->
+<tr class="group hover:bg-surface-container-low transition-colors border-l-4 border-status-danger" id="unbalanced-row">
+<td class="py-table-cell-v px-table-cell-h pl-8 font-mono-md text-mono-md text-text-secondary">4000</td>
+<td class="py-table-cell-v px-table-cell-h pl-12 flex items-center gap-2">
+                                    Operating Revenue
+                                    <span class="material-symbols-outlined text-status-danger text-[16px]" title="Suspicious Entry Detected">warning</span>
+</td>
+<td class="py-table-cell-v px-table-cell-h">Revenue</td>
+<td class="py-table-cell-v px-table-cell-h">Income Statement</td>
+<td class="py-table-cell-v px-table-cell-h font-mono-md text-mono-md text-right text-primary">($2,450,000.00)</td>
+<td class="py-table-cell-v px-table-cell-h text-right">
+<button class="opacity-0 group-hover:opacity-100 p-1 hover:bg-surface-container-high rounded transition-all">
+<span class="material-symbols-outlined text-[20px]">info</span>
+</button>
+</td>
+</tr>
+<tr class="group hover:bg-surface-container-low transition-colors">
+<td class="py-table-cell-v px-table-cell-h pl-8 font-mono-md text-mono-md text-text-secondary">5000</td>
+<td class="py-table-cell-v px-table-cell-h pl-12">Cost of Goods Sold</td>
+<td class="py-table-cell-v px-table-cell-h">Expense</td>
+<td class="py-table-cell-v px-table-cell-h">Income Statement</td>
+<td class="py-table-cell-v px-table-cell-h font-mono-md text-mono-md text-right">$1,100,000.00</td>
+<td class="py-table-cell-v px-table-cell-h text-right">
+<button class="opacity-0 group-hover:opacity-100 p-1 hover:bg-surface-container-high rounded transition-all">
+<span class="material-symbols-outlined text-[20px]">edit</span>
+</button>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<!-- Pagination/Footer -->
+<div class="p-4 bg-white border-t border-border-default flex items-center justify-between">
+<span class="text-text-muted text-label-sm font-label-sm">Showing 1-10 of 482 accounts</span>
+<div class="flex items-center gap-1">
+<button class="w-8 h-8 flex items-center justify-center rounded border border-border-strong text-text-secondary hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_left</span>
+</button>
+<button class="w-8 h-8 flex items-center justify-center rounded bg-primary text-white font-label-sm text-label-sm">1</button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-border-strong text-text-secondary hover:bg-surface-container-low transition-colors font-label-sm text-label-sm">2</button>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-border-strong text-text-secondary hover:bg-surface-container-low transition-colors font-label-sm text-label-sm">3</button>
+<span class="px-2 text-text-muted">...</span>
+<button class="w-8 h-8 flex items-center justify-center rounded border border-border-strong text-text-secondary hover:bg-surface-container-low transition-colors">
+<span class="material-symbols-outlined text-[18px]">chevron_right</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Contextual Help / Insights Card -->
+<div class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="bg-brand-red-muted p-6 rounded border border-brand-red-border flex gap-4">
+<div class="w-10 h-10 bg-primary/10 rounded-full flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-primary">lightbulb</span>
+</div>
+<div>
+<h4 class="font-heading-lg text-heading-lg text-primary mb-1">Mapping Suggestion</h4>
+<p class="text-on-surface-variant font-body-md text-body-md mb-3">
+                            You have 12 new accounts imported from the ERP that haven't been mapped to the Standard Audit File (SAF-T) format. We recommend using the bulk mapper tool.
+                        </p>
+<a class="text-primary font-label-lg text-label-lg underline underline-offset-4 hover:text-brand-red-hover transition-colors" href="#">Open Bulk Mapper</a>
+</div>
+</div>
+<div class="bg-white p-6 border border-border-default rounded-lg shadow-card relative overflow-hidden">
+<div class="flex items-center gap-3 mb-4">
+<span class="material-symbols-outlined text-tertiary">history_edu</span>
+<h4 class="font-heading-lg text-heading-lg text-text-primary">Change Log</h4>
+</div>
+<ul class="space-y-4">
+<li class="flex items-start gap-3">
+<div class="w-1.5 h-1.5 rounded-full bg-border-strong mt-2 shrink-0"></div>
+<div>
+<div class="text-label-lg font-label-lg text-text-primary">Account 1100 Name Change</div>
+<div class="text-label-sm font-label-sm text-text-muted">Jan 12, 14:22 • Michael Chen</div>
+</div>
+</li>
+<li class="flex items-start gap-3">
+<div class="w-1.5 h-1.5 rounded-full bg-border-strong mt-2 shrink-0"></div>
+<div>
+<div class="text-label-lg font-label-lg text-text-primary">New Account 5015 Created</div>
+<div class="text-label-sm font-label-sm text-text-muted">Jan 10, 09:15 • Sarah Jenkins</div>
+</div>
+</li>
+</ul>
+</div>
+</div>
+</main>
+</div>
+<!-- Micro-interaction for the unbalanced row -->
+<script>
+        const unbalancedRow = document.getElementById('unbalanced-row');
+        if (unbalancedRow) {
+            unbalancedRow.addEventListener('mouseenter', () => {
+                unbalancedRow.style.animation = 'shake 0.3s cubic-bezier(.36,.07,.19,.97) both';
+            });
+            unbalancedRow.addEventListener('mouseleave', () => {
+                unbalancedRow.style.animation = 'none';
+            });
+        }
+
+        // Keyframes for the shake animation
+        const styleSheet = document.createElement("style");
+        styleSheet.innerText = `
+            @keyframes shake {
+                10%, 90% { transform: translate3d(-1px, 0, 0); }
+                20%, 80% { transform: translate3d(2px, 0, 0); }
+                30%, 50%, 70% { transform: translate3d(-2px, 0, 0); }
+                40%, 60% { transform: translate3d(2px, 0, 0); }
+            }
+        `;
+        document.head.appendChild(styleSheet);
+    </script>
+</body></html>

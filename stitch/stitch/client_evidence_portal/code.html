@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LedgerScope - Document Request #DR-0024</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&amp;family=IBM+Plex+Mono&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-secondary-fixed-variant": "#46464a",
+                      "on-background": "#191c1e",
+                      "text-muted": "#8C93A0",
+                      "on-tertiary-container": "#9aefb6",
+                      "surface-container-high": "#e7e8ea",
+                      "border-strong": "#CDD0D6",
+                      "status-warning": "#B45309",
+                      "primary-fixed": "#ffdad4",
+                      "on-secondary-fixed": "#1b1b1f",
+                      "tertiary-fixed": "#a0f5bb",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-container": "#626266",
+                      "brand-red-muted": "#F8E8E7",
+                      "text-primary": "#0F1114",
+                      "tertiary-container": "#156f42",
+                      "secondary-fixed-dim": "#c7c6ca",
+                      "text-secondary": "#4A5261",
+                      "on-surface": "#191c1e",
+                      "shell-border": "#252830",
+                      "on-error": "#ffffff",
+                      "on-primary-container": "#ffd3cb",
+                      "on-primary-fixed-variant": "#920600",
+                      "on-tertiary-fixed": "#00210f",
+                      "on-surface-variant": "#5c403b",
+                      "on-error-container": "#93000a",
+                      "shell-surface": "#13141A",
+                      "error-container": "#ffdad6",
+                      "background": "#f8f9fb",
+                      "surface-tint": "#bc1507",
+                      "surface-dim": "#d9dadc",
+                      "surface-container": "#edeef0",
+                      "on-tertiary-fixed-variant": "#00522d",
+                      "outline": "#916f6a",
+                      "tertiary-fixed-dim": "#84d8a1",
+                      "secondary-container": "#e0dfe3",
+                      "brand-red-press": "#8B1208",
+                      "on-primary-fixed": "#400100",
+                      "inverse-surface": "#2e3132",
+                      "outline-variant": "#e5bdb7",
+                      "on-primary": "#ffffff",
+                      "surface": "#f8f9fb",
+                      "primary-fixed-dim": "#ffb4a7",
+                      "surface-container-low": "#f3f4f6",
+                      "secondary-fixed": "#e3e2e6",
+                      "brand-red-hover": "#A31508",
+                      "surface-container-lowest": "#ffffff",
+                      "tertiary": "#00552f",
+                      "on-secondary": "#ffffff",
+                      "status-danger": "#DC2626",
+                      "shell-elevated": "#1A1C23",
+                      "border-default": "#E3E5E9",
+                      "surface-variant": "#e1e2e4",
+                      "surface-bright": "#f8f9fb",
+                      "inverse-on-surface": "#f0f1f3",
+                      "brand-red-border": "#EBBAB7",
+                      "primary-container": "#c0190a",
+                      "surface-container-highest": "#e1e2e4",
+                      "error": "#ba1a1a",
+                      "secondary": "#5e5e62",
+                      "inverse-primary": "#ffb4a7",
+                      "primary": "#970600"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "sub-unit": "4px",
+                      "baseline": "8px",
+                      "table-cell-v": "12px",
+                      "gutter-tablet": "24px",
+                      "gutter-desktop": "32px",
+                      "form-gap": "20px",
+                      "table-cell-h": "16px",
+                      "card-padding": "24px"
+              },
+              "fontFamily": {
+                      "heading-lg": ["IBM Plex Sans"],
+                      "label-sm": ["IBM Plex Sans"],
+                      "mono-md": ["IBM Plex Mono"],
+                      "display-lg": ["DM Serif Display"],
+                      "display-md": ["DM Serif Display"],
+                      "body-md": ["IBM Plex Sans"],
+                      "label-lg": ["IBM Plex Sans"]
+              },
+              "fontSize": {
+                      "heading-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "500"}],
+                      "mono-md": ["14px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "display-lg": ["36px", {"lineHeight": "40px", "fontWeight": "600"}],
+                      "display-md": ["30px", {"lineHeight": "36px", "fontWeight": "600"}],
+                      "body-md": ["14px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "label-lg": ["14px", {"lineHeight": "20px", "fontWeight": "500"}]
+              }
+            }
+          }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+          font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-surface text-text-primary font-body-md min-h-screen flex">
+<!-- SideNavBar -->
+<nav class="hidden md:flex flex-col z-40 bg-shell-surface dark:bg-shell-surface text-on-primary dark:text-on-primary-fixed fixed left-0 top-0 h-full w-60 border-r border-shell-border">
+<!-- Header -->
+<div class="p-6 border-b border-shell-border mb-4">
+<div class="flex items-center gap-3 mb-2">
+<div class="w-8 h-8 rounded bg-surface-container-high overflow-hidden flex-shrink-0">
+<img alt="Company Logo" class="w-full h-full object-cover" data-alt="A clean, minimalist logo mark for a corporate entity, utilizing geometric shapes and a professional color palette. The aesthetic is sharp and modern, suitable for high-stakes financial environments." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBlYjsV2Vfx7GFwl8ePqSfHTgfsLT7zdPUya9xEdTTwu4L-4ONiHBfILU7Nf7uJoB2BH2cGt7WNJY9Dp1sqXQD5IPxy3qAoaY0Ye5_6SW0gJ4-7eLoY8zJ7g_5DUam5oQgBhQfk4ODyT-gB4oLrL4JvZXSIxAfe3sb_KmwHCyERGBnz9J4IGil08Ux3p_VQZVxdvt_b5AHGUC0ah4BqyoMungSs0s9vs8SDZqKE9-cyhVxt_0fsjotgaUutUhQkkMdFsYfkEygUZBnT"/>
+</div>
+<div>
+<h1 class="font-display-md text-display-md text-white text-lg leading-tight">Acme Corp</h1>
+</div>
+</div>
+<p class="font-label-sm text-label-sm text-text-muted uppercase tracking-wider">FY 2024 Audit</p>
+<button class="mt-4 w-full bg-transparent border border-shell-border text-white hover:bg-shell-elevated transition-colors font-label-lg text-label-lg py-2 px-4 rounded text-center">
+                Switch Entity
+            </button>
+</div>
+<!-- Main Nav -->
+<div class="flex-1 overflow-y-auto py-2">
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="business_center">business_center</span>
+                Entities
+            </a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="account_balance">account_balance</span>
+                Accounts
+            </a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="receipt_long">receipt_long</span>
+                Transactions
+            </a>
+<a class="bg-shell-elevated text-white border-l-4 border-primary px-4 py-3 flex items-center gap-3 font-label-lg text-label-lg active:scale-98" href="#">
+<span class="material-symbols-outlined" data-icon="account_tree">account_tree</span>
+                Reconciliation
+            </a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="settings">settings</span>
+                Settings
+            </a>
+</div>
+<!-- Footer Nav -->
+<div class="border-t border-shell-border py-4">
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="help">help</span>
+                Support
+            </a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all font-label-lg text-label-lg" href="#">
+<span class="material-symbols-outlined" data-icon="history">history</span>
+                Logs
+            </a>
+</div>
+</nav>
+<!-- Main Content Area -->
+<div class="flex-1 md:ml-60 flex flex-col min-h-screen">
+<!-- TopNavBar (Mobile) - Used mainly for mobile since side nav is hidden -->
+<header class="md:hidden sticky top-0 z-50 flex items-center justify-between px-gutter-desktop h-14 w-full bg-surface-container-lowest shadow-sm border-b border-border-default">
+<div class="font-display-md text-display-md text-primary truncate">LedgerScope</div>
+<div class="flex items-center gap-4">
+<button class="text-text-secondary hover:text-brand-red-hover transition-colors active:opacity-80">
+<span class="material-symbols-outlined" data-icon="menu">menu</span>
+</button>
+</div>
+</header>
+<!-- Page Header -->
+<div class="bg-surface-container-lowest border-b border-border-default px-gutter-desktop py-6">
+<div class="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+<div>
+<div class="flex items-center gap-3 mb-2">
+<span class="bg-surface-container-high text-text-secondary font-mono-md text-mono-md px-2 py-0.5 rounded text-xs border border-border-default">DR-0024</span>
+<span class="bg-brand-red-muted text-primary-container border border-brand-red-border font-label-sm text-label-sm px-2 py-0.5 rounded flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="priority_high">priority_high</span> High Priority
+                        </span>
+<span class="text-text-secondary font-label-sm text-label-sm flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]" data-icon="calendar_today">calendar_today</span> Due: Oct 25, 2024
+                        </span>
+</div>
+<h2 class="font-display-lg text-display-lg text-text-primary mb-1">Bank Statement - Q3</h2>
+<p class="text-text-secondary font-body-md text-body-md">Acme Corp Operating Account ending in 4921.</p>
+</div>
+<div class="flex items-center gap-3 shrink-0">
+<button class="bg-surface-container-lowest border border-border-default text-text-primary px-4 py-2 rounded font-label-lg text-label-lg hover:bg-surface-container-high transition-colors">
+                        Decline Request
+                    </button>
+<button class="bg-primary-container text-white px-4 py-2 rounded font-label-lg text-label-lg hover:bg-brand-red-hover transition-colors shadow-sm">
+                        Submit Documents
+                    </button>
+</div>
+</div>
+</div>
+<!-- Canvas -->
+<main class="flex-1 p-gutter-desktop bg-surface overflow-x-hidden">
+<div class="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-3 gap-6 items-start">
+<!-- Left Column: Files -->
+<div class="lg:col-span-2 space-y-6">
+<!-- Uploaded Files Section -->
+<div class="bg-white rounded-lg border border-border-default shadow-sm overflow-hidden">
+<div class="px-6 py-4 border-b border-strong flex justify-between items-center bg-surface-bright">
+<h3 class="font-heading-lg text-heading-lg text-text-primary">Provided Documents</h3>
+<span class="font-mono-md text-mono-md text-text-secondary text-sm">2 Files</span>
+</div>
+<div class="divide-y divide-border-default">
+<!-- File 1: Accepted -->
+<div class="p-4 hover:bg-surface-container-low transition-colors flex items-start gap-4">
+<div class="w-10 h-10 rounded bg-surface-container-high flex items-center justify-center text-text-secondary shrink-0">
+<span class="material-symbols-outlined" data-icon="picture_as_pdf">picture_as_pdf</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between gap-4 mb-1">
+<h4 class="font-label-lg text-label-lg text-text-primary truncate">Acme_Corp_Statement_Jul_Sep_2024.pdf</h4>
+<span class="bg-[#ECFDF5] text-[#065F46] border border-[#A7F3D0] px-2 py-0.5 rounded text-xs font-label-sm flex items-center gap-1 shrink-0">
+<span class="material-symbols-outlined text-[12px] fill" data-icon="check_circle">check_circle</span> Accepted
+                                        </span>
+</div>
+<div class="flex items-center gap-4 text-sm text-text-muted font-body-md text-body-md">
+<span>2.4 MB</span>
+<span>Uploaded Oct 12 by Jane Doe</span>
+<span class="font-mono-md text-mono-md text-xs">v2</span>
+</div>
+<div class="mt-3 text-sm text-text-secondary border-l-2 border-border-default pl-3 ml-1 py-1">
+<div class="flex items-center justify-between group">
+<span><span class="font-mono-md text-mono-md text-xs">v1</span> • Rejected: Missing September pages.</span>
+<button class="text-text-muted hover:text-text-primary opacity-0 group-hover:opacity-100 transition-opacity">
+<span class="material-symbols-outlined text-[16px]" data-icon="visibility">visibility</span>
+</button>
+</div>
+</div>
+</div>
+<div class="shrink-0 flex items-center gap-2">
+<button class="text-text-muted hover:text-text-primary p-1 rounded hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" data-icon="download">download</span>
+</button>
+<button class="text-text-muted hover:text-text-primary p-1 rounded hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" data-icon="more_vert">more_vert</span>
+</button>
+</div>
+</div>
+<!-- File 2: Pending -->
+<div class="p-4 hover:bg-surface-container-low transition-colors flex items-start gap-4">
+<div class="w-10 h-10 rounded bg-surface-container-high flex items-center justify-center text-text-secondary shrink-0">
+<span class="material-symbols-outlined" data-icon="description">description</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between gap-4 mb-1">
+<h4 class="font-label-lg text-label-lg text-text-primary truncate">Reconciliation_Notes_Q3.docx</h4>
+<span class="bg-surface-container-highest text-text-secondary border border-border-strong px-2 py-0.5 rounded text-xs font-label-sm shrink-0">
+                                            Pending Review
+                                        </span>
+</div>
+<div class="flex items-center gap-4 text-sm text-text-muted font-body-md text-body-md">
+<span>145 KB</span>
+<span>Uploaded Oct 14 by John Smith</span>
+<span class="font-mono-md text-mono-md text-xs">v1</span>
+</div>
+</div>
+<div class="shrink-0 flex items-center gap-2">
+<button class="text-text-muted hover:text-text-primary p-1 rounded hover:bg-surface-container-high transition-colors">
+<span class="material-symbols-outlined" data-icon="download">download</span>
+</button>
+<button class="text-text-muted hover:text-status-danger p-1 rounded hover:bg-brand-red-muted transition-colors">
+<span class="material-symbols-outlined" data-icon="delete">delete</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+<!-- Dropzone -->
+<div class="border-2 border-dashed border-brand-red-border bg-brand-red-muted/30 rounded-lg p-10 flex flex-col items-center justify-center text-center hover:bg-brand-red-muted/50 transition-colors cursor-pointer relative group">
+<div class="w-12 h-12 rounded-full bg-surface-container-lowest shadow-sm flex items-center justify-center text-primary-container mb-4 group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" data-icon="cloud_upload">cloud_upload</span>
+</div>
+<h4 class="font-heading-lg text-heading-lg text-text-primary mb-2">Drag &amp; Drop files here</h4>
+<p class="text-text-secondary font-body-md text-body-md mb-4 max-w-sm">Support for PDF, XLSX, CSV, and standard image formats up to 50MB.</p>
+<button class="bg-surface-container-lowest border border-border-strong text-text-primary px-4 py-2 rounded font-label-lg text-label-lg hover:bg-surface-container-high transition-colors shadow-sm">
+                            Browse Files
+                        </button>
+<!-- Focus state overlay simulation -->
+<div class="absolute inset-0 rounded-lg pointer-events-none group-focus-within:ring-4 group-focus-within:ring-brand-red-border/50"></div>
+</div>
+</div>
+<!-- Right Column: Sidebar Thread -->
+<div class="bg-white rounded-lg border border-border-default shadow-sm flex flex-col h-[calc(100vh-14rem)] sticky top-24">
+<div class="px-6 py-4 border-b border-strong bg-surface-bright flex items-center gap-2">
+<span class="material-symbols-outlined text-text-secondary" data-icon="forum">forum</span>
+<h3 class="font-heading-lg text-heading-lg text-text-primary">Communication</h3>
+</div>
+<div class="flex-1 overflow-y-auto p-6 space-y-6">
+<!-- Instruction Block -->
+<div class="bg-surface-container-low border border-border-default rounded p-4">
+<h4 class="font-label-lg text-label-lg text-text-primary mb-2 flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-primary" data-icon="assignment_ind">assignment_ind</span>
+                                Auditor Instructions
+                            </h4>
+<p class="text-sm text-text-secondary font-body-md text-body-md leading-relaxed">
+                                Please provide the consolidated bank statements for the primary operating account covering Q3 (July 1 - Sept 30). Ensure all pages, including blank ones, are included to verify completeness.
+                            </p>
+</div>
+<!-- Chat Thread -->
+<div class="space-y-4">
+<!-- Message -->
+<div class="flex gap-3">
+<div class="w-8 h-8 rounded bg-surface-container-high shrink-0 overflow-hidden">
+<img alt="Auditor Avatar" class="w-full h-full object-cover" data-alt="A professional headshot of an auditor in a high-key corporate setting, clean and crisp aesthetic matching the financial software context." src="https://lh3.googleusercontent.com/aida-public/AB6AXuAiC-N8mLdNzFzmEAvxnSuktf_akhtGcfnlwm6ZUHmgUZjwelIUD5GXqHB5fP1miz7dPbuVlYPAxqtgNceily_hu_ylWNegJyeUDljec1pRGWf2reAlyEZDftEiqgdSFQkkx6xEcc7qvVzJoBpOsTZCQnbTKBfZhPx-2Cbwp4OhBtR3_8gly1jVzhkq3s1cp7S-5jArab5EUsp6m-aUkdFTIpp4yPL4yRunR1L9zonFKr7xmOPlv4H4C_6tR_6JtuuLOKVjlbRI8Aji"/>
+</div>
+<div class="flex-1">
+<div class="flex items-baseline justify-between mb-1">
+<span class="font-label-lg text-label-lg text-text-primary">Sarah Jenkins (Auditor)</span>
+<span class="text-xs text-text-muted font-mono-md">Oct 12, 10:45 AM</span>
+</div>
+<p class="text-sm text-text-secondary font-body-md bg-surface-container-low p-3 rounded-r rounded-bl inline-block border border-border-default">
+                                        The first upload was missing the final 3 pages for September. I've rejected it. Please re-upload the complete file.
+                                    </p>
+</div>
+</div>
+<!-- Message (Self) -->
+<div class="flex gap-3 flex-row-reverse">
+<div class="w-8 h-8 rounded bg-primary-container text-white flex items-center justify-center font-label-lg shrink-0">
+                                    JD
+                                </div>
+<div class="flex-1 flex flex-col items-end">
+<div class="flex items-baseline justify-between mb-1 w-full flex-row-reverse">
+<span class="font-label-lg text-label-lg text-text-primary">Jane Doe (You)</span>
+<span class="text-xs text-text-muted font-mono-md">Oct 12, 11:30 AM</span>
+</div>
+<p class="text-sm text-text-primary font-body-md bg-brand-red-muted p-3 rounded-l rounded-br inline-block border border-brand-red-border text-right">
+                                        Apologies, the scanner jammed. I've uploaded version 2 with all pages intact. Let me know if you need the raw CSV export as well.
+                                    </p>
+</div>
+</div>
+<!-- System Message -->
+<div class="flex items-center gap-4 text-xs text-text-muted font-mono-md my-4">
+<div class="flex-1 h-px bg-border-default"></div>
+<span>Sarah Jenkins marked file as Accepted</span>
+<div class="flex-1 h-px bg-border-default"></div>
+</div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="p-4 border-t border-border-default bg-surface-bright">
+<div class="relative">
+<textarea class="w-full border-strong rounded bg-surface-container-lowest font-body-md text-sm p-3 pr-10 focus:ring-1 focus:ring-primary focus:border-primary resize-none" placeholder="Add a comment..." rows="2"></textarea>
+<button class="absolute right-2 bottom-2 p-1.5 text-text-muted hover:text-primary transition-colors rounded hover:bg-brand-red-muted">
+<span class="material-symbols-outlined text-[20px] fill" data-icon="send">send</span>
+</button>
+</div>
+</div>
+</div>
+</div>
+</main>
+</div>
+</body></html>

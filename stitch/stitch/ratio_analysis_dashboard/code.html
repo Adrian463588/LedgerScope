@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LedgerScope | Ratio Analysis Dashboard</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital,wght@0,400;0,600;1,400&amp;family=IBM+Plex+Mono:wght@400;500&amp;family=IBM+Plex+Sans:wght@300;400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Tailwind Configuration -->
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "tertiary-container": "#156f42",
+                    "shell-surface": "#13141A",
+                    "error": "#ba1a1a",
+                    "surface-dim": "#d9dadc",
+                    "text-secondary": "#4A5261",
+                    "surface-container": "#edeef0",
+                    "brand-red-border": "#EBBAB7",
+                    "outline": "#916f6a",
+                    "on-primary-fixed": "#400100",
+                    "on-primary-container": "#ffd3cb",
+                    "shell-elevated": "#1A1C23",
+                    "on-error-container": "#93000a",
+                    "shell-border": "#252830",
+                    "secondary": "#5e5e62",
+                    "on-surface-variant": "#5c403b",
+                    "surface": "#f8f9fb",
+                    "border-strong": "#CDD0D6",
+                    "on-tertiary-fixed": "#00210f",
+                    "surface-tint": "#bc1507",
+                    "on-surface": "#191c1e",
+                    "tertiary": "#00552f",
+                    "brand-red-hover": "#A31508",
+                    "on-secondary": "#ffffff",
+                    "on-primary": "#ffffff",
+                    "brand-red-press": "#8B1208",
+                    "status-danger": "#DC2626",
+                    "status-warning": "#B45309",
+                    "background": "#f8f9fb",
+                    "surface-container-low": "#f3f4f6",
+                    "primary": "#970600",
+                    "inverse-primary": "#ffb4a7",
+                    "primary-container": "#c0190a",
+                    "surface-container-high": "#e7e8ea",
+                    "surface-bright": "#f8f9fb",
+                    "primary-fixed-dim": "#ffb4a7",
+                    "error-container": "#ffdad6",
+                    "on-tertiary-container": "#9aefb6",
+                    "on-error": "#ffffff",
+                    "outline-variant": "#e5bdb7",
+                    "text-muted": "#8C93A0",
+                    "text-primary": "#0F1114",
+                    "tertiary-fixed-dim": "#84d8a1",
+                    "on-tertiary": "#ffffff",
+                    "tertiary-fixed": "#a0f5bb",
+                    "secondary-fixed-dim": "#c7c6ca",
+                    "surface-container-highest": "#e1e2e4",
+                    "on-primary-fixed-variant": "#920600",
+                    "secondary-container": "#e0dfe3",
+                    "on-secondary-container": "#626266",
+                    "on-background": "#191c1e",
+                    "inverse-surface": "#2e3132",
+                    "border-default": "#E3E5E9",
+                    "surface-container-lowest": "#ffffff",
+                    "secondary-fixed": "#e3e2e6",
+                    "primary-fixed": "#ffdad4",
+                    "on-tertiary-fixed-variant": "#00522d",
+                    "on-secondary-fixed-variant": "#46464a",
+                    "surface-variant": "#e1e2e4",
+                    "brand-red-muted": "#F8E8E7",
+                    "on-secondary-fixed": "#1b1b1f",
+                    "inverse-on-surface": "#f0f1f3"
+            },
+            "borderRadius": {
+                    "DEFAULT": "4px",
+                    "lg": "8px",
+                    "xl": "12px",
+                    "full": "9999px"
+            },
+            "spacing": {
+                    "table-cell-v": "12px",
+                    "card-padding": "24px",
+                    "table-cell-h": "16px",
+                    "gutter-tablet": "24px",
+                    "gutter-desktop": "32px",
+                    "form-gap": "20px",
+                    "sub-unit": "4px",
+                    "baseline": "8px"
+            },
+            "fontFamily": {
+                    "mono-md": ["IBM Plex Mono"],
+                    "label-sm": ["IBM Plex Sans"],
+                    "heading-lg": ["IBM Plex Sans"],
+                    "body-md": ["IBM Plex Sans"],
+                    "display-lg": ["DM Serif Display"],
+                    "label-lg": ["IBM Plex Sans"],
+                    "display-md": ["DM Serif Display"]
+            },
+            "fontSize": {
+                    "mono-md": ["14px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "500"}],
+                    "heading-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                    "body-md": ["14px", {"lineHeight": "24px", "fontWeight": "400"}],
+                    "display-lg": ["36px", {"lineHeight": "40px", "fontWeight": "600"}],
+                    "label-lg": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                    "display-md": ["30px", {"lineHeight": "36px", "fontWeight": "600"}]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .bento-grid {
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+        }
+        .shadow-card {
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+        }
+        .focus-red:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(192,25,10,0.20);
+        }
+        .zebra-striping tr:nth-child(even) {
+            background-color: #F9FAFB;
+        }
+        .custom-scrollbar::-webkit-scrollbar {
+            width: 4px;
+        }
+        .custom-scrollbar::-webkit-scrollbar-thumb {
+            background: #CDD0D6;
+            border-radius: 2px;
+        }
+    </style>
+</head>
+<body class="bg-background text-on-surface font-body-md text-body-md overflow-x-hidden">
+<!-- Top Navigation Shell -->
+<header class="sticky top-0 z-50 flex items-center justify-between px-gutter-desktop h-14 w-full bg-surface-container-lowest shadow-sm border-b border-border-default">
+<div class="flex items-center gap-8">
+<span class="font-display-md text-display-md text-primary">LedgerScope</span>
+<nav class="hidden md:flex items-center gap-6">
+<a class="font-body-md text-body-md text-text-secondary hover:text-brand-red-hover transition-colors" href="#">Dashboard</a>
+<a class="font-body-md text-body-md text-primary border-b-2 border-primary pb-1" href="#">Ledgers</a>
+<a class="font-body-md text-body-md text-text-secondary hover:text-brand-red-hover transition-colors" href="#">Audit Trail</a>
+<a class="font-body-md text-body-md text-text-secondary hover:text-brand-red-hover transition-colors" href="#">Reporting</a>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<div class="relative">
+<span class="material-symbols-outlined absolute left-3 top-1/2 -translate-y-1/2 text-text-muted">search</span>
+<input class="pl-10 pr-4 py-1 bg-surface-container rounded border border-border-default text-body-md focus-red w-64" placeholder="Search Ledgers..." type="text"/>
+</div>
+<button class="material-symbols-outlined text-text-secondary hover:text-primary transition-colors">notifications</button>
+<button class="material-symbols-outlined text-text-secondary hover:text-primary transition-colors">settings</button>
+<img alt="User profile" class="w-8 h-8 rounded-full border border-border-default" data-alt="A professional headshot of a corporate financial analyst in a modern office. The lighting is crisp and neutral, following a high-key light mode aesthetic. The background is a soft-focus minimalist corporate setting with clean lines and a palette of whites and grays, accented by subtle deep red office decor." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBq_RncaoqMcIlf6CH_2Fr7sMj9Wh5wQ7-FZUfi9NrQ6Yww7n_MN7_uuDkhW5YRTDlPW4TvAeMeW4kVPaMri36IecYsa-PkbN9MtygvQw5K0VJGD_sTbwy0ItkqTwPAvT469ZY8P3nV57SRLB5NMmEIPjMAUEhQdReQsI-PbMPL8pdfwY9ZvBscYDhLRzcGaRoeM3sRrrCPTCADh5M8iRIVlw_LPxpwWt7KHu4oLx4xl70enkYfNRKIfPpgtNMtKt7CH1akXH7ZJSt5"/>
+</div>
+</header>
+<!-- Sidebar Shell -->
+<aside class="fixed left-0 top-14 h-[calc(100vh-56px)] w-60 z-40 bg-shell-surface border-r border-shell-border hidden md:flex flex-col">
+<div class="p-6 flex items-center gap-3">
+<div class="w-10 h-10 bg-primary flex items-center justify-center rounded-lg">
+<span class="material-symbols-outlined text-white" style="font-variation-settings: 'FILL' 1;">business_center</span>
+</div>
+<div>
+<p class="font-label-lg text-label-lg text-white">Acme Corp</p>
+<p class="text-[11px] text-text-muted uppercase tracking-wider">FY 2024 Audit</p>
+</div>
+</div>
+<nav class="flex-1 px-2 space-y-1">
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all rounded" href="#">
+<span class="material-symbols-outlined">business_center</span>
+<span>Entities</span>
+</a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all rounded" href="#">
+<span class="material-symbols-outlined">account_balance</span>
+<span>Accounts</span>
+</a>
+<a class="bg-shell-elevated text-white border-l-4 border-primary px-4 py-3 flex items-center gap-3" href="#">
+<span class="material-symbols-outlined">receipt_long</span>
+<span>Transactions</span>
+</a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all rounded" href="#">
+<span class="material-symbols-outlined">account_tree</span>
+<span>Reconciliation</span>
+</a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all rounded" href="#">
+<span class="material-symbols-outlined">settings</span>
+<span>Settings</span>
+</a>
+</nav>
+<div class="p-4 border-t border-shell-border">
+<button class="w-full bg-primary-container text-white py-2 rounded font-label-lg text-label-lg hover:bg-brand-red-hover transition-colors focus-red">
+                Switch Entity
+            </button>
+</div>
+<div class="p-2 space-y-1 border-t border-shell-border">
+<a class="text-text-muted px-4 py-2 flex items-center gap-3 hover:text-white transition-colors text-sm" href="#">
+<span class="material-symbols-outlined text-sm">help</span>
+<span>Support</span>
+</a>
+<a class="text-text-muted px-4 py-2 flex items-center gap-3 hover:text-white transition-colors text-sm" href="#">
+<span class="material-symbols-outlined text-sm">history</span>
+<span>Logs</span>
+</a>
+</div>
+</aside>
+<!-- Main Content Area -->
+<main class="md:ml-60 min-h-[calc(100vh-56px)] p-gutter-desktop">
+<header class="mb-8 flex justify-between items-end">
+<div>
+<h1 class="font-display-lg text-display-lg text-text-primary mb-1">Ratio Analysis</h1>
+<p class="text-text-secondary font-body-md">Comprehensive financial health diagnostics for Acme Corp</p>
+</div>
+<div class="flex gap-3">
+<button class="flex items-center gap-2 px-4 py-2 border border-border-strong rounded bg-white font-label-lg text-label-lg hover:bg-surface-container transition-colors">
+<span class="material-symbols-outlined">download</span>
+                    Export PDF
+                </button>
+<button class="flex items-center gap-2 px-4 py-2 bg-primary text-white rounded font-label-lg text-label-lg hover:bg-brand-red-hover transition-colors">
+<span class="material-symbols-outlined">refresh</span>
+                    Refresh Data
+                </button>
+</div>
+</header>
+<!-- KPI Grid -->
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+<!-- Liquidity Card -->
+<div class="bg-white p-card-padding border border-border-default rounded-lg shadow-card">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label-sm text-label-sm text-text-muted uppercase tracking-widest">Liquidity</span>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-2 py-0.5 rounded text-[10px] font-bold">+12.4%</span>
+</div>
+<h3 class="font-body-md text-text-secondary mb-1">Current Ratio</h3>
+<div class="flex items-baseline gap-2">
+<span class="font-display-md text-display-md text-text-primary">2.41</span>
+<span class="text-text-muted text-sm">Target: 2.00</span>
+</div>
+<div class="mt-4 h-1 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-tertiary-container w-[80%]"></div>
+</div>
+</div>
+<!-- Solvency Card -->
+<div class="bg-white p-card-padding border border-border-default rounded-lg shadow-card">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label-sm text-label-sm text-text-muted uppercase tracking-widest">Solvency</span>
+<span class="bg-brand-red-muted text-primary px-2 py-0.5 rounded text-[10px] font-bold">-2.1%</span>
+</div>
+<h3 class="font-body-md text-text-secondary mb-1">Debt-to-Equity</h3>
+<div class="flex items-baseline gap-2">
+<span class="font-display-md text-display-md text-text-primary">0.68</span>
+<span class="text-text-muted text-sm">Target: &lt; 0.80</span>
+</div>
+<div class="mt-4 h-1 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary-container w-[68%]"></div>
+</div>
+</div>
+<!-- Profitability Card -->
+<div class="bg-white p-card-padding border border-border-default rounded-lg shadow-card">
+<div class="flex justify-between items-start mb-4">
+<span class="font-label-sm text-label-sm text-text-muted uppercase tracking-widest">Profitability</span>
+<span class="bg-tertiary-fixed text-on-tertiary-fixed-variant px-2 py-0.5 rounded text-[10px] font-bold">+4.5%</span>
+</div>
+<h3 class="font-body-md text-text-secondary mb-1">Net Margin</h3>
+<div class="flex items-baseline gap-2">
+<span class="font-display-md text-display-md text-text-primary">18.2%</span>
+<span class="text-text-muted text-sm">Prior: 17.4%</span>
+</div>
+<div class="mt-4 h-1 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-tertiary-container w-[72%]"></div>
+</div>
+</div>
+</div>
+<!-- Main Analytics Section -->
+<div class="bento-grid">
+<!-- Trend Line Chart Container -->
+<div class="col-span-12 lg:col-span-8 bg-white border border-border-default rounded-lg shadow-card p-card-padding flex flex-col">
+<div class="flex justify-between items-center mb-6">
+<div>
+<h2 class="font-heading-lg text-heading-lg text-text-primary">Ratio Trend Performance</h2>
+<p class="text-sm text-text-muted">12-Month historical trend for Current Ratio</p>
+</div>
+<div class="flex gap-2">
+<button class="px-3 py-1 text-xs font-semibold rounded bg-surface-container text-text-secondary">Quarterly</button>
+<button class="px-3 py-1 text-xs font-semibold rounded bg-primary text-white">Monthly</button>
+</div>
+</div>
+<div class="flex-1 relative min-h-[320px] bg-surface-container-low rounded border border-dashed border-border-strong flex items-center justify-center group overflow-hidden">
+<!-- Fake Chart Visual -->
+<div class="absolute inset-0 opacity-10">
+<div class="h-full w-full" style="background-image: radial-gradient(#CDD0D6 1px, transparent 1px); background-size: 24px 24px;"></div>
+</div>
+<svg class="w-full h-full p-8" preserveaspectratio="none" viewbox="0 0 1000 300">
+<path d="M0,250 L100,240 L200,260 L300,220 L400,230 L500,180 L600,190 L700,140 L800,150 L900,110 L1000,120" fill="none" stroke="#C0190A" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path>
+<path d="M0,250 L100,240 L200,260 L300,220 L400,230 L500,180 L600,190 L700,140 L800,150 L900,110 L1000,120 V300 H0 Z" fill="url(#gradient)" opacity="0.1"></path>
+<defs>
+<lineargradient id="gradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#C0190A"></stop>
+<stop offset="100%" stop-color="#FFFFFF"></stop>
+</lineargradient>
+</defs>
+</svg>
+<!-- Hover Effect Dots -->
+<div class="absolute top-[140px] left-[70%] w-3 h-3 bg-primary rounded-full border-2 border-white shadow-lg animate-pulse"></div>
+<div class="absolute top-[100px] left-[70%] bg-shell-surface text-white p-2 rounded text-xs pointer-events-none transform -translate-x-1/2">
+<span class="block font-bold">Oct 2024</span>
+<span class="block">Ratio: 2.45</span>
+</div>
+</div>
+</div>
+<!-- Comparison Table Container -->
+<div class="col-span-12 lg:col-span-4 bg-white border border-border-default rounded-lg shadow-card p-card-padding">
+<h2 class="font-heading-lg text-heading-lg text-text-primary mb-4">Industry Benchmarks</h2>
+<div class="overflow-x-auto">
+<table class="w-full text-left zebra-striping">
+<thead class="border-b-2 border-border-strong bg-surface">
+<tr>
+<th class="py-table-cell-v px-table-cell-h font-label-sm text-label-sm text-text-muted uppercase">Sector</th>
+<th class="py-table-cell-v px-table-cell-h font-label-sm text-label-sm text-text-muted uppercase text-right">Avg. Ratio</th>
+<th class="py-table-cell-v px-table-cell-h font-label-sm text-label-sm text-text-muted uppercase text-right">Status</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-border-default">
+<tr>
+<td class="py-table-cell-v px-table-cell-h font-body-md text-text-primary">Acme Corp</td>
+<td class="py-table-cell-v px-table-cell-h font-mono-md text-mono-md text-right">2.41</td>
+<td class="py-table-cell-v px-table-cell-h text-right">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-tertiary-fixed text-on-tertiary-fixed-variant">TOP TIER</span>
+</td>
+</tr>
+<tr>
+<td class="py-table-cell-v px-table-cell-h font-body-md text-text-primary">Tech Sector</td>
+<td class="py-table-cell-v px-table-cell-h font-mono-md text-mono-md text-right">1.85</td>
+<td class="py-table-cell-v px-table-cell-h text-right">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary-container text-on-secondary-container">BENCHMARK</span>
+</td>
+</tr>
+<tr>
+<td class="py-table-cell-v px-table-cell-h font-body-md text-text-primary">Manufacturing</td>
+<td class="py-table-cell-v px-table-cell-h font-mono-md text-mono-md text-right">1.20</td>
+<td class="py-table-cell-v px-table-cell-h text-right">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary-container text-on-secondary-container">BENCHMARK</span>
+</td>
+</tr>
+<tr>
+<td class="py-table-cell-v px-table-cell-h font-body-md text-text-primary">Retail Index</td>
+<td class="py-table-cell-v px-table-cell-h font-mono-md text-mono-md text-right">1.10</td>
+<td class="py-table-cell-v px-table-cell-h text-right">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-secondary-container text-on-secondary-container">BENCHMARK</span>
+</td>
+</tr>
+<tr>
+<td class="py-table-cell-v px-table-cell-h font-body-md text-text-primary">Logistics</td>
+<td class="py-table-cell-v px-table-cell-h font-mono-md text-mono-md text-right">0.95</td>
+<td class="py-table-cell-v px-table-cell-h text-right">
+<span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-error-container text-on-error-container">UNDERPERFORM</span>
+</td>
+</tr>
+</tbody>
+</table>
+</div>
+<div class="mt-6 p-4 bg-surface-container rounded-lg border border-border-default">
+<p class="text-xs text-text-secondary leading-relaxed italic">
+                        "Acme Corp currently maintains a current ratio 30% higher than the tech sector average, indicating strong short-term liquidity and efficient working capital management."
+                    </p>
+</div>
+</div>
+</div>
+<!-- Detail Insights -->
+<section class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+<div class="bg-white border border-border-default rounded-lg shadow-card p-card-padding">
+<h3 class="font-heading-lg text-heading-lg text-text-primary mb-4 flex items-center gap-2">
+<span class="material-symbols-outlined text-primary">analytics</span>
+                    Solvency Risk Assessment
+                </h3>
+<div class="space-y-6">
+<div class="flex items-center gap-4">
+<div class="flex-1">
+<div class="flex justify-between mb-1">
+<span class="text-sm font-semibold">Interest Coverage Ratio</span>
+<span class="text-sm font-mono-md">8.4x</span>
+</div>
+<div class="w-full h-2 bg-surface-container rounded-full">
+<div class="h-full bg-tertiary-container rounded-full" style="width: 84%"></div>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex-1">
+<div class="flex justify-between mb-1">
+<span class="text-sm font-semibold">Equity Multiplier</span>
+<span class="text-sm font-mono-md">1.68x</span>
+</div>
+<div class="w-full h-2 bg-surface-container rounded-full">
+<div class="h-full bg-primary-container rounded-full" style="width: 42%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="relative rounded-lg overflow-hidden group shadow-card border border-border-default">
+<img alt="Financial background" class="w-full h-full object-cover" data-alt="A macro shot of complex financial spreadsheets and data visualizations on a high-resolution display. The image captures a technical, disciplined atmosphere with sharp focus on bar charts and numerical data. The color palette is strictly professional, featuring deep blacks, crisp whites, and clinical red accents against a clean light-mode office background." src="https://lh3.googleusercontent.com/aida-public/AB6AXuA5nrc2zqan0EkDtS9tF2XVZtnxcp_cvm3KdohsP4-ANCsJBbFMwPO-S9X_wQpozyYF8muz0eaDErMTLql5zeUixZORuvq9HeqM15zd2JsKuw51mg5OWhylPOKmokhU4N64vkYozE2rxXC4JP_FZALyYeBsdOYZ3Qu3VO_M58L4gIpqls6ERcP6aqd3Jp0EaA94faaXblIxmIr7KQTD2tPpWFTscRrZE3ImaWgy3KmT-iBnotx59g69q9m4cgdYOvnbnCzVy1KJvmFS"/>
+<div class="absolute inset-0 bg-gradient-to-t from-shell-surface/90 to-transparent flex flex-col justify-end p-6">
+<span class="text-primary font-bold text-xs uppercase tracking-widest mb-2">Automated Audit Note</span>
+<p class="text-white font-display-md text-xl leading-snug">
+                        Debt levels have decreased by 4% YoY while retained earnings grew by 12%, driving the overall improvement in solvency metrics.
+                    </p>
+</div>
+</div>
+</section>
+</main>
+<!-- Contextual FAB for Transaction Entry -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary text-white rounded-full shadow-lg flex items-center justify-center hover:bg-brand-red-hover active:scale-95 transition-all z-50 focus-red">
+<span class="material-symbols-outlined text-2xl" style="font-variation-settings: 'FILL' 1;">add</span>
+</button>
+<script>
+        // Simple interactivity for demonstration
+        document.querySelectorAll('button').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const icon = btn.querySelector('.material-symbols-outlined');
+                if(icon && icon.innerText === 'refresh') {
+                    btn.classList.add('animate-spin');
+                    setTimeout(() => btn.classList.remove('animate-spin'), 1000);
+                }
+            });
+        });
+
+        // Add "Financial Indicator" shake animation simulation
+        function triggerError(elementId) {
+            const el = document.getElementById(elementId);
+            if(el) {
+                el.classList.add('animate-[shake_300ms_ease-in-out]');
+                setTimeout(() => el.classList.remove('animate-[shake_300ms_ease-in-out]'), 300);
+            }
+        }
+    </script>
+<style>
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+    </style>
+</body></html>

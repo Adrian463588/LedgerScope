@@ -1,0 +1,49 @@
+# Environment and secrets
+.env
+.env.*
+!.env.example
+!**/.env.example
+auth.json
+*.key
+*.pem
+*.p12
+*.pfx
+id_rsa
+id_ed25519
+
+# Dependencies and build outputs
+vendor/
+node_modules/
+public/build/
+public/hot
+public/storage
+backend/public/build/
+backend/public/hot
+backend/public/storage
+
+# Logs, caches, and runtime files
+*.log
+.phpunit.cache/
+.phpunit.result.cache
+storage/logs/
+backend/storage/logs/
+backend/storage/framework/cache/
+backend/storage/framework/sessions/
+backend/storage/framework/views/
+backend/storage/pail/
+backend/storage/*.key
+
+# IDE and OS files
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+.cursor/
+.codex/
+.nova/
+.zed/
+
+# Tool-generated local metadata
+skills-lock.json
+backend/phpstan*.txt
+backend/test_pdo.php

@@ -1,0 +1,391 @@
+<!DOCTYPE html>
+
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>LedgerScope - WP-C.1.1 Cash &amp; Bank</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=IBM+Plex+Mono:wght@400&amp;family=DM+Serif+Display&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "on-secondary-fixed-variant": "#46464a",
+                        "on-background": "#191c1e",
+                        "text-muted": "#8C93A0",
+                        "on-tertiary-container": "#9aefb6",
+                        "surface-container-high": "#e7e8ea",
+                        "border-strong": "#CDD0D6",
+                        "status-warning": "#B45309",
+                        "primary-fixed": "#ffdad4",
+                        "on-secondary-fixed": "#1b1b1f",
+                        "tertiary-fixed": "#a0f5bb",
+                        "on-tertiary": "#ffffff",
+                        "on-secondary-container": "#626266",
+                        "brand-red-muted": "#F8E8E7",
+                        "text-primary": "#0F1114",
+                        "tertiary-container": "#156f42",
+                        "secondary-fixed-dim": "#c7c6ca",
+                        "text-secondary": "#4A5261",
+                        "on-surface": "#191c1e",
+                        "shell-border": "#252830",
+                        "on-error": "#ffffff",
+                        "on-primary-container": "#ffd3cb",
+                        "on-primary-fixed-variant": "#920600",
+                        "on-tertiary-fixed": "#00210f",
+                        "on-surface-variant": "#5c403b",
+                        "on-error-container": "#93000a",
+                        "shell-surface": "#13141A",
+                        "error-container": "#ffdad6",
+                        "background": "#f8f9fb",
+                        "surface-tint": "#bc1507",
+                        "surface-dim": "#d9dadc",
+                        "surface-container": "#edeef0",
+                        "on-tertiary-fixed-variant": "#00522d",
+                        "outline": "#916f6a",
+                        "tertiary-fixed-dim": "#84d8a1",
+                        "secondary-container": "#e0dfe3",
+                        "brand-red-press": "#8B1208",
+                        "on-primary-fixed": "#400100",
+                        "inverse-surface": "#2e3132",
+                        "outline-variant": "#e5bdb7",
+                        "on-primary": "#ffffff",
+                        "surface": "#f8f9fb",
+                        "primary-fixed-dim": "#ffb4a7",
+                        "surface-container-low": "#f3f4f6",
+                        "secondary-fixed": "#e3e2e6",
+                        "brand-red-hover": "#A31508",
+                        "surface-container-lowest": "#ffffff",
+                        "tertiary": "#00552f",
+                        "on-secondary": "#ffffff",
+                        "status-danger": "#DC2626",
+                        "shell-elevated": "#1A1C23",
+                        "border-default": "#E3E5E9",
+                        "surface-variant": "#e1e2e4",
+                        "surface-bright": "#f8f9fb",
+                        "inverse-on-surface": "#f0f1f3",
+                        "brand-red-border": "#EBBAB7",
+                        "primary-container": "#c0190a",
+                        "surface-container-highest": "#e1e2e4",
+                        "error": "#ba1a1a",
+                        "secondary": "#5e5e62",
+                        "inverse-primary": "#ffb4a7",
+                        "primary": "#970600"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "sub-unit": "4px",
+                        "baseline": "8px",
+                        "table-cell-v": "12px",
+                        "gutter-tablet": "24px",
+                        "gutter-desktop": "32px",
+                        "form-gap": "20px",
+                        "table-cell-h": "16px",
+                        "card-padding": "24px"
+                    },
+                    "fontFamily": {
+                        "heading-lg": ["IBM Plex Sans"],
+                        "label-sm": ["IBM Plex Sans"],
+                        "mono-md": ["IBM Plex Mono"],
+                        "display-lg": ["DM Serif Display"],
+                        "display-md": ["DM Serif Display"],
+                        "body-md": ["IBM Plex Sans"],
+                        "label-lg": ["IBM Plex Sans"]
+                    },
+                    "fontSize": {
+                        "heading-lg": ["20px", { "lineHeight": "28px", "fontWeight": "600" }],
+                        "label-sm": ["12px", { "lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "500" }],
+                        "mono-md": ["14px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "display-lg": ["36px", { "lineHeight": "40px", "fontWeight": "600" }],
+                        "display-md": ["30px", { "lineHeight": "36px", "fontWeight": "600" }],
+                        "body-md": ["14px", { "lineHeight": "24px", "fontWeight": "400" }],
+                        "label-lg": ["14px", { "lineHeight": "20px", "fontWeight": "500" }]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        .material-symbols-outlined.fill {
+            font-variation-settings: 'FILL' 1;
+        }
+    </style>
+</head>
+<body class="bg-surface text-text-primary font-body-md text-body-md antialiased flex h-screen overflow-hidden">
+<!-- SideNavBar -->
+<nav class="fixed left-0 top-0 h-full flex flex-col z-40 bg-shell-surface docked left-0 h-full w-60 border-r border-shell-border hidden md:flex">
+<div class="px-6 py-8 border-b border-shell-border mb-4">
+<div class="flex items-center gap-3 mb-6">
+<div class="w-8 h-8 rounded bg-primary flex items-center justify-center text-white font-display-md text-display-md">
+<span class="text-xl">A</span>
+</div>
+<div>
+<h1 class="font-label-lg text-label-lg text-white">Acme Corp</h1>
+<p class="font-label-sm text-label-sm text-text-muted mt-1">FY 2024 Audit</p>
+</div>
+</div>
+<button class="w-full py-2 border border-shell-border rounded text-white font-label-lg text-label-lg hover:bg-shell-elevated transition-colors">Switch Entity</button>
+</div>
+<div class="flex-1 overflow-y-auto py-2 flex flex-col gap-1">
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all font-label-lg text-label-lg active:scale-98" href="#">
+<span class="material-symbols-outlined">business_center</span>
+                Entities
+            </a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all font-label-lg text-label-lg active:scale-98" href="#">
+<span class="material-symbols-outlined">account_balance</span>
+                Accounts
+            </a>
+<a class="bg-shell-elevated text-white border-l-4 border-primary px-4 py-3 flex items-center gap-3 font-label-lg text-label-lg active:scale-98" href="#">
+<span class="material-symbols-outlined fill">receipt_long</span>
+                Transactions
+            </a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all font-label-lg text-label-lg active:scale-98" href="#">
+<span class="material-symbols-outlined">account_tree</span>
+                Reconciliation
+            </a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all font-label-lg text-label-lg active:scale-98" href="#">
+<span class="material-symbols-outlined">settings</span>
+                Settings
+            </a>
+</div>
+<div class="mt-auto border-t border-shell-border py-4 flex flex-col gap-1">
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all font-label-lg text-label-lg active:scale-98" href="#">
+<span class="material-symbols-outlined">help</span>
+                Support
+            </a>
+<a class="text-text-muted px-4 py-3 flex items-center gap-3 hover:bg-shell-elevated hover:text-white transition-all font-label-lg text-label-lg active:scale-98" href="#">
+<span class="material-symbols-outlined">history</span>
+                Logs
+            </a>
+</div>
+</nav>
+<!-- Main Content Canvas -->
+<main class="flex-1 md:ml-60 flex flex-col h-full bg-surface">
+<!-- TopAppBar (Minimal for interior pages) -->
+<header class="sticky top-0 z-50 flex items-center justify-between px-gutter-desktop h-14 w-full bg-surface-container-lowest border-b border-border-default shadow-sm">
+<div class="flex items-center gap-4">
+<a class="text-text-secondary hover:text-text-primary" href="#">
+<span class="material-symbols-outlined">arrow_back</span>
+</a>
+<nav class="flex items-center text-label-sm text-text-muted">
+<a class="hover:text-primary" href="#">Transactions</a>
+<span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span>
+<a class="hover:text-primary" href="#">Working Papers</a>
+<span class="material-symbols-outlined text-[16px] mx-1">chevron_right</span>
+<span class="text-text-primary">WP-C.1.1</span>
+</nav>
+</div>
+<div class="flex items-center gap-4">
+<span class="px-2 py-1 bg-brand-red-muted text-primary rounded-sm font-label-sm text-label-sm uppercase tracking-wider border border-brand-red-border">IN REVIEW</span>
+<button class="p-2 text-text-secondary hover:text-primary transition-colors">
+<span class="material-symbols-outlined">more_vert</span>
+</button>
+</div>
+</header>
+<!-- Page Header -->
+<div class="px-gutter-desktop py-6 bg-surface-container-lowest border-b border-border-default">
+<h2 class="font-heading-lg text-heading-lg text-text-primary mb-2">WP-C.1.1 Cash &amp; Bank</h2>
+<p class="text-text-secondary max-w-3xl">Substantive analytical procedures and detailed testing of year-end cash balances to ensure existence, completeness, and accuracy of Acme Corp's operational accounts.</p>
+</div>
+<!-- Split Layout Area -->
+<div class="flex-1 overflow-y-auto px-gutter-desktop py-8">
+<div class="flex flex-col lg:flex-row gap-8 max-w-[1440px] mx-auto h-full">
+<!-- Left Column (2/3): Objectives, Procedures, Conclusion -->
+<div class="lg:w-2/3 flex flex-col gap-8">
+<!-- Objective Card -->
+<section class="bg-surface-container-lowest border border-border-default rounded-md p-card-padding shadow-sm">
+<h3 class="font-label-lg text-label-lg text-text-primary border-b border-border-default pb-2 mb-4">Audit Objective</h3>
+<p class="text-text-secondary mb-4">To obtain sufficient appropriate audit evidence that the cash and bank balances recorded in the financial statements exist, are owned by the entity, and are completely and accurately recorded at the reporting date.</p>
+<div class="grid grid-cols-2 gap-4 mt-6 p-4 bg-surface rounded">
+<div>
+<p class="font-label-sm text-label-sm text-text-muted mb-1 uppercase">Materiality Allocation</p>
+<p class="font-mono-md text-mono-md text-text-primary">$ 250,000.00</p>
+</div>
+<div>
+<p class="font-label-sm text-label-sm text-text-muted mb-1 uppercase">Risk Assessment</p>
+<div class="flex items-center gap-2 text-status-warning">
+<span class="material-symbols-outlined text-[18px]">warning</span>
+<span class="font-label-lg text-label-lg">Moderate</span>
+</div>
+</div>
+</div>
+</section>
+<!-- Procedures Checklist -->
+<section class="bg-surface-container-lowest border border-border-default rounded-md shadow-sm overflow-hidden flex-1 flex flex-col">
+<div class="p-4 border-b border-border-default bg-surface-container-low flex justify-between items-center">
+<h3 class="font-label-lg text-label-lg text-text-primary">Audit Procedures</h3>
+<span class="font-label-sm text-label-sm text-text-muted">4 of 5 Completed</span>
+</div>
+<div class="flex-1 overflow-y-auto p-0">
+<!-- Item 1 -->
+<div class="flex items-start gap-4 p-4 border-b border-border-default hover:bg-surface transition-colors group">
+<input checked="" class="mt-1 rounded text-primary focus:ring-primary border-border-strong w-4 h-4 cursor-pointer" type="checkbox"/>
+<div class="flex-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="px-2 py-0.5 bg-surface-container-high text-text-secondary rounded font-label-sm text-[10px] uppercase">Inquiry</span>
+<h4 class="font-label-lg text-label-lg text-text-primary line-through text-text-muted">Obtain Bank Confirmations</h4>
+</div>
+<p class="text-text-secondary text-sm mb-2">Request and receive direct confirmations from all financial institutions where the entity holds accounts.</p>
+<div class="flex gap-2">
+<span class="inline-flex items-center gap-1 text-xs text-primary bg-brand-red-muted px-2 py-1 rounded border border-brand-red-border">
+<span class="material-symbols-outlined text-[14px]">attachment</span>
+                                            Chase_Conf_FY24.pdf
+                                        </span>
+</div>
+</div>
+</div>
+<!-- Item 2 -->
+<div class="flex items-start gap-4 p-4 border-b border-border-default hover:bg-surface transition-colors group">
+<input checked="" class="mt-1 rounded text-primary focus:ring-primary border-border-strong w-4 h-4 cursor-pointer" type="checkbox"/>
+<div class="flex-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="px-2 py-0.5 bg-surface-container-high text-text-secondary rounded font-label-sm text-[10px] uppercase">Inspection</span>
+<h4 class="font-label-lg text-label-lg text-text-primary line-through text-text-muted">Test Bank Reconciliations</h4>
+</div>
+<p class="text-text-secondary text-sm">Review mathematical accuracy of client's year-end bank reconciliations and agree balance per bank to confirmation.</p>
+</div>
+</div>
+<!-- Item 3 (Pending) -->
+<div class="flex items-start gap-4 p-4 border-b border-border-default bg-brand-red-muted/20 hover:bg-brand-red-muted/40 transition-colors group">
+<input class="mt-1 rounded text-primary focus:ring-primary border-border-strong w-4 h-4 cursor-pointer" type="checkbox"/>
+<div class="flex-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="px-2 py-0.5 bg-surface-container-high text-text-secondary rounded font-label-sm text-[10px] uppercase">Inspection</span>
+<h4 class="font-label-lg text-label-lg text-text-primary">Vouch Reconciling Items</h4>
+</div>
+<p class="text-text-secondary text-sm mb-3">Trace outstanding checks and deposits in transit to subsequent bank statements to ensure timely clearing.</p>
+<div class="bg-surface border border-border-default rounded p-3 text-sm">
+<div class="flex items-center justify-between border-b border-border-default pb-2 mb-2">
+<span class="font-mono-md text-mono-md">Check #10492</span>
+<span class="font-mono-md text-mono-md text-status-danger">$ 45,200.00</span>
+</div>
+<p class="text-text-muted italic text-xs flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">error</span>
+                                            Awaiting January statement to verify clearing date.
+                                        </p>
+</div>
+</div>
+</div>
+</div>
+</section>
+<!-- Conclusion Text Area -->
+<section class="bg-surface-container-lowest border border-border-default rounded-md p-card-padding shadow-sm">
+<div class="flex justify-between items-end mb-4">
+<h3 class="font-label-lg text-label-lg text-text-primary">Audit Conclusion</h3>
+<button class="text-primary hover:text-brand-red-hover text-sm flex items-center gap-1 font-label-lg text-label-lg transition-colors">
+<span class="material-symbols-outlined text-[16px]">edit</span>
+                                Edit Draft
+                            </button>
+</div>
+<div class="bg-surface border border-border-default rounded p-4 relative min-h-[120px]">
+<p class="text-text-primary">Based on the procedures performed, nothing has come to our attention that causes us to believe the cash and bank balances are materially misstated. Exceptions noted during reconciliation testing were trivial and resolved satisfactorily.</p>
+<div class="absolute bottom-4 right-4 flex items-center gap-2">
+<span class="w-2 h-2 rounded-full bg-status-warning animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-text-muted">Draft Saved 10m ago</span>
+</div>
+</div>
+</section>
+</div>
+<!-- Right Column (1/3): Sign-off & Review Notes -->
+<div class="lg:w-1/3 flex flex-col gap-8">
+<!-- Sign-off Trail -->
+<section class="bg-surface-container-lowest border border-border-default rounded-md shadow-sm">
+<div class="p-4 border-b border-border-default">
+<h3 class="font-label-lg text-label-lg text-text-primary flex items-center gap-2">
+<span class="material-symbols-outlined">verified_user</span>
+                                Sign-off Trail
+                            </h3>
+</div>
+<div class="p-4 flex flex-col gap-0 relative">
+<!-- Vertical Line -->
+<div class="absolute left-[31px] top-[36px] bottom-[36px] w-[2px] bg-border-default z-0"></div>
+<!-- Prepared -->
+<div class="flex gap-4 relative z-10 mb-6">
+<div class="w-8 h-8 rounded-full bg-primary-container text-white flex items-center justify-center shrink-0 border-2 border-surface-container-lowest">
+<span class="font-label-sm text-[10px]">JD</span>
+</div>
+<div class="pt-1">
+<p class="font-label-lg text-label-lg text-text-primary">Prepared by John Doe</p>
+<p class="text-xs text-text-muted">Oct 12, 2024 - 14:30 EST</p>
+</div>
+</div>
+<!-- Reviewed -->
+<div class="flex gap-4 relative z-10 mb-6">
+<div class="w-8 h-8 rounded-full bg-surface-variant text-text-secondary flex items-center justify-center shrink-0 border-2 border-surface-container-lowest">
+<span class="font-label-sm text-[10px]">SA</span>
+</div>
+<div class="pt-1">
+<p class="font-label-lg text-label-lg text-text-primary">Reviewed by Sarah Adams</p>
+<p class="text-xs text-text-muted">Oct 14, 2024 - 09:15 EST</p>
+</div>
+</div>
+<!-- Manager Approval (Pending) -->
+<div class="flex gap-4 relative z-10">
+<div class="w-8 h-8 rounded-full bg-surface border-2 border-dashed border-border-strong text-text-muted flex items-center justify-center shrink-0">
+<span class="material-symbols-outlined text-[16px]">pending</span>
+</div>
+<div class="pt-1 flex-1">
+<p class="font-label-lg text-label-lg text-text-muted">Manager Approval Pending</p>
+<button class="mt-2 w-full py-1.5 bg-primary hover:bg-brand-red-hover text-white rounded font-label-lg text-label-lg transition-colors">Sign Off</button>
+</div>
+</div>
+</div>
+</section>
+<!-- Review Notes Thread -->
+<section class="bg-surface-container-lowest border border-border-default rounded-md shadow-sm flex-1 flex flex-col min-h-[300px]">
+<div class="p-4 border-b border-border-default flex justify-between items-center bg-surface-container-low">
+<h3 class="font-label-lg text-label-lg text-text-primary flex items-center gap-2">
+<span class="material-symbols-outlined">forum</span>
+                                Review Notes
+                            </h3>
+<span class="bg-status-warning text-white font-label-sm text-[10px] px-2 py-0.5 rounded">1 OPEN</span>
+</div>
+<div class="flex-1 overflow-y-auto p-4 flex flex-col gap-4">
+<!-- Thread Item -->
+<div class="bg-surface rounded border border-border-default p-3">
+<div class="flex justify-between items-start mb-2">
+<div class="flex items-center gap-2">
+<div class="w-6 h-6 rounded bg-surface-variant text-text-secondary flex items-center justify-center font-label-sm text-[9px]">SA</div>
+<span class="font-label-lg text-label-lg text-text-primary">Sarah A.</span>
+</div>
+<span class="text-xs text-text-muted">Yesterday</span>
+</div>
+<p class="text-sm text-text-primary mb-2">Please ensure you attach the final confirmation received from Wells Fargo. The current attachment appears to be incomplete.</p>
+<div class="flex justify-end gap-2">
+<button class="text-xs font-label-sm text-text-muted hover:text-primary transition-colors">Reply</button>
+<button class="text-xs font-label-sm text-text-muted hover:text-primary transition-colors flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">check</span> Resolve
+                                    </button>
+</div>
+</div>
+</div>
+<!-- Input Area -->
+<div class="p-3 border-t border-border-default bg-surface">
+<div class="relative">
+<textarea class="w-full bg-surface-container-lowest border border-border-strong rounded focus:border-primary focus:ring-1 focus:ring-primary p-2 text-sm min-h-[80px] resize-none" placeholder="Add a review note..."></textarea>
+<div class="absolute bottom-2 right-2 flex gap-1">
+<button class="p-1 text-text-muted hover:text-primary transition-colors">
+<span class="material-symbols-outlined text-[18px]">alternate_email</span>
+</button>
+<button class="px-3 py-1 bg-primary text-white rounded font-label-sm text-xs hover:bg-brand-red-hover transition-colors">Post</button>
+</div>
+</div>
+</div>
+</section>
+</div>
+</div>
+</div>
+</main>
+</body></html>

@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>MFA Verification | LedgerScope</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600&amp;family=DM+Serif+Display:ital@0;1&amp;family=IBM+Plex+Mono:wght@400&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "primary": "#970600",
+                      "inverse-primary": "#ffb4a7",
+                      "secondary": "#5e5e62",
+                      "surface-container-highest": "#e1e2e4",
+                      "error": "#ba1a1a",
+                      "primary-container": "#c0190a",
+                      "surface-variant": "#e1e2e4",
+                      "surface-bright": "#f8f9fb",
+                      "inverse-on-surface": "#f0f1f3",
+                      "brand-red-border": "#EBBAB7",
+                      "status-danger": "#DC2626",
+                      "shell-elevated": "#1A1C23",
+                      "border-default": "#E3E5E9",
+                      "on-secondary": "#ffffff",
+                      "tertiary": "#00552f",
+                      "surface-container-lowest": "#ffffff",
+                      "brand-red-hover": "#A31508",
+                      "secondary-fixed": "#e3e2e6",
+                      "surface-container-low": "#f3f4f6",
+                      "surface": "#f8f9fb",
+                      "primary-fixed-dim": "#ffb4a7",
+                      "on-primary": "#ffffff",
+                      "outline-variant": "#e5bdb7",
+                      "inverse-surface": "#2e3132",
+                      "on-primary-fixed": "#400100",
+                      "brand-red-press": "#8B1208",
+                      "tertiary-fixed-dim": "#84d8a1",
+                      "secondary-container": "#e0dfe3",
+                      "outline": "#916f6a",
+                      "on-tertiary-fixed-variant": "#00522d",
+                      "surface-container": "#edeef0",
+                      "surface-dim": "#d9dadc",
+                      "surface-tint": "#bc1507",
+                      "background": "#f8f9fb",
+                      "shell-surface": "#13141A",
+                      "error-container": "#ffdad6",
+                      "on-tertiary-fixed": "#00210f",
+                      "on-surface-variant": "#5c403b",
+                      "on-error-container": "#93000a",
+                      "on-primary-fixed-variant": "#920600",
+                      "on-primary-container": "#ffd3cb",
+                      "shell-border": "#252830",
+                      "on-error": "#ffffff",
+                      "on-surface": "#191c1e",
+                      "text-secondary": "#4A5261",
+                      "secondary-fixed-dim": "#c7c6ca",
+                      "text-primary": "#0F1114",
+                      "tertiary-container": "#156f42",
+                      "tertiary-fixed": "#a0f5bb",
+                      "on-tertiary": "#ffffff",
+                      "on-secondary-container": "#626266",
+                      "brand-red-muted": "#F8E8E7",
+                      "on-secondary-fixed": "#1b1b1f",
+                      "primary-fixed": "#ffdad4",
+                      "status-warning": "#B45309",
+                      "border-strong": "#CDD0D6",
+                      "surface-container-high": "#e7e8ea",
+                      "on-tertiary-container": "#9aefb6",
+                      "text-muted": "#8C93A0",
+                      "on-background": "#191c1e",
+                      "on-secondary-fixed-variant": "#46464a"
+              },
+              "borderRadius": {
+                      "DEFAULT": "4px",
+                      "lg": "8px",
+                      "xl": "12px",
+                      "full": "9999px"
+              },
+              "spacing": {
+                      "table-cell-v": "12px",
+                      "gutter-tablet": "24px",
+                      "gutter-desktop": "32px",
+                      "sub-unit": "4px",
+                      "baseline": "8px",
+                      "table-cell-h": "16px",
+                      "card-padding": "24px",
+                      "form-gap": "20px"
+              },
+              "fontFamily": {
+                      "label-lg": ["IBM Plex Sans"],
+                      "display-md": ["DM Serif Display"],
+                      "body-md": ["IBM Plex Sans"],
+                      "mono-md": ["IBM Plex Mono"],
+                      "display-lg": ["DM Serif Display"],
+                      "heading-lg": ["IBM Plex Sans"],
+                      "label-sm": ["IBM Plex Sans"]
+              },
+              "fontSize": {
+                      "label-lg": ["14px", {"lineHeight": "20px", "fontWeight": "500"}],
+                      "display-md": ["30px", {"lineHeight": "36px", "fontWeight": "600"}],
+                      "body-md": ["14px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "mono-md": ["14px", {"lineHeight": "24px", "fontWeight": "400"}],
+                      "display-lg": ["36px", {"lineHeight": "40px", "fontWeight": "600"}],
+                      "heading-lg": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                      "label-sm": ["12px", {"lineHeight": "16px", "letterSpacing": "0.08em", "fontWeight": "500"}]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        .mfa-input:focus {
+            box-shadow: 0 0 0 3px rgba(192, 25, 10, 0.20);
+            border-color: #970600;
+        }
+        .editorial-shadow {
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+        }
+        .immutable-overlay {
+            background-color: #0C0D10;
+            opacity: 0.72;
+            backdrop-filter: blur(2px);
+        }
+    </style>
+</head>
+<body class="bg-surface font-body-md text-text-primary antialiased overflow-hidden">
+<!-- Split Layout Container -->
+<main class="flex min-h-screen">
+<!-- Left Side: Editorial Brand Content (Desktop Only) -->
+<section class="hidden lg:flex lg:w-1/2 bg-shell-surface flex-col justify-between p-12 text-white relative">
+<div class="z-10">
+<div class="flex items-center gap-3 mb-16">
+<span class="material-symbols-outlined text-primary text-4xl" style="font-variation-settings: 'FILL' 1;">account_balance</span>
+<h1 class="font-display-md text-display-md tracking-tight">LedgerScope</h1>
+</div>
+<div class="max-w-md">
+<h2 class="font-display-lg text-display-lg mb-6 leading-tight">Advanced Financial Integrity &amp; Verification.</h2>
+<p class="text-text-muted font-body-md leading-relaxed">
+                        Secure access to the global ledger requires multi-factor authentication. Our protocols ensure that every entry, audit, and transaction remains immutable and traceable.
+                    </p>
+</div>
+</div>
+<div class="z-10 border-t border-shell-border pt-8 flex items-center justify-between">
+<div>
+<p class="font-label-sm text-label-sm uppercase tracking-widest text-text-muted mb-1">System Status</p>
+<div class="flex items-center gap-2">
+<div class="h-2 w-2 rounded-full bg-tertiary-container"></div>
+<span class="font-mono-md text-mono-md text-on-tertiary-container">ALL PROTOCOLS NOMINAL</span>
+</div>
+</div>
+<div class="text-right">
+<p class="font-label-sm text-label-sm text-text-muted italic">"In Math We Trust, In Ledgers We Verify"</p>
+</div>
+</div>
+<!-- Abstract Background Graphic -->
+<div class="absolute inset-0 opacity-20 pointer-events-none">
+<img class="w-full h-full object-cover grayscale brightness-50" data-alt="A sophisticated digital visualization of a blockchain network or financial ledger system. The image features clean, sharp lines and geometric nodes interconnecting in a high-contrast dark space. Deep blacks dominate the background while thin, precise glowing lines in muted grays and sharp brand reds create a sense of secure, high-stakes infrastructure. The lighting is cold and professional, evoking a disciplined and authoritative atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuBwZ6yoAZ7rQJC8Wk7gu0TOaMcpKHBNtutKKIqQOv8Vhf2Y5pmQPziL6khGxDsMXbOKkXvFtjnF9SZJf_DUNXfdHfxOzGKXEImTUpJ3pyZF-yreFLTDkAIidfbkiNsaNKWvhCQDQWxc6NJlP22Bw1Y2iVIAe7Qw5w0N7aWdcJPoBpWKUoZKJJ1-mnzU_F-pDSKYTb-3WEZ1FPTNVjKL7nYkP7om5Ok7Gz2gM9_68KaXbYwX_diG8sFmuCcq99Qnqmc4SUTJ0qIXrJkn"/>
+</div>
+</section>
+<!-- Right Side: MFA Verification Canvas -->
+<section class="w-full lg:w-1/2 flex items-center justify-center p-6 sm:p-12 bg-surface">
+<div class="w-full max-w-[440px]">
+<!-- Logo for Mobile -->
+<div class="lg:hidden flex justify-center mb-10">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-primary text-3xl" style="font-variation-settings: 'FILL' 1;">account_balance</span>
+<h1 class="font-display-md text-display-md text-primary">LedgerScope</h1>
+</div>
+</div>
+<!-- Verification Card -->
+<div class="bg-surface-container-lowest border border-border-default rounded-lg p-baseline sm:p-card-padding editorial-shadow">
+<div class="mb-8">
+<h2 class="font-heading-lg text-heading-lg text-text-primary mb-2">Two-Factor Authentication</h2>
+<p class="text-text-secondary font-body-md">
+                            A 6-digit verification code has been sent to <span class="text-text-primary font-medium">a.v***@acme.corp</span>. Please enter it below to continue.
+                        </p>
+</div>
+<form class="space-y-form-gap" id="mfa-form">
+<!-- 6-Digit OTP Inputs -->
+<div class="flex justify-between gap-2 sm:gap-3" id="otp-container">
+<input class="mfa-input w-full h-14 text-center text-xl font-mono-md border border-border-strong rounded transition-all focus:outline-none" maxlength="1" required="" type="text"/>
+<input class="mfa-input w-full h-14 text-center text-xl font-mono-md border border-border-strong rounded transition-all focus:outline-none" maxlength="1" required="" type="text"/>
+<input class="mfa-input w-full h-14 text-center text-xl font-mono-md border border-border-strong rounded transition-all focus:outline-none" maxlength="1" required="" type="text"/>
+<input class="mfa-input w-full h-14 text-center text-xl font-mono-md border border-border-strong rounded transition-all focus:outline-none" maxlength="1" required="" type="text"/>
+<input class="mfa-input w-full h-14 text-center text-xl font-mono-md border border-border-strong rounded transition-all focus:outline-none" maxlength="1" required="" type="text"/>
+<input class="mfa-input w-full h-14 text-center text-xl font-mono-md border border-border-strong rounded transition-all focus:outline-none" maxlength="1" required="" type="text"/>
+</div>
+<div class="pt-2">
+<button class="w-full py-3 bg-primary text-white font-label-lg rounded hover:bg-brand-red-hover active:bg-brand-red-press transition-colors shadow-sm flex items-center justify-center gap-2 group" type="submit">
+<span>Verify and Continue</span>
+<span class="material-symbols-outlined text-[18px] group-hover:translate-x-1 transition-transform">arrow_forward</span>
+</button>
+</div>
+<div class="flex flex-col items-center gap-4 pt-4 border-t border-border-default">
+<button class="text-text-secondary hover:text-primary font-label-lg transition-colors flex items-center gap-2" type="button">
+<span class="material-symbols-outlined text-[18px]">refresh</span>
+                                Resend Code (59s)
+                            </button>
+<a class="text-text-muted hover:text-text-primary font-label-sm uppercase tracking-wider underline-offset-4 hover:underline" href="#">
+                                I've lost access to my email
+                            </a>
+</div>
+</form>
+</div>
+<!-- Footer Links -->
+<div class="mt-8 flex justify-center gap-gutter-tablet">
+<a class="text-text-muted font-label-sm hover:text-text-primary" href="#">Legal</a>
+<a class="text-text-muted font-label-sm hover:text-text-primary" href="#">Audit Policy</a>
+<a class="text-text-muted font-label-sm hover:text-text-primary" href="#">Technical Support</a>
+</div>
+</div>
+</section>
+</main>
+<!-- Micro-interaction Script for OTP Auto-focus and UX -->
+<script>
+        const inputs = document.querySelectorAll('.mfa-input');
+        const form = document.getElementById('mfa-form');
+
+        inputs.forEach((input, index) => {
+            // Focus first input on load
+            if (index === 0) input.focus();
+
+            input.addEventListener('input', (e) => {
+                if (e.target.value.length === 1 && index < inputs.length - 1) {
+                    inputs[index + 1].focus();
+                }
+            });
+
+            input.addEventListener('keydown', (e) => {
+                if (e.key === 'Backspace' && e.target.value === '' && index > 0) {
+                    inputs[index - 1].focus();
+                }
+            });
+
+            // Prevent non-numeric entry for standard OTP behavior
+            input.addEventListener('keypress', (e) => {
+                if (!/[0-9]/.test(e.key)) {
+                    e.preventDefault();
+                }
+            });
+        });
+
+        form.addEventListener('submit', (e) => {
+            e.preventDefault();
+            const btn = e.target.querySelector('button[type="submit"]');
+            const originalContent = btn.innerHTML;
+
+            // Visual feedback for "Authoritative" UX
+            btn.disabled = true;
+            btn.innerHTML = `
+                <svg class="animate-spin h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+                <span>Authenticating Credentials...</span>
+            `;
+
+            // Mock success and transition
+            setTimeout(() => {
+                btn.classList.replace('bg-primary', 'bg-tertiary-container');
+                btn.innerHTML = `
+                    <span class="material-symbols-outlined">check_circle</span>
+                    <span>Identity Verified</span>
+                `;
+            }, 1200);
+        });
+
+        // Subtle animation for error (shake) if logic were present
+        function triggerErrorShake() {
+            const container = document.getElementById('otp-container');
+            container.classList.add('animate-[shake_0.3s_ease-in-out]');
+            setTimeout(() => container.classList.remove('animate-[shake_0.3s_ease-in-out]'), 300);
+        }
+    </script>
+<style>
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            25% { transform: translateX(-4px); }
+            75% { transform: translateX(4px); }
+        }
+        .animate-shake {
+            animation: shake 0.3s ease-in-out;
+        }
+    </style>
+</body></html>
