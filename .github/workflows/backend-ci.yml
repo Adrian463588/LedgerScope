@@ -170,6 +170,7 @@ jobs:
       contents: read
       packages: write
       security-events: write # Required for Trivy to upload SARIF results to GitHub Security tab
+      actions: read # Required to access workflow-runs API for SARIF upload
 
     steps:
       - uses: actions/checkout@v4
@@ -212,6 +213,7 @@ jobs:
       - name: Upload Trivy scan results to GitHub Security tab
         uses: github/codeql-action/upload-sarif@v3
         if: always() # Upload results even if the previous step failed
+        continue-on-error: true # Prevents pipeline crash on private repos without Advanced Security
         with:
           sarif_file: 'trivy-results.sarif'
 

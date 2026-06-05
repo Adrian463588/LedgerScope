@@ -3,8 +3,9 @@ FROM php:8.4-fpm-alpine AS base
 
 WORKDIR /var/www/html
 
-# Runtime system dependencies
-RUN apk add --no-cache \
+# Runtime system dependencies and security updates
+RUN apk upgrade --no-cache && \
+    apk add --no-cache \
     libpng \
     libzip \
     libpq \
