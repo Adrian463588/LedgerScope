@@ -27,7 +27,7 @@ final class CompanyUserController extends Controller
             'is_primary' => ['nullable', 'boolean'],
         ]);
 
-        $user = User::findOrFail($validated['user_id']);
+        $user = User::findOrFail((int) $validated['user_id']);
         $companyUser = $this->service->assignUser($company, $user, $validated);
 
         return ApiResponse::created($companyUser, 'User assigned to company.');
