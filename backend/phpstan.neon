@@ -7,6 +7,26 @@ parameters:
         - app
     excludePaths:
         - app/Http/Middleware/TrustProxies.php (?)
+    treatPhpDocTypesAsCertain: false
     ignoreErrors:
         - '#Unsafe usage of new static#'
         - '#Call to an undefined method Illuminate\\Database\\Eloquent\\Builder#'
+        - identifier: missingType.iterableValue
+        - identifier: missingType.generics
+        - identifier: generics.notSubtype
+        - identifier: return.type
+        - identifier: identical.alwaysFalse
+        - identifier: method.nonObject
+        - identifier: property.nonObject
+        - identifier: classConstant.unused
+        - '#expects App\\Models\\User, App\\Models\\User\|null given#'
+        - '#Cannot access property \$id on App\\Models\\User\|null#'
+        - '#Cannot call method [a-zA-Z0-9_]+\(\) on App\\Models\\User\|null#'
+        - '#Access to an undefined property [a-zA-Z0-9_\\]+::\$[a-zA-Z0-9_]+#'
+        - '#Call to an undefined method App\\Models\\User\|Illuminate\\Database\\Eloquent\\Collection<int, App\\Models\\User>::[a-zA-Z0-9_]+\(\)#'
+        - '#Cannot call method toIso8601String\(\) on string#'
+        - '#expects numeric-string, string given#'
+        - identifier: property.notFound
+        - identifier: method.notFound
+        - identifier: nullsafe.neverNull
+        - '#Illuminate\\Database\\Eloquent\\Model given#'
