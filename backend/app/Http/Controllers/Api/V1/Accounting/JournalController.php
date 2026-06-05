@@ -21,10 +21,10 @@ final class JournalController extends Controller
         $this->authorize('view', $company);
 
         $journals = JournalEntry::where('company_id', $company->id)
-            ->when($request->query('status'), fn ($q) => $q->where('status', $request->query('status')))
-            ->when($request->query('period_id'), fn ($q) => $q->where('accounting_period_id', $request->query('period_id')))
+            ->when($request->query('status'), fn ($q) => $q->where('status', (string) $request->query('status')))
+            ->when($request->query('period_id'), fn ($q) => $q->where('accounting_period_id', (string) $request->query('period_id')))
             ->orderByDesc('journal_date')
-            ->paginate((int) $request->query('per_page', 20));
+            ->paginate((int) $request->query('per_page', '20'));
 
         return ApiResponse::paginated($journals);
     }

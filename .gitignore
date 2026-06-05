@@ -20,6 +20,10 @@ public/storage
 backend/public/build/
 backend/public/hot
 backend/public/storage
+frontend/dist/
+frontend/coverage/
+frontend/cypress/screenshots/
+frontend/cypress/videos/
 
 # Logs, caches, and runtime files
 *.log

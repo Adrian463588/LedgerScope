@@ -8,9 +8,14 @@ use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
+/**
+ * @property \App\Models\User $superAdmin
+ */
+
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
+    /** @var \Tests\TestCase $this */
     $this->superAdmin = User::factory()->create();
     $this->superAdmin->roles()->attach(
         Role::where('name', 'super_admin')->first()

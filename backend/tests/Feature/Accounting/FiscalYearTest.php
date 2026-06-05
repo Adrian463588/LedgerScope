@@ -13,9 +13,15 @@ use App\Services\Accounting\PeriodLockService;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 
+/**
+ * @property \App\Models\User $admin
+ * @property \App\Models\Company $company
+ */
+
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
+    /** @var \Tests\TestCase $this */
     $this->admin = User::factory()->create();
     $adminRole = Role::firstOrCreate(['name' => 'super_admin'], ['display_name' => 'Super Admin']);
     $this->admin->roles()->attach($adminRole->id);
@@ -60,6 +66,7 @@ it('creates 14 checklist items per quarter', function (): void {
     $service = app(FiscalYearGeneratorService::class);
     $fiscalYear = $service->generate($this->company, 2024);
 
+    /** @var \App\Models\Quarter $quarter */
     $quarter = $fiscalYear->quarters()->first();
     expect($quarter->checklists()->count())->toBe(14);
 });
@@ -76,6 +83,7 @@ it('period lock service locks a period', function (): void {
     $service = app(FiscalYearGeneratorService::class);
     $fiscalYear = $service->generate($this->company, 2024);
 
+    /** @var \App\Models\AccountingPeriod $period */
     $period = $fiscalYear->accountingPeriods()->first();
 
     // Assign lock permission
@@ -95,6 +103,7 @@ it('period lock service locks a period', function (): void {
 it('cannot lock an already-locked period', function (): void {
     $service = app(FiscalYearGeneratorService::class);
     $fiscalYear = $service->generate($this->company, 2024);
+    /** @var \App\Models\AccountingPeriod $period */
     $period = $fiscalYear->accountingPeriods()->first();
 
     $perm = Permission::firstOrCreate(
@@ -114,6 +123,7 @@ it('cannot lock an already-locked period', function (): void {
 it('unlock requires a reason', function (): void {
     $service = app(FiscalYearGeneratorService::class);
     $fiscalYear = $service->generate($this->company, 2024);
+    /** @var \App\Models\AccountingPeriod $period */
     $period = $fiscalYear->accountingPeriods()->first();
 
     $lockPerm = Permission::firstOrCreate(

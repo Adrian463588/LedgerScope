@@ -19,7 +19,7 @@ final class CompanyController extends Controller
     {
         $this->authorize('viewAny', Company::class);
 
-        $companies = $this->service->listForUser($request->user(), (int) $request->query('per_page', 20));
+        $companies = $this->service->listForUser($request->user(), (int) $request->query('per_page', '20'));
 
         return ApiResponse::paginated($companies);
     }

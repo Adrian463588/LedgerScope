@@ -1,0 +1,167 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap');
+@import 'tailwindcss';
+
+@theme {
+  --color-brand-50: #fef1f0;
+  --color-brand-100: #fee2e0;
+  --color-brand-200: #fdcac7;
+  --color-brand-300: #fa9e99;
+  --color-brand-400: #f56b63;
+  --color-brand-500: #e53a30;
+  --color-brand-600: #c0190a;
+  --color-brand-700: #a31508;
+  --color-brand-800: #8b1208;
+  --color-brand-900: #72100a;
+  --color-brand-950: #3d0705;
+  --color-shell-50: #f0f1f4;
+  --color-shell-100: #e3e5e9;
+  --color-shell-200: #c6cad3;
+  --color-shell-300: #9ea5b3;
+  --color-shell-400: #717a8a;
+  --color-shell-500: #4a5261;
+  --color-shell-600: #363d4b;
+  --color-shell-700: #252830;
+  --color-shell-800: #1a1c23;
+  --color-shell-900: #13141a;
+  --color-shell-950: #0c0d10;
+}
+
+:root {
+  --brand-red: #c0190a;
+  --brand-red-hover: #a31508;
+  --brand-red-press: #8b1208;
+  --brand-red-muted: #f8e8e7;
+  --brand-red-border: #ebbab7;
+  --shell-bg: #0c0d10;
+  --shell-surface: #13141a;
+  --shell-elevated: #1a1c23;
+  --shell-border: #252830;
+  --shell-border-soft: #1e2028;
+  --page-bg: #f4f5f7;
+  --surface: #ffffff;
+  --surface-alt: #f9fafb;
+  --surface-hover: #f1f3f5;
+  --surface-active: #eef0f3;
+  --border: #e3e5e9;
+  --border-strong: #cdd0d6;
+  --border-focus: #c0190a;
+  --text-primary: #0f1114;
+  --text-secondary: #4a5261;
+  --text-muted: #8c93a0;
+  --text-inverse: #f5f6f8;
+  --text-inverse-muted: #7b8190;
+  --debit-color: #0d6b3e;
+  --credit-color: #c0190a;
+  --zero-color: #8c93a0;
+  --locked-color: #4a5261;
+  --status-success: #059669;
+  --status-success-bg: #ecfdf5;
+  --status-success-border: #a7f3d0;
+  --status-warning: #b45309;
+  --status-warning-bg: #fffbeb;
+  --status-warning-border: #fde68a;
+  --status-danger: #dc2626;
+  --status-danger-bg: #fef2f2;
+  --status-danger-border: #fecaca;
+  --status-info: #1d4ed8;
+  --status-info-bg: #eff6ff;
+  --status-info-border: #bfdbfe;
+  --status-neutral: #4a5261;
+  --status-neutral-bg: #f4f5f7;
+  --status-neutral-border: #e3e5e9;
+  --status-locked: #374151;
+  --status-locked-bg: #f9fafb;
+  --status-locked-border: #d1d5db;
+  --shadow-card: 0 1px 3px 0 rgb(0 0 0 / 8%), 0 1px 2px -1px rgb(0 0 0 / 6%);
+  --shadow-modal: 0 20px 48px -12px rgb(0 0 0 / 20%);
+  --shadow-dropdown: 0 4px 16px -2px rgb(0 0 0 / 14%);
+  --shadow-focus: 0 0 0 3px rgb(192 25 10 / 20%);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  color: var(--text-primary);
+  background: var(--page-bg);
+  font-family: 'IBM Plex Sans', system-ui, sans-serif;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  background: var(--page-bg);
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+button:focus-visible,
+a:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--brand-red);
+  outline-offset: 2px;
+}
+
+.font-display {
+  font-family: 'DM Serif Display', Georgia, serif;
+}
+
+.font-mono-finance {
+  font-family: 'IBM Plex Mono', ui-monospace, monospace;
+  font-variant-numeric: tabular-nums;
+}
+
+.page-content {
+  animation: page-in 280ms cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.data-table tbody tr {
+  animation: row-in 200ms ease both;
+}
+
+.skeleton {
+  background: linear-gradient(90deg, var(--border) 25%, var(--surface-alt) 50%, var(--border) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.6s infinite;
+  border-radius: 3px;
+}
+
+.balance-indicator {
+  transition: color 180ms ease, transform 180ms ease;
+}
+
+.balance-indicator.unbalanced {
+  animation: shake 300ms;
+}
+
+@keyframes shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+
+@keyframes row-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  20% { transform: translateX(-3px); }
+  40% { transform: translateX(3px); }
+  60% { transform: translateX(-2px); }
+  80% { transform: translateX(2px); }
+}
