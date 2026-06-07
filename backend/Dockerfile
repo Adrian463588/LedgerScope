@@ -17,6 +17,8 @@ RUN apk upgrade --no-cache && \
 # This automatically installs -dev packages for compiling and removes them afterwards
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 
+ENV MAKEFLAGS="-j1"
+
 RUN install-php-extensions \
     pdo \
     pdo_pgsql \
@@ -25,6 +27,8 @@ RUN install-php-extensions \
     bcmath \
     zip \
     gd
+
+ENV MAKEFLAGS=""
 
 # ─── Stage 2: Build dependencies ─────────────────────────────────────────────
 FROM base AS build
