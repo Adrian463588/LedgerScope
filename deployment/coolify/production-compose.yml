@@ -1,0 +1,140 @@
+# LedgerScope Production Docker Compose for Coolify
+# Copy and import this into Coolify's Application Stack Editor.
+
+version: '3.8'
+
+services:
+  # 1. Backend Service (Laravel 13 + PHP 8.4 + Horizon + Nginx)
+  ledgerscope-backend:
+    build:
+      context: .
+      dockerfile: backend/Dockerfile
+    container_name: ledgerscope-backend-prod
+    restart: unless-stopped
+    environment:
+      - APP_NAME=LedgerScope
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_KEY=${APP_KEY} # Securely managed in Coolify Secrets
+      - APP_URL=${APP_BACKEND_URL}
+      
+      # Database connection (internal Coolify network)
+      - DB_CONNECTION=pgsql
+      - DB_HOST=ledgerscope-db
+      - DB_PORT=5432
+      - DB_DATABASE=ledgerscope
+      - DB_USERNAME=ledgerscope_user
+      - DB_PASSWORD=${DB_PASSWORD}
+      
+      # Cache & Queue (Redis internal)
+      - CACHE_STORE=redis
+      - QUEUE_CONNECTION=redis
+      - SESSION_DRIVER=redis
+      - REDIS_HOST=ledgerscope-redis
+      - REDIS_PORT=6379
+      
+      # S3 / Object Storage Configuration
+      # (Set to 's3' for GCS Interoperability or self-hosted MinIO)
+      - FILESYSTEM_DISK=${FILESYSTEM_DISK:-s3}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - AWS_BUCKET=${AWS_BUCKET:-ledgerscope-evidence}
+      - AWS_ENDPOINT=${AWS_ENDPOINT} # e.g. https://storage.googleapis.com or http://ledgerscope-minio:9000
+      - AWS_USE_PATH_STYLE_ENDPOINT=true
+
+    volumes:
+      - backend-storage:/var/www/html/storage
+    depends_on:
+      ledgerscope-db:
+        condition: service_healthy
+      ledgerscope-redis:
+        condition: service_healthy
+    networks:
+      - ledgerscope-network
+
+  # 2. Frontend Service (Vue 3 SPA + Secure Nginx Proxy)
+  ledgerscope-frontend:
+    build:
+      context: .
+      dockerfile: deployment/docker/frontend.dockerfile
+    container_name: ledgerscope-frontend-prod
+    restart: unless-stopped
+    depends_on:
+      - ledgerscope-backend
+    labels:
+      # Coolify dynamic domain assignment and reverse proxy configuration
+      - "coolify.fqdn=${APP_FRONTEND_URL}"
+    networks:
+      - ledgerscope-network
+
+  # 3. Database Service (PostgreSQL 17)
+  ledgerscope-db:
+    image: postgres:17-alpine
+    container_name: ledgerscope-db-prod
+    restart: unless-stopped
+    environment:
+      - POSTGRES_DB=ledgerscope
+      - POSTGRES_USER=ledgerscope_user
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    volumes:
+      - db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ledgerscope_user -d ledgerscope"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ledgerscope-network
+
+  # 4. Cache & Queue Service (Redis 7)
+  ledgerscope-redis:
+    image: redis:7-alpine
+    container_name: ledgerscope-redis-prod
+    restart: unless-stopped
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis-data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ledgerscope-network
+
+  # 5. Object Storage (MinIO) - Fallback if not using GCP Cloud Storage
+  ledgerscope-minio:
+    image: minio/minio:latest
+    container_name: ledgerscope-minio-prod
+    restart: unless-stopped
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-ledgerscope_minio}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+    volumes:
+      - minio-data:/data
+    command: server /data --console-address ":9001"
+    labels:
+      # Coolify subdomains for Object Storage API and Console
+      - "coolify.fqdn=${MINIO_API_URL},${MINIO_CONSOLE_URL}"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - ledgerscope-network
+
+volumes:
+  backend-storage:
+    driver: local
+  db-data:
+    driver: local
+  redis-data:
+    driver: local
+  minio-data:
+    driver: local
+
+networks:
+  ledgerscope-network:
+    name: ledgerscope-prod-network

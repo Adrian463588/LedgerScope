@@ -62,3 +62,9 @@ backend/test_pdo.php
 # BMAD temporary output
 _bmad-output/
 
+# Terraform ignore rules
+**/.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.tfstate.lock.info
+**/.terraform.lock.hcl
