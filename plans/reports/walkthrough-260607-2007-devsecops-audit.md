@@ -21,3 +21,8 @@ Audit keamanan DevSecOps telah berhasil dilakukan pada repositori. Perubahan kod
    - Menjalankan regex scan untuk mendeteksi penugasan rahasia (`password=`, `secret=`, dll.) dan memverifikasi bahwa tidak ada nilai rahasia sensitif yang tertulis di kode.
 3. **Keamanan CI/CD**:
    - Alur kerja GitHub Actions (`.github/workflows/backend-ci.yml`) sudah menyertakan pemindaian otomatis `Gitleaks` untuk mendeteksi rahasia dan pemindaian `Trivy` untuk image Docker. Ini memastikan proteksi DevSecOps berlapis pada remote repository saat proses push dilakukan.
+
+## Pertanyaan yang Belum Terpecahkan (Unresolved Questions)
+
+- Tidak ada. Seluruh file sensitif telah diverifikasi diabaikan oleh `.gitignore` dan tidak ada kebocoran kredensial terdeteksi dalam repositori.
+
