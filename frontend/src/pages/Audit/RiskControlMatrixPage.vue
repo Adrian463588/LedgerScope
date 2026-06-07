@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, computed } from 'vue';
+import { useRoute } from 'vue-router';
 import { Plus, Trash, Check, ShieldAlert } from 'lucide-vue-next';
 import { useUiStore } from '@/stores/ui.store';
 import { useCompanyStore } from '@/stores/company.store';
@@ -12,6 +13,7 @@ import PageHeader from '@/components/ui/PageHeader.vue';
 import StatusBadge from '@/components/ui/StatusBadge.vue';
 import ControlRiskList from '@/components/audit/control-risk-list.vue';
 
+const route = useRoute();
 const ui = useUiStore();
 const companyStore = useCompanyStore();
 const notification = useNotification();
@@ -30,12 +32,18 @@ const newDesc = ref('');
 async function loadEngagement() {
   try {
     isLoading.value = true;
-    const companyId = companyStore.activeCompany?.id ?? 1;
-    const engagements = await engagementApi.list(companyId);
-    const firstEng = engagements[0];
-    if (firstEng && firstEng.id !== undefined) {
-      engagementId.value = firstEng.id;
+    const paramId = route.params['id'];
+    if (paramId) {
+      engagementId.value = Number(paramId);
       await fetchControls();
+    } else {
+      const companyId = companyStore.activeCompany?.id ?? 1;
+      const engagements = await engagementApi.list(companyId);
+      const firstEng = engagements[0];
+      if (firstEng && firstEng.id !== undefined) {
+        engagementId.value = firstEng.id;
+        await fetchControls();
+      }
     }
   } catch (error) {
     notification.error('Failed to load active engagement.');
