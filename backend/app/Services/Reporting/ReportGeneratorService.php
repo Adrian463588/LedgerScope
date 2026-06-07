@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Reporting;
 
 use App\Enums\Reporting\ReportStatus;
+use App\Jobs\GenerateReportJob;
 use App\Models\Company;
 use App\Models\Report;
 use App\Models\User;
@@ -33,7 +34,7 @@ final class ReportGeneratorService
             ]);
 
             // Dispatch generation job (Phase 9 full impl):
-            // GenerateReportJob::dispatch($report);
+            GenerateReportJob::dispatch($report);
 
             return $report;
         });

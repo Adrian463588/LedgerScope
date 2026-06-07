@@ -18,7 +18,7 @@ export const useCompanyStore = defineStore('company', () => {
     try {
       companies.value = await companyApi.list();
       if (companies.value.length > 0) {
-        activeCompanyId.value = companies.value[0].id;
+        activeCompanyId.value = companies.value[0]!.id;
       }
     } catch (caught) {
       error.value = caught instanceof Error ? caught.message : 'API is currently unreachable.';

@@ -74,9 +74,22 @@ final class Money
         return new self('0.00', $currency);
     }
 
+    public function lessThan(Money $other): bool
+    {
+        $this->assertSameCurrency($other);
+
+        return bccomp($this->amount, $other->amount, 2) < 0;
+    }
+
+    public function negate(): self
+    {
+        return new self(bcmul($this->amount, '-1', 2), $this->currency);
+    }
+
     public static function fromDecimal(string $amount, string $currency): self
     {
-        return new self(number_format((float) $amount, 2, '.', ''), $currency);
+        // Use bcmath to normalise — never cast to float.
+        return new self(bcadd($amount, '0', 2), $currency);
     }
 
     public function __toString(): string

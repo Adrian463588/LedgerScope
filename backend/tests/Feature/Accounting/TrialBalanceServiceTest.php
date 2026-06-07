@@ -7,6 +7,8 @@ use App\Models\AccountingPeriod;
 use App\Models\ChartOfAccount;
 use App\Models\Company;
 use App\Models\JournalEntry;
+use App\Models\TrialBalance;
+use App\Models\TrialBalanceLine;
 use App\Models\User;
 use App\Services\Accounting\FiscalYearGeneratorService;
 use App\Services\Accounting\TrialBalanceService;
@@ -119,4 +121,85 @@ it('only includes posted journal lines in trial balance', function (): void {
     expect($tb->is_balanced)->toBeTrue();
     expect($tb->total_debit)->toBe('0.00');
     expect($tb->lines)->toHaveCount(0);
+});
+
+it('calculates total ending balance with opening balance properly', function (): void {
+    // We need a previous period with a closed Trial Balance
+    $previousPeriod = AccountingPeriod::create([
+        'company_id' => $this->company->id,
+        'fiscal_year_id' => $this->period->fiscal_year_id,
+        'period_name' => '2023-12',
+        'period_type' => 'monthly',
+        'start_date' => '2023-12-01',
+        'end_date' => '2023-12-31',
+        'status' => 'closed',
+    ]);
+
+    $prevTb = TrialBalance::create([
+        'company_id' => $this->company->id,
+        'accounting_period_id' => $previousPeriod->id,
+        'total_debit' => '10000.00',
+        'total_credit' => '10000.00',
+        'is_balanced' => true,
+        'status' => 'balanced',
+        'generated_at' => now()->subMonth(),
+        'generated_by' => $this->user->id,
+    ]);
+
+    TrialBalanceLine::create([
+        'trial_balance_id' => $prevTb->id,
+        'account_id' => $this->cash->id,
+        'opening_debit' => '0.00',
+        'opening_credit' => '0.00',
+        'period_debit' => '10000.00',
+        'period_credit' => '0.00',
+        'closing_debit' => '10000.00',
+        'closing_credit' => '0.00',
+    ]);
+
+    TrialBalanceLine::create([
+        'trial_balance_id' => $prevTb->id,
+        'account_id' => $this->revenue->id,
+        'opening_debit' => '0.00',
+        'opening_credit' => '0.00',
+        'period_debit' => '0.00',
+        'period_credit' => '10000.00',
+        'closing_debit' => '0.00',
+        'closing_credit' => '10000.00',
+    ]);
+
+    // Current period movement
+    $journal = JournalEntry::create([
+        'company_id' => $this->company->id,
+        'accounting_period_id' => $this->period->id,
+        'description' => 'Current period revenue',
+        'journal_date' => '2024-01-15',
+        'journal_number' => 'JNL-1-2024-00001',
+        'status' => JournalStatus::Posted->value,
+        'source_type' => 'manual',
+        'created_by' => $this->user->id,
+        'posted_by' => $this->user->id,
+        'posted_at' => now(),
+    ]);
+
+    $journal->lines()->createMany([
+        ['account_id' => $this->cash->id,    'debit' => '5000.00', 'credit' => '0.00', 'currency' => 'IDR'],
+        ['account_id' => $this->revenue->id, 'debit' => '0.00',    'credit' => '5000.00', 'currency' => 'IDR'],
+    ]);
+
+    $tb = $this->service->generate($this->company, $this->period, $this->user);
+
+    expect($tb->is_balanced)->toBeTrue();
+    expect($tb->total_debit)->toBe('15000.00'); // 10000 + 5000
+    expect($tb->total_credit)->toBe('15000.00'); // 10000 + 5000
+
+    $cashLine = $tb->lines->where('account_id', $this->cash->id)->first();
+    expect($cashLine->opening_debit)->toBe('10000.00');
+    expect($cashLine->period_debit)->toBe('5000.00');
+    expect($cashLine->closing_debit)->toBe('15000.00');
+
+    $revLine = $tb->lines->where('account_id', $this->revenue->id)->first();
+    expect($revLine->opening_credit)->toBe('10000.00');
+    expect($revLine->period_credit)->toBe('5000.00');
+    expect($revLine->closing_credit)->toBe('15000.00');
 });

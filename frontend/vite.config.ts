@@ -24,8 +24,16 @@ export default defineConfig({
         host: true,
         port: 5173,
         proxy: {
-            '/api': 'http://localhost:8000',
-            '/sanctum': 'http://localhost:8000',
+            '/api': {
+                target: 'http://localhost:8000',
+                changeOrigin: true,
+                cookieDomainRewrite: 'localhost',
+            },
+            '/sanctum': {
+                target: 'http://localhost:8000',
+                changeOrigin: true,
+                cookieDomainRewrite: 'localhost',
+            },
         },
     },
 });

@@ -30,6 +30,36 @@ final class Quarter extends Model
         'unlock_reason',
     ];
 
+    protected static function booted(): void
+    {
+        static::created(function (Quarter $quarter): void {
+            $keys = [
+                'all_journals_posted',
+                'imported_data_validated',
+                'trial_balance_balanced',
+                'bank_reconciliation_completed',
+                'ar_reconciliation_completed',
+                'ap_reconciliation_completed',
+                'tax_account_reviewed',
+                'accrual_entries_posted',
+                'prepayment_entries_posted',
+                'depreciation_entries_posted',
+                'financial_statements_generated',
+                'manager_review_completed',
+                'quarter_approved',
+                'quarter_locked',
+            ];
+
+            foreach ($keys as $key) {
+                $quarter->checklists()->firstOrCreate([
+                    'checklist_key' => $key,
+                ], [
+                    'is_completed' => false,
+                ]);
+            }
+        });
+    }
+
     /**
      * @return array<string, string>
      */

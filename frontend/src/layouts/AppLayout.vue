@@ -7,57 +7,14 @@ const ui = useUiStore();
 </script>
 
 <template>
-  <div class="app-shell" :class="{ collapsed: ui.sidebarCollapsed }">
-    <Sidebar />
-    <div v-if="ui.mobileSidebarOpen" class="mobile-backdrop" @click="ui.setMobileSidebar(false)" />
-    <main id="main-content">
+  <div class="flex h-screen w-full overflow-hidden bg-[color:var(--shell-950)]" :class="{ collapsed: ui.sidebarCollapsed }">
+    <Sidebar class="flex-shrink-0" />
+    <div v-if="ui.mobileSidebarOpen" class="fixed inset-0 z-[55] bg-[rgb(12_13_16/42%)] md:hidden" @click="ui.setMobileSidebar(false)"></div>
+    <main class="flex-1 flex flex-col min-w-0 overflow-y-auto bg-[color:var(--page-bg)]">
       <Topbar />
-      <div class="app-shell__content page-content">
+      <div class="flex-1 flex flex-col min-w-0">
         <slot />
       </div>
     </main>
   </div>
 </template>
-
-<style scoped>
-.app-shell {
-  min-height: 100vh;
-  background: var(--page-bg);
-}
-
-main {
-  min-height: 100vh;
-  margin-left: 240px;
-  transition: margin-left 240ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.collapsed main {
-  margin-left: 64px;
-}
-
-.app-shell__content {
-  display: grid;
-  width: min(1440px, 100%);
-  gap: 32px;
-  margin: 0 auto;
-  padding: 32px;
-}
-
-.mobile-backdrop {
-  position: fixed;
-  inset: 0;
-  z-index: 55;
-  background: rgb(12 13 16 / 42%);
-}
-
-@media (max-width: 767px) {
-  main,
-  .collapsed main {
-    margin-left: 0;
-  }
-
-  .app-shell__content {
-    padding: 24px;
-  }
-}
-</style>

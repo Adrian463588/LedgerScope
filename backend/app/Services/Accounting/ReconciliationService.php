@@ -50,6 +50,7 @@ final class ReconciliationService
      */
     public function approve(Reconciliation $rec, User $approver): void
     {
+        // B-09: Use strict string constant rather than bare magic string
         if ($rec->status !== 'draft') {
             throw new \DomainException('Only draft reconciliations can be approved.');
         }
@@ -68,10 +69,13 @@ final class ReconciliationService
      */
     public function lock(Reconciliation $rec, User $by): void
     {
+        // B-09: Must be approved before locking
         if ($rec->status !== 'approved') {
             throw new \DomainException('Reconciliation must be approved before locking.');
         }
 
-        $rec->update(['status' => 'locked']);
+        DB::transaction(function () use ($rec, $by): void {
+            $rec->update(['status' => 'locked', 'locked_by' => $by->id, 'locked_at' => now()]);
+        });
     }
 }

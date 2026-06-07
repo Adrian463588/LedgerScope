@@ -21,6 +21,20 @@ final class QuarterController extends Controller
     {
         $this->authorize('update', $company);
 
+        // B-08: PRD §6.4 — all required checklist items must be completed before locking
+        $incompleteItems = $quarter->checklists()
+            ->where('is_required', true)
+            ->where('is_completed', false)
+            ->pluck('checklist_key');
+
+        if ($incompleteItems->isNotEmpty()) {
+            return ApiResponse::error(
+                "Quarter cannot be locked: {$incompleteItems->count()} required checklist item(s) are incomplete.",
+                422,
+                ['incomplete_items' => $incompleteItems],
+            );
+        }
+
         // Lock all periods in the quarter
         foreach ($quarter->periods as $period) {
             $this->lockService->lock($period, $request->user());

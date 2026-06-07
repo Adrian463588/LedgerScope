@@ -12,6 +12,9 @@ use App\Models\ImportBatch;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+use App\Jobs\Imports\ImportAccountsJob;
+use Illuminate\Support\Facades\Storage;
+
 final class AccountController extends Controller
 {
     public function index(Request $request, Company $company): JsonResponse
@@ -84,7 +87,30 @@ final class AccountController extends Controller
     {
         $this->authorize('update', $company);
 
-        return ApiResponse::success(null, 'Import queued. Feature coming in Phase 4.');
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
+        ]);
+
+        $file = $request->file('file');
+        $originalName = $file->getClientOriginalName();
+        $path = $file->store('imports', 'local');
+
+        if ($path === false) {
+            return ApiResponse::error('Failed to store uploaded file.', 500);
+        }
+
+        $batch = ImportBatch::create([
+            'company_id' => $company->id,
+            'user_id' => $request->user()->id,
+            'import_type' => 'chart_of_accounts',
+            'status' => 'pending',
+            'original_filename' => $originalName,
+            'file_path' => $path,
+        ]);
+
+        dispatch(new ImportAccountsJob($company->id, $batch->id, $path));
+
+        return ApiResponse::created($batch->fresh(), 'Import queued.');
     }
 
     public function importStatus(Company $company, int $batch): JsonResponse

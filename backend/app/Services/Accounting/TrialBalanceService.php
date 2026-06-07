@@ -24,6 +24,25 @@ final class TrialBalanceService
     public function generate(Company $company, AccountingPeriod $period, User $generatedBy): TrialBalance
     {
         return DB::transaction(function () use ($company, $period, $generatedBy): TrialBalance {
+            // Get opening balances from the latest closed/locked period before this one
+            $previousPeriod = AccountingPeriod::where('company_id', $company->id)
+                ->where('end_date', '<', $period->start_date)
+                ->orderByDesc('end_date')
+                ->first();
+
+            $openingBalances = collect();
+            if ($previousPeriod) {
+                $previousTb = TrialBalance::with('lines')
+                    ->where('company_id', $company->id)
+                    ->where('accounting_period_id', $previousPeriod->id)
+                    ->latest('generated_at')
+                    ->first();
+
+                if ($previousTb) {
+                    $openingBalances = $previousTb->lines->keyBy('account_id');
+                }
+            }
+
             // Aggregate posted lines by account for this period
             $lines = JournalEntryLine::query()
                 ->join('journal_entries', 'journal_entries.id', '=', 'journal_entry_lines.journal_entry_id')
@@ -36,15 +55,51 @@ final class TrialBalanceService
                     SUM(journal_entry_lines.credit) AS total_credit
                 ')
                 ->groupBy('journal_entry_lines.account_id')
-                ->get();
+                ->get()
+                ->keyBy('account_id');
+
+            $allAccountIds = $openingBalances->keys()->merge($lines->keys())->unique();
 
             $currency = $company->currency;
             $totalDebit = Money::zero($currency);
             $totalCredit = Money::zero($currency);
 
-            foreach ($lines as $line) {
-                $totalDebit = $totalDebit->add(new Money((string) $line->total_debit, $currency));
-                $totalCredit = $totalCredit->add(new Money((string) $line->total_credit, $currency));
+            $tbLinesData = [];
+
+            foreach ($allAccountIds as $accountId) {
+                $openingLine = $openingBalances->get($accountId);
+                $movementLine = $lines->get($accountId);
+
+                $openingDebit = $openingLine ? new Money($openingLine->closing_debit, $currency) : Money::zero($currency);
+                $openingCredit = $openingLine ? new Money($openingLine->closing_credit, $currency) : Money::zero($currency);
+
+                $periodDebit = $movementLine ? new Money((string) $movementLine->total_debit, $currency) : Money::zero($currency);
+                $periodCredit = $movementLine ? new Money((string) $movementLine->total_credit, $currency) : Money::zero($currency);
+
+                // Calculate ending balances using Money VO
+                $totalDebitSide = $openingDebit->add($periodDebit);
+                $totalCreditSide = $openingCredit->add($periodCredit);
+
+                if ($totalDebitSide->greaterThan($totalCreditSide) || $totalDebitSide->equals($totalCreditSide)) {
+                    $closingDebit = $totalDebitSide->subtract($totalCreditSide);
+                    $closingCredit = Money::zero($currency);
+                } else {
+                    $closingDebit = Money::zero($currency);
+                    $closingCredit = $totalCreditSide->subtract($totalDebitSide);
+                }
+
+                $totalDebit = $totalDebit->add($closingDebit);
+                $totalCredit = $totalCredit->add($closingCredit);
+
+                $tbLinesData[] = [
+                    'account_id' => $accountId,
+                    'opening_debit' => $openingDebit->getAmount(),
+                    'opening_credit' => $openingCredit->getAmount(),
+                    'period_debit' => $periodDebit->getAmount(),
+                    'period_credit' => $periodCredit->getAmount(),
+                    'closing_debit' => $closingDebit->getAmount(),
+                    'closing_credit' => $closingCredit->getAmount(),
+                ];
             }
 
             $isBalanced = $totalDebit->equals($totalCredit);
@@ -62,24 +117,9 @@ final class TrialBalanceService
             ]);
 
             // Insert per-account lines
-            foreach ($lines as $line) {
-                $debit = bcadd((string) $line->total_debit, '0', 2);
-                $credit = bcadd((string) $line->total_credit, '0', 2);
-
-                $closing = bcsub($debit, $credit, 2);
-                $closingDebit = bccomp($closing, '0', 2) >= 0 ? $closing : '0.00';
-                $closingCredit = bccomp($closing, '0', 2) < 0 ? ltrim($closing, '-') : '0.00';
-
-                TrialBalanceLine::create([
-                    'trial_balance_id' => $trialBalance->id,
-                    'account_id' => $line->account_id,
-                    'opening_debit' => '0.00',
-                    'opening_credit' => '0.00',
-                    'period_debit' => $debit,
-                    'period_credit' => $credit,
-                    'closing_debit' => $closingDebit,
-                    'closing_credit' => $closingCredit,
-                ]);
+            foreach ($tbLinesData as $lineData) {
+                $lineData['trial_balance_id'] = $trialBalance->id;
+                TrialBalanceLine::create($lineData);
             }
 
             return $trialBalance->load('lines');

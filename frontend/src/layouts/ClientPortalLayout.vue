@@ -1,12 +1,16 @@
 <script setup lang="ts">
 import { navigateTo } from '@/router';
+import NotificationBell from '@/components/shared/notification-bell.vue';
 </script>
 
 <template>
   <main class="client-layout">
     <header>
       <button @click="navigateTo('/dashboard')">LedgerScope</button>
-      <span>Client Evidence Portal</span>
+      <div class="header-right">
+        <NotificationBell />
+        <span>Client Evidence Portal</span>
+      </div>
     </header>
     <section class="page-content">
       <slot />
@@ -28,6 +32,12 @@ header {
   border-bottom: 1px solid var(--border);
   background: white;
   padding: 0 32px;
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 16px;
 }
 
 button {

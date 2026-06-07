@@ -9,18 +9,18 @@ use App\Models\User;
 use App\Models\WorkingPaper;
 use App\Services\Audit\WorkingPaperService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 /**
- * @property \App\Models\User $lead
- * @property \App\Models\Company $company
- * @property \App\Models\Engagement $engagement
- * @property \App\Services\Audit\WorkingPaperService $service
+ * @property User $lead
+ * @property Company $company
+ * @property Engagement $engagement
+ * @property WorkingPaperService $service
  */
-
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    /** @var \Tests\TestCase $this */
+    /** @var TestCase $this */
     $this->lead = User::factory()->create();
     $this->company = Company::factory()->create();
 

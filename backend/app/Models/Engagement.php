@@ -8,6 +8,7 @@ use App\Enums\Audit\EngagementStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 final class Engagement extends Model
@@ -52,5 +53,35 @@ final class Engagement extends Model
     public function findings(): HasMany
     {
         return $this->hasMany(Finding::class);
+    }
+
+    public function evidenceFiles(): HasMany
+    {
+        return $this->hasMany(EvidenceFile::class);
+    }
+
+    public function documentRequests(): HasMany
+    {
+        return $this->hasMany(DocumentRequest::class);
+    }
+
+    public function manager(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'manager_id');
+    }
+
+    public function partner(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'partner_id');
+    }
+
+    public function auditPlan(): HasOne
+    {
+        return $this->hasOne(AuditPlan::class);
+    }
+
+    public function riskAssessments(): HasMany
+    {
+        return $this->hasMany(RiskAssessment::class);
     }
 }

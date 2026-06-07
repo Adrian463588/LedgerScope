@@ -137,6 +137,10 @@ final class JournalService
 
         $period = $journal->accountingPeriod;
 
+        if ($period->isLocked()) {
+            throw new \DomainException('Cannot post to a locked period.');
+        }
+
         if (! $period->isOpen()) {
             throw new \DomainException('Cannot post to a locked or closed period.');
         }
@@ -202,13 +206,21 @@ final class JournalService
         }
 
         return DB::transaction(function () use ($journal, $user, $reason): JournalEntry {
+            $period = $journal->accountingPeriod;
+
+            // B-03 fix: use today if within period, otherwise use period end_date
+            $today = now()->toDateString();
+            $reversalDate = ($today >= $period->start_date->toDateString() && $today <= $period->end_date->toDateString())
+                ? $today
+                : $period->end_date->toDateString();
+
             // Create negated journal
             /** @var JournalEntry $reversal */
             $reversal = JournalEntry::create([
                 'company_id' => $journal->company_id,
                 'accounting_period_id' => $journal->accounting_period_id,
                 'description' => "REVERSAL: {$journal->description} — {$reason}",
-                'journal_date' => now()->toDateString(),
+                'journal_date' => $reversalDate,
                 'reference' => $journal->reference,
                 'source_type' => JournalSourceType::Reversal->value,
                 'status' => JournalStatus::Approved->value,

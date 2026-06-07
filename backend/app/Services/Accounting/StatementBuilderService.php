@@ -29,11 +29,18 @@ final class StatementBuilderService
      */
     public function build(Company $company, AccountingPeriod $period, string $type, User $generatedBy): FinancialStatement
     {
+        // B-04: Guard against saving stub records for unimplemented types
+        $implemented = ['income_statement', 'balance_sheet'];
+        if (! in_array($type, $implemented, true)) {
+            throw new \DomainException(
+                "Financial statement type [{$type}] is not yet implemented. Supported: ".implode(', ', $implemented),
+            );
+        }
+
         return DB::transaction(function () use ($company, $period, $type, $generatedBy): FinancialStatement {
             $data = match ($type) {
                 'income_statement' => $this->buildIncomeStatement($company, $period),
                 'balance_sheet' => $this->buildBalanceSheet($company, $period),
-                default => ['message' => 'Statement type not yet implemented.'],
             };
 
             /** @var FinancialStatement $statement */

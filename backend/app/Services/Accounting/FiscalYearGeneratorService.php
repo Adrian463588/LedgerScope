@@ -6,11 +6,13 @@ namespace App\Services\Accounting;
 
 use App\Enums\Accounting\PeriodStatus;
 use App\Enums\Accounting\PeriodType;
+use App\Events\Accounting\FiscalYearCreated;
 use App\Models\AccountingPeriod;
 use App\Models\Company;
 use App\Models\FiscalYear;
 use App\Models\Quarter;
 use App\Models\QuarterClosingChecklist;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -47,9 +49,9 @@ final class FiscalYearGeneratorService
         'Q4' => [10, 11, 12],
     ];
 
-    public function generate(Company $company, int $year): FiscalYear
+    public function generate(Company $company, int $year, ?User $generatedBy = null): FiscalYear
     {
-        return DB::transaction(function () use ($company, $year): FiscalYear {
+        return DB::transaction(function () use ($company, $year, $generatedBy): FiscalYear {
             $startMonth = $company->fiscal_year_start_month ?? 1;
 
             $startDate = Carbon::create($year, $startMonth, 1)->startOfDay();
@@ -73,6 +75,18 @@ final class FiscalYearGeneratorService
             // 4. Create checklist items for each quarter
             foreach ($quarters as $quarter) {
                 $this->createChecklists($quarter);
+            }
+
+            // 5. A-10: Dispatch FiscalYearCreated event — required by AGENTS_BACKEND §3.2
+            if ($generatedBy !== null) {
+                event(new FiscalYearCreated(
+                    userId: $generatedBy->id,
+                    action: 'create_fiscal_year',
+                    companyId: $company->id,
+                    objectType: 'FiscalYear',
+                    objectId: $fiscalYear->id,
+                    metadata: ['year' => $year],
+                ));
             }
 
             return $fiscalYear->load(['quarters', 'accountingPeriods']);
@@ -146,6 +160,10 @@ final class FiscalYearGeneratorService
 
     private function createChecklists(Quarter $quarter): void
     {
+        if (QuarterClosingChecklist::where('quarter_id', $quarter->id)->exists()) {
+            return;
+        }
+
         $rows = array_map(
             fn (string $key) => [
                 'quarter_id' => $quarter->id,

@@ -22,7 +22,17 @@ const credit = ref('2500000.00');
 const debitNumber = computed(() => Number(debit.value));
 const creditNumber = computed(() => Number(credit.value));
 
+const isBalanced = computed(() => {
+  const dVal = parseFloat(debit.value) || 0;
+  const cVal = parseFloat(credit.value) || 0;
+  return Math.abs(dVal - cVal) < 0.005;
+});
+
 async function post(): Promise<void> {
+  if (!isBalanced.value) {
+    notification.error('Debit and credit must be balanced before posting.');
+    return;
+  }
   const confirmed = await confirmDialog.confirm({
     title: 'Post Journal',
     message: 'Posted journals become immutable. Continue only after debit and credit are balanced.',
@@ -41,7 +51,7 @@ onMounted(() => ui.setBreadcrumbs(['Accounting', 'Journal Entries', 'New Journal
   <PageHeader title="Create New Journal Entry" subtitle="Validated double-entry form with live balance feedback.">
     <template #actions>
       <AppButton @click="navigateTo('/journal-entries')">Cancel</AppButton>
-      <AppButton variant="primary" @click="post">Post Journal</AppButton>
+      <AppButton variant="primary" :disabled="!isBalanced" @click="post">Post Journal</AppButton>
     </template>
   </PageHeader>
   <LockBanner />

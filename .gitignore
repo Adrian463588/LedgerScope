@@ -58,3 +58,7 @@ backend/test_pdo.php
 /fuel/app/logs/*/*/*
 /fuel/app/cache/*/*
 /fuel/app/config/crypt.php
+
+# BMAD temporary output
+_bmad-output/
+

@@ -14,8 +14,12 @@ import {
   Scale,
   Settings2,
   ShieldCheck,
+  Menu,
+  X,
+  Users,
+  History,
 } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { computed, ref } from 'vue';
 
 import CompanySwitcher from './CompanySwitcher.vue';
 import NavLink from './NavLink.vue';
@@ -41,8 +45,11 @@ const icons = {
   'Audit Program': FileText,
   'Working Paper': FileText,
   'Audit Findings': AlertTriangle,
+  'Journal Red-Flags': AlertTriangle,
   Evidence: Paperclip,
   'Reporting Hub': FileBarChart2,
+  'User Management': Users,
+  'Audit Trail': History,
   Settings: Settings2,
 };
 
@@ -56,107 +63,70 @@ const groups = computed(() => {
     });
   return Array.from(result.entries());
 });
+
+const isMobileMenuOpen = ref(false);
+
+function toggleMobileMenu() {
+  isMobileMenuOpen.value = !isMobileMenuOpen.value;
+}
 </script>
 
 <template>
-  <aside class="sidebar" :class="{ collapsed: ui.sidebarCollapsed, open: ui.mobileSidebarOpen }">
-    <div class="sidebar__brand">
-      <span class="wordmark"><strong>Ledger</strong><i />Scope</span>
-      <span v-if="!ui.sidebarCollapsed" class="version">v1.0</span>
+  <!-- Mobile Toggle Button (Visible only on small screens) -->
+  <button 
+    class="md:hidden fixed top-4 left-4 z-[60] p-2 text-[var(--text-inverse-muted)] hover:text-white"
+    @click="toggleMobileMenu"
+    aria-label="Toggle Sidebar"
+  >
+    <Menu v-if="!isMobileMenuOpen" class="w-6 h-6" />
+  </button>
+
+  <!-- Mobile Backdrop Overlay -->
+  <div 
+    v-if="isMobileMenuOpen" 
+    class="fixed inset-0 z-40 bg-black/50 md:hidden" 
+    @click="isMobileMenuOpen = false"
+  ></div>
+
+  <!-- Sidebar -->
+  <aside 
+    class="fixed inset-y-0 left-0 z-50 flex flex-col transform transition-transform duration-200 ease-in-out md:static"
+    :class="[
+      isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
+      ui.sidebarCollapsed ? 'w-16' : 'w-[240px]'
+    ]"
+    style="background: var(--shell-bg); border-right: 1px solid var(--shell-border);"
+  >
+    <!-- Brand -->
+    <div class="flex items-center justify-between min-h-[56px] px-[18px]">
+      <span class="text-base tracking-normal text-[var(--brand-red)]">
+        <strong class="text-white font-semibold">Ledger</strong><i class="inline-block w-px h-[14px] mx-[6px] align-middle bg-[var(--brand-red)]" />Scope
+      </span>
+      <span v-if="!ui.sidebarCollapsed" class="text-[var(--text-inverse-muted)] font-mono text-[0.6875rem]">v1.0</span>
+      <button v-if="isMobileMenuOpen" class="md:hidden text-[var(--text-inverse-muted)]" @click="isMobileMenuOpen = false">
+        <X class="w-5 h-5" />
+      </button>
     </div>
+
     <CompanySwitcher v-if="!ui.sidebarCollapsed" />
-    <nav>
-      <section v-for="[group, items] in groups" :key="group">
-        <p v-if="!ui.sidebarCollapsed">{{ group }}</p>
-        <NavLink v-for="item in items" :key="item.path" :href="item.path" :icon="icons[item.label as keyof typeof icons]" :compact="ui.sidebarCollapsed">
+
+    <!-- Navigation -->
+    <nav class="flex-1 overflow-y-auto p-2">
+      <section v-for="[group, items] in groups" :key="group" class="grid gap-1 mb-2">
+        <p v-if="!ui.sidebarCollapsed" class="m-0 text-[var(--text-inverse-muted)] text-[0.625rem] font-semibold tracking-[0.08em] opacity-50 px-3 pt-4 pb-1.5 uppercase">
+          {{ group }}
+        </p>
+        <NavLink 
+          v-for="item in items" 
+          :key="item.path" 
+          :href="item.path" 
+          :icon="icons[item.label as keyof typeof icons]" 
+          :compact="ui.sidebarCollapsed"
+          @click="isMobileMenuOpen = false"
+        >
           {{ item.label }}
         </NavLink>
       </section>
     </nav>
   </aside>
 </template>
-
-<style scoped>
-.sidebar {
-  position: fixed;
-  inset: 0 auto 0 0;
-  z-index: 60;
-  display: flex;
-  width: 240px;
-  flex-direction: column;
-  background: var(--shell-bg);
-  border-right: 1px solid var(--shell-border);
-  transition: width 240ms cubic-bezier(0.16, 1, 0.3, 1), transform 240ms cubic-bezier(0.16, 1, 0.3, 1);
-}
-
-.sidebar.collapsed {
-  width: 64px;
-}
-
-.sidebar__brand {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  min-height: 56px;
-  padding: 0 18px;
-}
-
-.wordmark {
-  color: var(--brand-red);
-  font-size: 1rem;
-  letter-spacing: 0;
-}
-
-.wordmark strong {
-  color: white;
-  font-weight: 600;
-}
-
-.wordmark i {
-  display: inline-block;
-  width: 1px;
-  height: 14px;
-  margin: 0 6px;
-  background: var(--brand-red);
-  vertical-align: middle;
-}
-
-.version {
-  color: var(--text-inverse-muted);
-  font-family: 'IBM Plex Mono', monospace;
-  font-size: 0.6875rem;
-}
-
-nav {
-  flex: 1;
-  overflow-y: auto;
-  padding: 8px;
-}
-
-section {
-  display: grid;
-  gap: 4px;
-  margin-bottom: 8px;
-}
-
-p {
-  margin: 0;
-  color: var(--text-inverse-muted);
-  font-size: 0.625rem;
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  opacity: 0.5;
-  padding: 16px 12px 6px;
-  text-transform: uppercase;
-}
-
-@media (max-width: 767px) {
-  .sidebar {
-    transform: translateX(-100%);
-  }
-
-  .sidebar.open {
-    transform: translateX(0);
-  }
-}
-</style>

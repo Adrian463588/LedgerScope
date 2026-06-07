@@ -12,6 +12,9 @@ use App\Services\Accounting\JournalService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+use App\Models\ImportBatch;
+use App\Jobs\Imports\ImportJournalsJob;
+
 final class JournalController extends Controller
 {
     public function __construct(private readonly JournalService $service) {}
@@ -130,6 +133,29 @@ final class JournalController extends Controller
     {
         $this->authorize('update', $company);
 
-        return ApiResponse::success(null, 'Import queued.');
+        $request->validate([
+            'file' => ['required', 'file', 'mimes:xlsx,xls,csv', 'max:10240'],
+        ]);
+
+        $file = $request->file('file');
+        $originalName = $file->getClientOriginalName();
+        $path = $file->store('imports', 'local');
+
+        if ($path === false) {
+            return ApiResponse::error('Failed to store uploaded file.', 500);
+        }
+
+        $batch = ImportBatch::create([
+            'company_id' => $company->id,
+            'user_id' => $request->user()->id,
+            'import_type' => 'journal_entries',
+            'status' => 'pending',
+            'original_filename' => $originalName,
+            'file_path' => $path,
+        ]);
+
+        dispatch(new ImportJournalsJob($company->id, $batch->id, $path, $request->user()->id));
+
+        return ApiResponse::created($batch->fresh(), 'Import queued.');
     }
 }

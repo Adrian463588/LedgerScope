@@ -9,7 +9,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 final class ReviewNote extends Model
 {
-    protected $fillable = ['working_paper_id', 'created_by', 'content', 'status', 'resolved_at', 'resolved_by'];
+    protected $fillable = [
+        'working_paper_id',
+        'created_by',
+        'content',
+        'status',
+        'resolved_at',
+        'resolved_by',
+    ];
 
     protected function casts(): array
     {
@@ -21,8 +28,18 @@ final class ReviewNote extends Model
         return $this->belongsTo(WorkingPaper::class);
     }
 
-    public function creator(): BelongsTo
+    public function createdBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'created_by');
+    }
+
+    public function resolvedBy(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'resolved_by');
+    }
+
+    public function replies(): \Illuminate\Database\Eloquent\Relations\HasMany
+    {
+        return $this->hasMany(ReviewNoteReply::class);
     }
 }

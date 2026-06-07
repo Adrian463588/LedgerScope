@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { Component } from 'vue';
-
 import { navigateTo, useRouter } from '@/router';
 
 const props = withDefaults(

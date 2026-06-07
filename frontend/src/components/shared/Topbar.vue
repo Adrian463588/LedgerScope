@@ -1,11 +1,15 @@
 <script setup lang="ts">
-import { Bell, Menu, Search, Settings2 } from 'lucide-vue-next';
+import { Menu, Search, Settings2 } from 'lucide-vue-next';
 import { storeToRefs } from 'pinia';
 
+import { useAuthStore } from '@/stores/auth.store';
 import { useUiStore } from '@/stores/ui.store';
+import NotificationBell from '@/components/shared/notification-bell.vue';
 
 const ui = useUiStore();
+const auth = useAuthStore();
 const { breadcrumbs } = storeToRefs(ui);
+const { userInitials } = storeToRefs(auth);
 </script>
 
 <template>
@@ -26,9 +30,9 @@ const { breadcrumbs } = storeToRefs(ui);
         <Search aria-hidden="true" />
         <input placeholder="Search records..." />
       </label>
-      <button class="icon-button" aria-label="Notifications"><Bell aria-hidden="true" /><span>3</span></button>
+      <NotificationBell />
       <button class="icon-button" aria-label="Settings"><Settings2 aria-hidden="true" /></button>
-      <div class="avatar" aria-label="Current user">RS</div>
+      <div class="avatar" :title="auth.user?.name ?? 'User'" aria-label="Current user">{{ userInitials }}</div>
     </div>
   </header>
 </template>

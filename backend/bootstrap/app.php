@@ -6,6 +6,19 @@ use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Http\Request;
 
+spl_autoload_register(function ($class) {
+    if (strpos($class, 'App\\') === 0) {
+        $parts = explode('\\', substr($class, 4));
+        $filename = array_pop($parts);
+        $kebabFilename = strtolower(preg_replace('/(?<!^)[A-Z]/', '-$0', $filename));
+        $path = implode('/', $parts);
+        $file = dirname(__DIR__) . '/app/' . ($path ? $path . '/' : '') . $kebabFilename . '.php';
+        if (file_exists($file)) {
+            require_once $file;
+        }
+    }
+});
+
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
@@ -26,6 +39,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // Register named middleware aliases
         $middleware->alias([
             'company.access' => EnsureCompanyAccess::class,
+            'session.timeout' => \App\Http\Middleware\EnforceSessionTimeout::class,
+            'role' => \App\Http\Middleware\RoleMiddleware::class,
+            'permission' => \App\Http\Middleware\PermissionMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

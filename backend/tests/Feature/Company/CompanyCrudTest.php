@@ -7,15 +7,15 @@ use App\Models\Permission;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 /**
- * @property \App\Models\User $superAdmin
+ * @property User $superAdmin
  */
-
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    /** @var \Tests\TestCase $this */
+    /** @var TestCase $this */
     $this->superAdmin = User::factory()->create();
     $this->superAdmin->roles()->attach(
         Role::where('name', 'super_admin')->first()

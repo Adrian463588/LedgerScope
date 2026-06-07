@@ -127,6 +127,28 @@ final class ApiResponse
     }
 
     /**
+     * Return a generic error response with optional extra data.
+     *
+     * @param  array<string, mixed>|null  $data
+     */
+    public static function error(
+        string $message,
+        int $statusCode = 422,
+        ?array $data = null,
+    ): JsonResponse {
+        $payload = [
+            'success' => false,
+            'message' => $message,
+        ];
+
+        if ($data !== null) {
+            $payload['data'] = $data;
+        }
+
+        return response()->json($payload, $statusCode);
+    }
+
+    /**
      * Return a server error (500) response — never expose stack traces.
      */
     public static function serverError(
@@ -148,5 +170,14 @@ final class ApiResponse
             'success' => false,
             'message' => $message,
         ], 401);
+    }
+
+    /**
+     * Return a bad request (400) response.
+     */
+    public static function badRequest(
+        string $message = 'Bad request.',
+    ): JsonResponse {
+        return self::error($message, 400);
     }
 }

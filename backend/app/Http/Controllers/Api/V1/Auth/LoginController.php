@@ -52,6 +52,20 @@ final class LoginController extends Controller
             return ApiResponse::unauthorized('Your account has been deactivated. Please contact your administrator.');
         }
 
+        if ($user->mfa_enabled) {
+            $userId = $user->id;
+            Auth::logout();
+
+            if ($request->hasSession()) {
+                $request->session()->put('mfa:user_id', $userId);
+            }
+
+            return ApiResponse::success([
+                'mfa_required' => true,
+                'email' => $user->email,
+            ], 'MFA verification required.');
+        }
+
         if ($request->hasSession()) {
             $request->session()->regenerate();
         }

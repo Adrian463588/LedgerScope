@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Database\Seeders;
 
 use App\Enums\Common\UserStatus;
-use App\Models\Company;
 use App\Models\ChartOfAccount;
+use App\Models\Company;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Database\Seeder;
@@ -48,7 +48,7 @@ final class DemoDataSeeder extends Seeder
                 'phone' => '+62-21-555-0101',
                 'email' => 'finance@technusantara.test',
                 'website' => 'https://technusantara.test',
-            ]
+            ],
         );
 
         // Attach user to company
@@ -70,7 +70,7 @@ final class DemoDataSeeder extends Seeder
         foreach ($accounts as $accountData) {
             ChartOfAccount::firstOrCreate(
                 ['company_id' => $company->id, 'account_code' => $accountData['account_code']],
-                $accountData
+                $accountData,
             );
         }
     }

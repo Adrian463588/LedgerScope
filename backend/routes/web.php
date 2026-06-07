@@ -4,9 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 // Auth Routes (to be implemented later if needed)
-Route::get('/', function () {
-    return Inertia::render('Dashboard');
-});
+Route::redirect('/', '/dashboard');
 
 // Dashboard
 Route::get('/dashboard', function () {

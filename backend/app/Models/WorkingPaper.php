@@ -13,11 +13,17 @@ final class WorkingPaper extends Model
     protected $fillable = [
         'engagement_id', 'title', 'paper_ref', 'status',
         'prepared_by', 'reviewed_by', 'reviewed_at', 'content',
+        'sign_off_at', 'sign_off_by', 'is_locked', 'locked_at', 'locked_by',
     ];
 
     protected function casts(): array
     {
-        return ['reviewed_at' => 'datetime'];
+        return [
+            'reviewed_at' => 'datetime',
+            'sign_off_at' => 'datetime',
+            'locked_at' => 'datetime',
+            'is_locked' => 'boolean',
+        ];
     }
 
     public function engagement(): BelongsTo

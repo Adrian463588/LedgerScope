@@ -18,7 +18,7 @@ const layoutComponent = computed(() => {
 
 <template>
   <component :is="layoutComponent">
-    <component :is="route?.component" />
+    <RouterView />
   </component>
   <ToastHost />
   <ConfirmDialog />

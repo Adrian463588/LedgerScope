@@ -9,11 +9,14 @@ use App\Http\Responses\ApiResponse;
 use App\Models\Company;
 use App\Models\Engagement;
 use App\Models\User;
+use App\Services\Audit\EngagementService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 final class EngagementController extends Controller
 {
+    public function __construct(private readonly EngagementService $service) {}
+
     public function index(Company $company): JsonResponse
     {
         $this->authorize('view', $company);
@@ -29,17 +32,15 @@ final class EngagementController extends Controller
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:200'],
-            'engagement_type' => ['required', 'string', 'in:audit,review,compilation,advisory'],
+            'engagement_type' => ['required', 'string', 'in:accounting_service,financial_analysis,external_audit,internal_audit,review_engagement,compilation_engagement,tax_compliance,risk_advisory,internal_control_review'],
             'start_date' => ['required', 'date'],
             'end_date' => ['required', 'date', 'after:start_date'],
             'scope' => ['nullable', 'string'],
             'objectives' => ['nullable', 'string'],
         ]);
 
-        $engagement = Engagement::create(array_merge($validated, [
-            'company_id' => $company->id,
-            'lead_auditor_id' => $request->user()->id,
-        ]));
+        // B-06: Use service layer — enforces Planning status + DB transaction
+        $engagement = $this->service->create($validated, $company, $request->user());
 
         return ApiResponse::created($engagement, 'Engagement created.');
     }

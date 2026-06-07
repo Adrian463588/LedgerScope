@@ -5,6 +5,7 @@ declare(strict_types=1);
 use App\Enums\Accounting\JournalStatus;
 use App\Models\ChartOfAccount;
 use App\Models\Company;
+use App\Models\ImportBatch;
 use App\Models\JournalEntry;
 use App\Models\Permission;
 use App\Models\Role;
@@ -14,6 +15,8 @@ use App\Services\Accounting\JournalService;
 use App\Services\Accounting\PeriodLockService;
 use App\ValueObjects\Money;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 
 uses(RefreshDatabase::class);
 
@@ -170,4 +173,125 @@ it('posted journal cannot be mutated', function (): void {
 
     expect(fn () => $journal->update(['description' => 'Changed']))
         ->toThrow(DomainException::class, 'immutable');
+});
+
+it('cannot post journal in locked period', function (): void {
+    $lockService = app(PeriodLockService::class);
+
+    $perm = Permission::firstOrCreate(
+        ['name' => 'quarter.lock'],
+        ['module' => 'quarter', 'action' => 'lock'],
+    );
+    $role = Role::firstOrCreate(['name' => 'super_admin'], ['display_name' => 'Super Admin']);
+    $role->permissions()->syncWithoutDetaching($perm->id);
+    $this->user->roles()->attach($role->id);
+
+    // Create a draft journal entry
+    $journal = $this->service->create([
+        'accounting_period_id' => $this->period->id,
+        'description' => 'Test journal',
+        'journal_date' => '2024-01-15',
+        'lines' => [
+            ['account_id' => $this->cashAccount->id,    'debit' => '500000', 'credit' => '0'],
+            ['account_id' => $this->revenueAccount->id, 'debit' => '0',     'credit' => '500000'],
+        ],
+    ], $this->user);
+
+    // Approve it
+    $this->service->submit($journal, $this->user);
+    $this->service->approve($journal, $this->user);
+
+    // Lock the period
+    $lockService->lock($this->period, $this->user);
+
+    // Try posting the journal, it should throw DomainException
+    expect(fn () => $this->service->post($journal, $this->user))
+        ->toThrow(DomainException::class, 'Cannot post to a locked period.');
+});
+
+it('imports chart of accounts from excel/csv', function (): void {
+    Storage::fake('local');
+
+    // Give user company.update permission
+    $perm = Permission::firstOrCreate(
+        ['name' => 'company.update'],
+        ['module' => 'company', 'action' => 'update'],
+    );
+    $role = Role::firstOrCreate(['name' => 'super_admin'], ['display_name' => 'Super Admin']);
+    $role->permissions()->syncWithoutDetaching($perm->id);
+    $this->user->roles()->attach($role->id);
+
+    // Create a mock CSV content
+    $csvContent = "account_code,account_name,account_type,description,parent_code\n";
+    $csvContent .= "1102,Cash at Bank,asset,Bank account,\n";
+    $csvContent .= "1103,Petty Cash,asset,Small cash,1102\n";
+
+    $file = UploadedFile::fake()->createWithContent('coa.csv', $csvContent);
+
+    // Post import request
+    $response = $this->actingAs($this->user)
+        ->postJson(route('accounts.import', [$this->company]), [
+            'file' => $file,
+        ]);
+
+    $response->assertStatus(201)
+        ->assertJsonFragment(['status' => 'completed']);
+
+    $batchId = $response->json('data.id');
+    $batch = ImportBatch::find($batchId);
+    expect($batch)->not->toBeNull();
+    expect($batch->success_rows)->toBe(2);
+    expect($batch->failed_rows)->toBe(0);
+
+    // Verify accounts were created
+    $account1 = ChartOfAccount::where('company_id', $this->company->id)->where('account_code', '1102')->first();
+    expect($account1)->not->toBeNull();
+    expect($account1->account_name)->toBe('Cash at Bank');
+
+    $account2 = ChartOfAccount::where('company_id', $this->company->id)->where('account_code', '1103')->first();
+    expect($account2)->not->toBeNull();
+    expect($account2->parent_id)->toBe($account1->id);
+});
+
+it('imports journal entries from excel/csv', function (): void {
+    Storage::fake('local');
+
+    // Give user company.update permission
+    $perm = Permission::firstOrCreate(
+        ['name' => 'company.update'],
+        ['module' => 'company', 'action' => 'update'],
+    );
+    $role = Role::firstOrCreate(['name' => 'super_admin'], ['display_name' => 'Super Admin']);
+    $role->permissions()->syncWithoutDetaching($perm->id);
+    $this->user->roles()->attach($role->id);
+
+    // Create a mock CSV content with balanced debits and credits
+    $csvContent = "journal_date,reference,description,account_code,debit,credit,line_description\n";
+    $csvContent .= "2024-01-15,REF-001,Salary accrual,1101,500000,0,Salary payment\n";
+    $csvContent .= "2024-01-15,REF-001,Salary accrual,4001,0,500000,Salary accrual offset\n";
+
+    $file = UploadedFile::fake()->createWithContent('journals.csv', $csvContent);
+
+    // Post import request
+    $response = $this->actingAs($this->user)
+        ->postJson(route('journals.import', [$this->company]), [
+            'file' => $file,
+        ]);
+
+    $response->assertStatus(201)
+        ->assertJsonFragment(['status' => 'completed']);
+
+    $batchId = $response->json('data.id');
+    $batch = ImportBatch::find($batchId);
+    expect($batch)->not->toBeNull();
+    expect($batch->success_rows)->toBe(2);
+    expect($batch->failed_rows)->toBe(0);
+
+    // Verify journal was created
+    $journal = JournalEntry::where('company_id', $this->company->id)
+        ->where('reference', 'REF-001')
+        ->first();
+    expect($journal)->not->toBeNull();
+    expect($journal->description)->toBe('Salary accrual');
+    expect($journal->lines()->count())->toBe(2);
 });

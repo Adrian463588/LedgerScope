@@ -8,18 +8,33 @@ import { useNotification } from '@/composables/useNotification';
 import { navigateTo } from '@/router';
 import { mfaSchema } from '@/schemas/auth.schema';
 
+import { useAuthStore } from '@/stores/auth.store';
+
+const auth = useAuthStore();
 const code = ref('');
 const error = ref('');
+const isLoading = ref(false);
 const notification = useNotification();
 
-function verify(): void {
+async function verify(): Promise<void> {
   const parsed = mfaSchema.safeParse({ code: code.value });
   if (!parsed.success) {
     error.value = parsed.error.issues[0]?.message ?? 'Enter the verification code.';
     return;
   }
-  notification.success('MFA verified.');
-  navigateTo('/dashboard');
+  
+  isLoading.value = true;
+  error.value = '';
+  try {
+    await auth.verifyMfa(parsed.data.code);
+    notification.success('MFA verified.');
+    navigateTo('/dashboard');
+  } catch (caught) {
+    error.value = caught instanceof Error ? caught.message : 'Invalid MFA code.';
+    notification.error('Verification failed. Please try again.');
+  } finally {
+    isLoading.value = false;
+  }
 }
 </script>
 
@@ -29,7 +44,7 @@ function verify(): void {
     <h2>Verify your access</h2>
     <p>Enter the 6-digit code from your authenticator app.</p>
     <AppInput v-model="code" label="Verification code" required :error="error" placeholder="123456" />
-    <AppButton variant="primary" type="submit">Verify</AppButton>
+    <AppButton variant="primary" type="submit" :loading="isLoading">Verify</AppButton>
   </form>
 </template>
 

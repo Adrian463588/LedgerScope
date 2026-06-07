@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\AccountingPeriod;
 use App\Models\Company;
 use App\Models\FiscalYear;
 use App\Models\Permission;
@@ -12,16 +13,16 @@ use App\Services\Accounting\FiscalYearGeneratorService;
 use App\Services\Accounting\PeriodLockService;
 use Illuminate\Database\QueryException;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Tests\TestCase;
 
 /**
- * @property \App\Models\User $admin
- * @property \App\Models\Company $company
+ * @property User $admin
+ * @property Company $company
  */
-
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    /** @var \Tests\TestCase $this */
+    /** @var TestCase $this */
     $this->admin = User::factory()->create();
     $adminRole = Role::firstOrCreate(['name' => 'super_admin'], ['display_name' => 'Super Admin']);
     $this->admin->roles()->attach($adminRole->id);
@@ -66,7 +67,7 @@ it('creates 14 checklist items per quarter', function (): void {
     $service = app(FiscalYearGeneratorService::class);
     $fiscalYear = $service->generate($this->company, 2024);
 
-    /** @var \App\Models\Quarter $quarter */
+    /** @var Quarter $quarter */
     $quarter = $fiscalYear->quarters()->first();
     expect($quarter->checklists()->count())->toBe(14);
 });
@@ -83,7 +84,7 @@ it('period lock service locks a period', function (): void {
     $service = app(FiscalYearGeneratorService::class);
     $fiscalYear = $service->generate($this->company, 2024);
 
-    /** @var \App\Models\AccountingPeriod $period */
+    /** @var AccountingPeriod $period */
     $period = $fiscalYear->accountingPeriods()->first();
 
     // Assign lock permission
@@ -103,7 +104,7 @@ it('period lock service locks a period', function (): void {
 it('cannot lock an already-locked period', function (): void {
     $service = app(FiscalYearGeneratorService::class);
     $fiscalYear = $service->generate($this->company, 2024);
-    /** @var \App\Models\AccountingPeriod $period */
+    /** @var AccountingPeriod $period */
     $period = $fiscalYear->accountingPeriods()->first();
 
     $perm = Permission::firstOrCreate(
@@ -123,7 +124,7 @@ it('cannot lock an already-locked period', function (): void {
 it('unlock requires a reason', function (): void {
     $service = app(FiscalYearGeneratorService::class);
     $fiscalYear = $service->generate($this->company, 2024);
-    /** @var \App\Models\AccountingPeriod $period */
+    /** @var AccountingPeriod $period */
     $period = $fiscalYear->accountingPeriods()->first();
 
     $lockPerm = Permission::firstOrCreate(
@@ -142,4 +143,44 @@ it('unlock requires a reason', function (): void {
 
     expect(fn () => $lockService->unlock($period->fresh(), $this->admin, ''))
         ->toThrow(DomainException::class, 'An unlock reason is required.');
+});
+
+it('quarter lock requires all checklist items completed', function (): void {
+    // Link admin to company
+    $this->company->companyUsers()->create(['user_id' => $this->admin->id]);
+
+    // Assign permissions
+    $compUpdatePerm = Permission::firstOrCreate(
+        ['name' => 'company.update'],
+        ['module' => 'company', 'action' => 'update'],
+    );
+    $lockPerm = Permission::firstOrCreate(
+        ['name' => 'quarter.lock'],
+        ['module' => 'quarter', 'action' => 'lock'],
+    );
+    $role = Role::where('name', 'super_admin')->first();
+    $role->permissions()->syncWithoutDetaching([$compUpdatePerm->id, $lockPerm->id]);
+
+    $service = app(FiscalYearGeneratorService::class);
+    $fiscalYear = $service->generate($this->company, 2024);
+    $quarter = $fiscalYear->quarters()->first();
+
+    // Try to lock, should return 422 because checklist is incomplete
+    $response = $this->actingAs($this->admin)
+        ->postJson(route('quarters.lock', [$this->company, $quarter]));
+
+    $response->assertStatus(422)
+        ->assertJsonFragment(['success' => false]);
+
+    // Mark all required checklist items completed
+    $quarter->checklists()->where('is_required', true)->update(['is_completed' => true]);
+
+    // Try to lock again, should succeed
+    $response = $this->actingAs($this->admin)
+        ->postJson(route('quarters.lock', [$this->company, $quarter]));
+
+    $response->assertStatus(200)
+        ->assertJsonFragment(['success' => true]);
+
+    expect($quarter->fresh()->is_locked)->toBeTrue();
 });

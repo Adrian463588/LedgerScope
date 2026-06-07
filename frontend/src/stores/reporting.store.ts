@@ -24,7 +24,11 @@ export const useReportingStore = defineStore('reporting', () => {
   async function generateReport(companyId: number, type: string): Promise<void> {
     reports.value.unshift({ id: Date.now(), name: `${type} report`, type, status: 'generating', version: 'v0.1.0', generated_at: new Date().toISOString().slice(0, 10) });
     try {
-      await reportingApi.generate(companyId, { type, period: 'Q1 2026' });
+      await reportingApi.generate(companyId, {
+        report_type: type,
+        title: `${type} report`,
+        parameters: { period: 'Q1 2026' },
+      });
     } catch (caught) {
       error.value = caught instanceof Error ? caught.message : 'API is currently unreachable.';
     }

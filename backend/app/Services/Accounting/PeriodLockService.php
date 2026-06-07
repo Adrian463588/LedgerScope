@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Services\Accounting;
 
 use App\Enums\Accounting\PeriodStatus;
+use App\Events\Accounting\PeriodLocked;
+use App\Events\Accounting\PeriodUnlocked;
 use App\Models\AccountingPeriod;
 use App\Models\User;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -34,6 +36,16 @@ final class PeriodLockService
                 'locked_by' => $user->id,
                 'status' => PeriodStatus::Locked->value,
             ])->save();
+
+            // B-07: Dispatch audit event — required by AGENTS_BACKEND §3.3
+            event(new PeriodLocked(
+                userId: $user->id,
+                action: 'lock_period',
+                companyId: $period->company_id,
+                objectType: 'AccountingPeriod',
+                objectId: $period->id,
+                metadata: ['period_name' => $period->period_name],
+            ));
         });
     }
 
@@ -51,7 +63,7 @@ final class PeriodLockService
             throw new \DomainException('An unlock reason is required.');
         }
 
-        DB::transaction(function () use ($period, $reason): void {
+        DB::transaction(function () use ($period, $user, $reason): void {
             $period->forceFill([
                 'is_locked' => false,
                 'locked_at' => null,
@@ -59,6 +71,16 @@ final class PeriodLockService
                 'unlock_reason' => $reason,
                 'status' => PeriodStatus::Open->value,
             ])->save();
+
+            // B-07: Dispatch audit event — required by AGENTS_BACKEND §3.3
+            event(new PeriodUnlocked(
+                userId: $user->id,
+                action: 'unlock_period',
+                companyId: $period->company_id,
+                objectType: 'AccountingPeriod',
+                objectId: $period->id,
+                metadata: ['period_name' => $period->period_name, 'reason' => $reason],
+            ));
         });
     }
 }

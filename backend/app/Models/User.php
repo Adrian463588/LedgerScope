@@ -33,6 +33,8 @@ class User extends Authenticatable
         'mfa_enabled',
         'mfa_secret',
         'last_login_at',
+        'email_verification_token',
+        'email_verification_expires_at',
     ];
 
     /** @var list<string> */
@@ -53,6 +55,7 @@ class User extends Authenticatable
             'password' => 'hashed',
             'mfa_enabled' => 'boolean',
             'status' => UserStatus::class,
+            'email_verification_expires_at' => 'datetime',
         ];
     }
 
@@ -87,5 +90,10 @@ class User extends Authenticatable
     public function invitations(): HasMany
     {
         return $this->hasMany(UserInvitation::class, 'invited_by');
+    }
+
+    public function notificationPreferences(): HasMany
+    {
+        return $this->hasMany(NotificationPreference::class);
     }
 }

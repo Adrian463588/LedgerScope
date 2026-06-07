@@ -14,6 +14,11 @@ use App\Events\Auth\UserActivated;
 use App\Events\Auth\UserLoggedIn;
 use App\Events\Auth\UserLoggedOut;
 use App\Events\Auth\UserLoginFailed;
+use App\Events\Audit\FindingStatusChanged;
+use App\Events\Audit\WorkingPaperSignedOff;
+use App\Events\Audit\ReviewNoteResolved;
+use App\Events\Evidence\EvidenceAccepted;
+use App\Events\Evidence\EvidenceRejected;
 use App\Listeners\AuditTrail\WriteAuditLog;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
@@ -40,6 +45,17 @@ class EventServiceProvider extends ServiceProvider
         JournalPosted::class => [WriteAuditLog::class],
         JournalRejected::class => [WriteAuditLog::class],
         JournalReversed::class => [WriteAuditLog::class],
+
+        // ─── Finding events ───────────────────────────────────────────────────
+        FindingStatusChanged::class => [WriteAuditLog::class],
+
+        // ─── Evidence events ──────────────────────────────────────────────────
+        EvidenceAccepted::class => [WriteAuditLog::class],
+        EvidenceRejected::class => [WriteAuditLog::class],
+
+        // ─── Working Paper & Review Note events ──────────────────────────────
+        WorkingPaperSignedOff::class => [WriteAuditLog::class],
+        ReviewNoteResolved::class => [WriteAuditLog::class],
     ];
 
     public function boot(): void {}
