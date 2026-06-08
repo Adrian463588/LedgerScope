@@ -1,34 +1,27 @@
 # ─── Stage 1: Base image ──────────────────────────────────────────────────────
-FROM php:8.4-fpm-alpine AS base
+FROM php:8.4-fpm AS base
 
 WORKDIR /var/www/html
 
-# Runtime system dependencies and security updates
-RUN apk upgrade --no-cache && \
-    apk add --no-cache \
-    libpng \
-    libzip \
-    libpq \
+# Runtime system dependencies and security updates using apt-get (Debian)
+RUN apt-get update && apt-get upgrade -y && \
+    apt-get install -y --no-install-recommends \
     supervisor \
     nginx \
-    bash
+    bash \
+    && rm -rf /var/lib/apt/lists/*
 
-# Download and use php-extension-installer for robust extension compilation
-# This automatically installs -dev packages for compiling and removes them afterwards
+# Download and use php-extension-installer
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
 
-ENV MAKEFLAGS="-j1"
-
+# install-php-extensions on Debian downloads precompiled .so files directly
+# (No heavy resource-intensive source compilation = no OOM crash on small VPS)
 RUN install-php-extensions \
-    pdo \
     pdo_pgsql \
-    opcache \
     pcntl \
     bcmath \
     zip \
     gd
-
-ENV MAKEFLAGS=""
 
 # ─── Stage 2: Build dependencies ─────────────────────────────────────────────
 FROM base AS build
@@ -62,7 +55,8 @@ COPY --from=build /var/www/html /var/www/html
 COPY docker/php/opcache.ini /usr/local/etc/php/conf.d/opcache.ini
 
 # Nginx config
-COPY docker/nginx/default.conf /etc/nginx/http.d/default.conf
+COPY docker/nginx/default.conf /etc/nginx/conf.d/default.conf
+RUN rm -f /etc/nginx/sites-enabled/default
 
 # Supervisor config
 COPY docker/supervisor/horizon.conf /etc/supervisor.d/horizon.ini
