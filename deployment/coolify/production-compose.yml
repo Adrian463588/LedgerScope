@@ -11,6 +11,8 @@ services:
       dockerfile: backend/Dockerfile
     container_name: ledgerscope-backend-prod
     restart: unless-stopped
+    labels:
+      - "coolify.fqdn=${APP_BACKEND_URL}"
     environment:
       - APP_NAME=LedgerScope
       - APP_ENV=production
