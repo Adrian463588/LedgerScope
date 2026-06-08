@@ -13,6 +13,7 @@ services:
     restart: unless-stopped
     labels:
       - "coolify.fqdn=${APP_BACKEND_URL}"
+      - "coolify.port=8080"
     environment:
       - APP_NAME=LedgerScope
       - APP_ENV=production
@@ -67,6 +68,7 @@ services:
     labels:
       # Coolify dynamic domain assignment and reverse proxy configuration
       - "coolify.fqdn=${APP_FRONTEND_URL}"
+      - "coolify.port=8080"
     networks:
       - ledgerscope-network
 
