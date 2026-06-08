@@ -21,7 +21,8 @@ RUN install-php-extensions \
     pcntl \
     bcmath \
     zip \
-    gd
+    gd \
+    redis
 
 # ─── Stage 2: Build dependencies ─────────────────────────────────────────────
 FROM base AS build
