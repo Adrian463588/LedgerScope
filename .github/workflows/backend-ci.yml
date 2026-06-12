@@ -43,7 +43,7 @@ jobs:
 
       # 1. Secret Scanning (DevSecOps Best Practice)
       - name: Gitleaks (Secret Detection)
-        uses: gitleaks/gitleaks-action@v2
+        uses: gitleaks/gitleaks-action@v3
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         # Gitleaks will fail the build if credentials/secrets are found in the code
