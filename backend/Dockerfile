@@ -1,7 +1,7 @@
 # syntax=docker/dockerfile:1.7
 
 # ─── Stage 1: Base image ──────────────────────────────────────────────────────
-FROM php:8.4-fpm AS base
+FROM php:8.5-fpm AS base
 
 WORKDIR /var/www/html
 
