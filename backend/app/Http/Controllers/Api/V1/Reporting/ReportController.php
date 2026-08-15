@@ -4,7 +4,10 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Reporting;
 
+use App\Events\AuditActionRecorded;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Reporting\GenerateReportRequest;
+use App\Http\Resources\Reporting\ReportResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Company;
 use App\Models\Report;
@@ -30,44 +33,66 @@ final class ReportController extends Controller
                 ->with('requestedBy')
                 ->orderByDesc('created_at')
                 ->paginate(20),
+            'Reports loaded.',
+            static fn (Report $report): ReportResource => new ReportResource($report),
         );
     }
 
-    public function generate(Request $request, Company $company): JsonResponse
+    public function generate(GenerateReportRequest $request, Company $company): JsonResponse
     {
         $this->authorize('update', $company);
 
-        $validated = $request->validate([
-            'report_type' => ['required', 'string', 'in:trial_balance,income_statement,balance_sheet,cash_flow,audit_report,engagement_summary'],
-            'title' => ['required', 'string', 'max:200'],
-            'format' => ['nullable', 'string', 'in:pdf,xlsx'],
-            'parameters' => ['nullable', 'array'],
-        ]);
-
         // EPIC 9: Use service — dispatches GenerateReportJob via queue
-        $report = $this->service->queue($validated, $company, $request->user());
+        $report = $this->service->queue($request->validated(), $company, $request->user());
 
-        return ApiResponse::created($report, 'Report generation queued.');
+        return ApiResponse::created(new ReportResource($report), 'Report generation queued.');
     }
 
     public function show(Company $company, Report $report): JsonResponse
     {
         $this->authorize('view', $company);
+        $this->authorize('view', $report);
 
-        return ApiResponse::success($report->load('requestedBy'));
+        return ApiResponse::success(new ReportResource($report->load('requestedBy')));
     }
 
-    public function download(Company $company, Report $report): JsonResponse
+    public function approve(Request $request, Company $company, Report $report): JsonResponse
+    {
+        $this->authorize('update', $company);
+        $this->authorize('update', $report);
+
+        return ApiResponse::success(
+            new ReportResource($this->service->approve($report, $request->user())),
+            'Report approved.',
+        );
+    }
+
+    public function download(Request $request, Company $company, Report $report): JsonResponse
     {
         $this->authorize('view', $company);
+        $this->authorize('view', $report);
 
-        if ($report->status->value !== 'completed') {
+        if (! in_array($report->status->value, ['completed', 'approved'], true)) {
             return ApiResponse::domainError('Report is not yet ready for download.');
         }
 
         if (! $report->file_path) {
             return ApiResponse::domainError('Report file is not available.');
         }
+
+        if (! Storage::disk('private')->exists($report->file_path)) {
+            return ApiResponse::domainError('Report file is not available.');
+        }
+
+        event(new AuditActionRecorded(
+            userId: $request->user()->id,
+            action: 'report.download',
+            companyId: $company->id,
+            objectType: 'Report',
+            objectId: $report->id,
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent(),
+        ));
 
         $url = Storage::disk('private')
             ->temporaryUrl($report->file_path, now()->addMinutes(15));

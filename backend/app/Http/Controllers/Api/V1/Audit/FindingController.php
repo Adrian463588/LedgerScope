@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api\V1\Audit;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Audit\StoreFindingRequest;
 use App\Http\Requests\Audit\UpdateFindingRequest;
+use App\Http\Resources\Audit\FindingResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Engagement;
 use App\Models\Finding;
@@ -25,9 +26,9 @@ final class FindingController extends Controller
     {
         $this->authorize('view', $engagement);
 
-        return ApiResponse::success(
+        return ApiResponse::success(FindingResource::collection(
             $engagement->findings()->with(['assignedTo', 'createdBy'])->orderByDesc('created_at')->get(),
-        );
+        ));
     }
 
     public function store(StoreFindingRequest $request, Engagement $engagement): JsonResponse
@@ -38,14 +39,14 @@ final class FindingController extends Controller
 
         $finding = $this->service->create($validated, $engagement, $request->user());
 
-        return ApiResponse::created($finding, 'Finding created.');
+        return ApiResponse::created(new FindingResource($finding), 'Finding created.');
     }
 
     public function show(Engagement $engagement, Finding $finding): JsonResponse
     {
         $this->authorize('view', $finding);
 
-        return ApiResponse::success($finding->load(['assignedTo', 'createdBy', 'approvedBy']));
+        return ApiResponse::success(new FindingResource($finding->load(['assignedTo', 'createdBy', 'approvedBy'])));
     }
 
     public function update(UpdateFindingRequest $request, Engagement $engagement, Finding $finding): JsonResponse
@@ -56,7 +57,7 @@ final class FindingController extends Controller
 
         $finding->update($validated);
 
-        return ApiResponse::success($finding->fresh(), 'Finding updated.');
+        return ApiResponse::success(new FindingResource($finding->fresh()), 'Finding updated.');
     }
 
     public function resolve(Request $request, Engagement $engagement, Finding $finding): JsonResponse
@@ -65,7 +66,7 @@ final class FindingController extends Controller
 
         $this->service->resolve($finding, $request->user());
 
-        return ApiResponse::success($finding->fresh(), 'Finding resolved.');
+        return ApiResponse::success(new FindingResource($finding->fresh()), 'Finding resolved.');
     }
 
     public function reopen(Request $request, Engagement $engagement, Finding $finding): JsonResponse
@@ -78,7 +79,7 @@ final class FindingController extends Controller
 
         $this->service->reopen($finding, $request->user(), $validated['reason']);
 
-        return ApiResponse::success($finding->fresh(), 'Finding reopened.');
+        return ApiResponse::success(new FindingResource($finding->fresh()), 'Finding reopened.');
     }
 
     public function managementResponse(Request $request, Engagement $engagement, Finding $finding): JsonResponse
@@ -91,6 +92,6 @@ final class FindingController extends Controller
 
         $this->service->recordManagementResponse($finding, $validated['management_response'], $request->user());
 
-        return ApiResponse::success($finding->fresh(), 'Management response recorded.');
+        return ApiResponse::success(new FindingResource($finding->fresh()), 'Management response recorded.');
     }
 }

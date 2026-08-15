@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Admin\RoleResource;
+use App\Http\Resources\Auth\UserResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Role;
 use App\Models\User;
@@ -25,7 +27,7 @@ final class AdminRoleController extends Controller
         $this->authorize('viewAny', Role::class);
 
         return ApiResponse::success(
-            Role::with('permissions:id,name')->orderBy('name')->get(),
+            RoleResource::collection(Role::with('permissions:id,name')->orderBy('name')->get()),
         );
     }
 
@@ -51,7 +53,7 @@ final class AdminRoleController extends Controller
         });
 
         return ApiResponse::success(
-            $user->load('roles:id,name,display_name'),
+            new UserResource($user->load('roles:id,name,display_name')),
             'Role assigned.',
         );
     }
@@ -74,7 +76,7 @@ final class AdminRoleController extends Controller
         });
 
         return ApiResponse::success(
-            $user->load('roles:id,name,display_name'),
+            new UserResource($user->load('roles:id,name,display_name')),
             'Role revoked.',
         );
     }

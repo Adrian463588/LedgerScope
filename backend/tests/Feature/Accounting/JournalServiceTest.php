@@ -175,6 +175,29 @@ it('posted journal cannot be mutated', function (): void {
         ->toThrow(DomainException::class, 'immutable');
 });
 
+it('posted journal lines cannot be mutated or deleted', function (): void {
+    $journal = $this->service->create([
+        'accounting_period_id' => $this->period->id,
+        'description' => 'Immutable lines',
+        'journal_date' => '2024-01-15',
+        'lines' => [
+            ['account_id' => $this->cashAccount->id, 'debit' => '1000', 'credit' => '0'],
+            ['account_id' => $this->revenueAccount->id, 'debit' => '0', 'credit' => '1000'],
+        ],
+    ], $this->user);
+
+    $this->service->submit($journal, $this->user);
+    $this->service->approve($journal, $this->user);
+    $this->service->post($journal, $this->user);
+
+    $line = $journal->fresh()->lines()->firstOrFail();
+
+    expect(fn () => $line->update(['description' => 'Changed']))
+        ->toThrow(DomainException::class, 'immutable');
+    expect(fn () => $line->delete())
+        ->toThrow(DomainException::class, 'immutable');
+});
+
 it('cannot post journal in locked period', function (): void {
     $lockService = app(PeriodLockService::class);
 

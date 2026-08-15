@@ -11,7 +11,13 @@ defineEmits<{
 
 <template>
   <Teleport to="body">
-    <aside v-if="open" class="drawer" role="dialog" aria-modal="true" :aria-label="title">
+    <aside
+      v-if="open"
+      class="drawer"
+      role="dialog"
+      aria-modal="true"
+      :aria-label="title"
+    >
       <div class="drawer__backdrop" @click="$emit('close')" />
       <section class="drawer__panel">
         <header>
@@ -34,7 +40,7 @@ defineEmits<{
 .drawer__backdrop {
   position: absolute;
   inset: 0;
-  background: rgb(12 13 16 / 42%);
+  background: var(--overlay-backdrop);
 }
 
 .drawer__panel {
@@ -56,7 +62,11 @@ header {
 }
 
 @keyframes slide-in {
-  from { transform: translateX(100%); }
-  to { transform: translateX(0); }
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
 }
 </style>

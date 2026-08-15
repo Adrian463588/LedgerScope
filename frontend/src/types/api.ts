@@ -14,9 +14,14 @@ export interface ApiResponse<T = unknown> {
   meta?: PaginationMeta;
 }
 
+export type ApiPaginatedResponse<T> = ApiResponse<T[]> & {
+  meta: PaginationMeta;
+};
+
 export interface ApiError {
   success: false;
   message: string;
+  code?: string;
   errors?: Record<string, string[]>;
 }
 
@@ -27,5 +32,5 @@ export interface ApiListParams {
   status?: string;
   period?: string;
   sort?: string;
-  direction?: 'asc' | 'desc';
+  direction?: "asc" | "desc";
 }

@@ -23,4 +23,9 @@ final class ReconciliationItem extends Model
     {
         return $this->belongsTo(Reconciliation::class);
     }
+
+    public function journalLine(): BelongsTo
+    {
+        return $this->belongsTo(JournalEntryLine::class, 'journal_line_id');
+    }
 }

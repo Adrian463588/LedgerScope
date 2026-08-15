@@ -1,10 +1,10 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { defineStore } from "pinia";
+import { ref } from "vue";
 
-import { engagementApi } from '@/api/endpoints';
-import type { Engagement } from '@/types';
+import { engagementApi } from "@/api/endpoints";
+import type { Engagement } from "@/types";
 
-export const useEngagementStore = defineStore('engagement', () => {
+export const useEngagementStore = defineStore("engagement", () => {
   const engagements = ref<Engagement[]>([]);
   const isLoading = ref(false);
   const error = ref<string | null>(null);
@@ -15,7 +15,10 @@ export const useEngagementStore = defineStore('engagement', () => {
     try {
       engagements.value = await engagementApi.list(companyId);
     } catch (caught) {
-      error.value = caught instanceof Error ? caught.message : 'API is currently unreachable.';
+      error.value =
+        caught instanceof Error
+          ? caught.message
+          : "API is currently unreachable.";
     } finally {
       isLoading.value = false;
     }

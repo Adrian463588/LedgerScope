@@ -5,8 +5,8 @@ withDefaults(
     width?: string;
   }>(),
   {
-    height: '14px',
-    width: '100%',
+    height: "14px",
+    width: "100%",
   },
 );
 </script>

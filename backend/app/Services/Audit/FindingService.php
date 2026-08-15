@@ -16,7 +16,7 @@ use Illuminate\Support\Facades\DB;
 final class FindingService
 {
     public function __construct(
-        private readonly NotificationService $notificationService
+        private readonly NotificationService $notificationService,
     ) {}
 
     /**
@@ -56,7 +56,7 @@ final class FindingService
                 'New Finding Raised',
                 "A new audit finding '{$finding->title}' has been raised with severity: {$severity}. Please provide a management response.",
                 'finding',
-                '/client/evidence'
+                '/client/evidence',
             );
 
             return $finding;
@@ -105,7 +105,7 @@ final class FindingService
                 'Management Response Recorded',
                 "A management response has been recorded for finding '{$finding->title}' by {$by->name}.",
                 'finding',
-                '/audit-findings'
+                '/audit-findings',
             );
         }
     }
@@ -173,7 +173,7 @@ final class FindingService
                     'Finding Reopened',
                     "The finding '{$finding->title}' has been reopened. Reason: {$reason}",
                     'finding',
-                    '/client/evidence'
+                    '/client/evidence',
                 );
             }
         });

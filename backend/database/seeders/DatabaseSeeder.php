@@ -10,12 +10,17 @@ class DatabaseSeeder extends Seeder
 {
     public function run(): void
     {
-        $this->call([
+        $seeders = [
             RoleSeeder::class,
             PermissionSeeder::class,
             RolePermissionSeeder::class,
             SuperAdminSeeder::class,
-            DemoDataSeeder::class,
-        ]);
+        ];
+
+        if (app()->environment(['local', 'testing'])) {
+            $seeders[] = DemoDataSeeder::class;
+        }
+
+        $this->call($seeders);
     }
 }

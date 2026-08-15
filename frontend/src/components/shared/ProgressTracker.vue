@@ -24,7 +24,7 @@ span {
 }
 
 strong {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: "IBM Plex Mono", monospace;
 }
 
 div {

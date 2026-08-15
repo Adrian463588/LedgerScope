@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
+use App\Events\AuditActionRecorded;
 use App\Events\Auth\UserLoggedIn;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\Auth\UserResource;
@@ -59,6 +60,15 @@ final class MfaVerifyController extends Controller
         event(new UserLoggedIn(
             userId: $user->id,
             action: 'login',
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent(),
+        ));
+
+        event(new AuditActionRecorded(
+            userId: $user->id,
+            action: 'auth.mfa.verified',
+            objectType: 'User',
+            objectId: $user->id,
             ipAddress: $request->ip(),
             userAgent: $request->userAgent(),
         ));

@@ -2,23 +2,28 @@
 
 declare(strict_types=1);
 
-use App\Models\AuditPlan;
+use App\Enums\Audit\EngagementStatus;
+use App\Events\Audit\ReviewNoteResolved;
+use App\Events\Audit\WorkingPaperSignedOff;
 use App\Models\Company;
 use App\Models\DocumentRequest;
 use App\Models\Engagement;
+use App\Models\EngagementMember;
+use App\Models\EvidenceFile;
 use App\Models\ReviewNote;
-use App\Models\ReviewNoteReply;
+use App\Models\Role;
 use App\Models\User;
 use App\Models\WorkingPaper;
-use App\Models\EvidenceFile;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
+use Tests\TestCase;
 
 uses(RefreshDatabase::class);
 
 beforeEach(function (): void {
-    /** @var \Tests\TestCase $this */
+    /** @var TestCase $this */
     $this->user = User::factory()->create();
-    $role = \App\Models\Role::firstOrCreate(['name' => 'super_admin', 'display_name' => 'Super Admin']);
+    $role = Role::firstOrCreate(['name' => 'super_admin', 'display_name' => 'Super Admin']);
     $this->user->roles()->attach($role);
 
     $this->company = Company::factory()->create();
@@ -27,7 +32,7 @@ beforeEach(function (): void {
         'company_id' => $this->company->id,
         'name' => 'Audit 2026',
         'engagement_type' => 'audit',
-        'status' => \App\Enums\Audit\EngagementStatus::Planning,
+        'status' => EngagementStatus::Planning,
         'start_date' => '2026-01-01',
         'end_date' => '2026-12-31',
         'lead_auditor_id' => $this->user->id,
@@ -107,10 +112,10 @@ it('verifies the document request state machine', function (): void {
     // 2. Open request (moves to in_progress)
     // Client access simulation
     $client = User::factory()->create();
-    $clientRole = \App\Models\Role::firstOrCreate(['name' => 'client', 'display_name' => 'Client']);
+    $clientRole = Role::firstOrCreate(['name' => 'client', 'display_name' => 'Client']);
     $client->roles()->attach($clientRole);
     $this->company->users()->attach($client);
-    \App\Models\EngagementMember::create([
+    EngagementMember::create([
         'engagement_id' => $this->engagement->id,
         'user_id' => $client->id,
         'role' => 'client',
@@ -163,8 +168,8 @@ it('verifies the document request state machine', function (): void {
 
 it('dispatches WorkingPaperSignedOff event on sign-off', function (): void {
     $this->actingAs($this->user);
-    \Illuminate\Support\Facades\Event::fake([
-        \App\Events\Audit\WorkingPaperSignedOff::class,
+    Event::fake([
+        WorkingPaperSignedOff::class,
     ]);
 
     $wp = WorkingPaper::create([
@@ -178,15 +183,15 @@ it('dispatches WorkingPaperSignedOff event on sign-off', function (): void {
     $response = $this->postJson("/api/v1/engagements/{$this->engagement->id}/working-papers/{$wp->id}/sign-off");
     $response->assertStatus(200);
 
-    \Illuminate\Support\Facades\Event::assertDispatched(\App\Events\Audit\WorkingPaperSignedOff::class, function ($event) use ($wp) {
+    Event::assertDispatched(WorkingPaperSignedOff::class, function ($event) use ($wp) {
         return $event->objectId === $wp->id && $event->userId === $this->user->id;
     });
 });
 
 it('dispatches ReviewNoteResolved event on resolve', function (): void {
     $this->actingAs($this->user);
-    \Illuminate\Support\Facades\Event::fake([
-        \App\Events\Audit\ReviewNoteResolved::class,
+    Event::fake([
+        ReviewNoteResolved::class,
     ]);
 
     $wp = WorkingPaper::create([
@@ -207,7 +212,7 @@ it('dispatches ReviewNoteResolved event on resolve', function (): void {
     $response = $this->postJson("/api/v1/engagements/{$this->engagement->id}/review-notes/{$note->id}/resolve");
     $response->assertStatus(200);
 
-    \Illuminate\Support\Facades\Event::assertDispatched(\App\Events\Audit\ReviewNoteResolved::class, function ($event) use ($note) {
+    Event::assertDispatched(ReviewNoteResolved::class, function ($event) use ($note) {
         return $event->objectId === $note->id && $event->userId === $this->user->id;
     });
 });
@@ -254,7 +259,7 @@ it('enforces company level isolation for client portal document requests', funct
     // 2. Create another company, client user, and engagement not linked to the original company
     $otherCompany = Company::factory()->create();
     $otherClient = User::factory()->create();
-    $clientRole = \App\Models\Role::firstOrCreate(['name' => 'client', 'display_name' => 'Client']);
+    $clientRole = Role::firstOrCreate(['name' => 'client', 'display_name' => 'Client']);
     $otherClient->roles()->attach($clientRole);
     $otherCompany->users()->attach($otherClient);
 
@@ -262,8 +267,7 @@ it('enforces company level isolation for client portal document requests', funct
     $this->actingAs($otherClient);
 
     $response = $this->getJson("/api/v1/client/document-requests/{$request->id}");
-    
+
     // It should be 403 Forbidden because they are not in the same company
     $response->assertStatus(403);
 });
-

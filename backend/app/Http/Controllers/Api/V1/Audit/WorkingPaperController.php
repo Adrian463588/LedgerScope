@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api\V1\Audit;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Audit\StoreWorkingPaperRequest;
 use App\Http\Requests\Audit\UpdateWorkingPaperRequest;
+use App\Http\Resources\Audit\WorkingPaperResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Engagement;
 use App\Models\WorkingPaper;
@@ -25,9 +26,9 @@ final class WorkingPaperController extends Controller
     {
         $this->authorize('view', $engagement);
 
-        return ApiResponse::success(
+        return ApiResponse::success(WorkingPaperResource::collection(
             $engagement->workingPapers()->with(['preparedBy', 'evidenceFiles'])->orderByDesc('created_at')->get(),
-        );
+        ));
     }
 
     public function store(StoreWorkingPaperRequest $request, Engagement $engagement): JsonResponse
@@ -38,22 +39,20 @@ final class WorkingPaperController extends Controller
 
         $wp = $this->service->create($validated, $engagement, $request->user());
 
-        return ApiResponse::created($wp, 'Working paper created.');
+        return ApiResponse::created(new WorkingPaperResource($wp), 'Working paper created.');
     }
 
     public function show(Engagement $engagement, WorkingPaper $workingPaper): JsonResponse
     {
         $this->authorize('view', $workingPaper);
 
-        return ApiResponse::success(
-            $workingPaper->load([
-                'preparedBy',
-                'evidenceFiles',
-                'reviewNotes.createdBy',
-                'reviewNotes.resolvedBy',
-                'reviewNotes.replies.user',
-            ])
-        );
+        return ApiResponse::success(new WorkingPaperResource($workingPaper->load([
+            'preparedBy',
+            'evidenceFiles',
+            'reviewNotes.createdBy',
+            'reviewNotes.resolvedBy',
+            'reviewNotes.replies.user',
+        ])));
     }
 
     public function update(UpdateWorkingPaperRequest $request, Engagement $engagement, WorkingPaper $workingPaper): JsonResponse
@@ -66,7 +65,7 @@ final class WorkingPaperController extends Controller
 
         $workingPaper->update($validated);
 
-        return ApiResponse::success($workingPaper->fresh(), 'Working paper updated.');
+        return ApiResponse::success(new WorkingPaperResource($workingPaper->fresh()), 'Working paper updated.');
     }
 
     public function signOff(Request $request, Engagement $engagement, WorkingPaper $workingPaper): JsonResponse
@@ -75,7 +74,7 @@ final class WorkingPaperController extends Controller
 
         $this->service->signOff($workingPaper, $request->user());
 
-        return ApiResponse::success($workingPaper->fresh(), 'Working paper signed off.');
+        return ApiResponse::success(new WorkingPaperResource($workingPaper->fresh()), 'Working paper signed off.');
     }
 
     public function lock(Request $request, Engagement $engagement, WorkingPaper $workingPaper): JsonResponse
@@ -84,7 +83,7 @@ final class WorkingPaperController extends Controller
 
         $this->service->lock($workingPaper, $request->user());
 
-        return ApiResponse::success($workingPaper->fresh(), 'Working paper locked.');
+        return ApiResponse::success(new WorkingPaperResource($workingPaper->fresh()), 'Working paper locked.');
     }
 
     public function unlock(Request $request, Engagement $engagement, WorkingPaper $workingPaper): JsonResponse
@@ -97,6 +96,6 @@ final class WorkingPaperController extends Controller
 
         $this->service->unlock($workingPaper, $request->user(), $validated['reason']);
 
-        return ApiResponse::success($workingPaper->fresh(), 'Working paper unlocked.');
+        return ApiResponse::success(new WorkingPaperResource($workingPaper->fresh()), 'Working paper unlocked.');
     }
 }

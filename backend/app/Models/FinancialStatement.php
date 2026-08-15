@@ -35,4 +35,22 @@ final class FinancialStatement extends Model
     {
         return $this->belongsTo(AccountingPeriod::class, 'accounting_period_id');
     }
+
+    public function save(array $options = []): bool
+    {
+        if ($this->exists && (bool) $this->getRawOriginal('is_locked')) {
+            throw new \DomainException('Locked financial statements are immutable.');
+        }
+
+        return parent::save($options);
+    }
+
+    public function delete(): ?bool
+    {
+        if ($this->exists && (bool) $this->getRawOriginal('is_locked')) {
+            throw new \DomainException('Locked financial statements are immutable.');
+        }
+
+        return parent::delete();
+    }
 }

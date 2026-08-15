@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Component } from 'vue';
+import type { Component } from "vue";
 
 withDefaults(
   defineProps<{
@@ -19,7 +19,12 @@ const slots = defineSlots<{
 
 <template>
   <section class="empty-state">
-    <component :is="icon" v-if="icon" class="empty-state__icon" aria-hidden="true" />
+    <component
+      :is="icon"
+      v-if="icon"
+      class="empty-state__icon"
+      aria-hidden="true"
+    />
     <h2>{{ title }}</h2>
     <p>{{ body }}</p>
     <div v-if="slots.default" class="empty-state__actions">

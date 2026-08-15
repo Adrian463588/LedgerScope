@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { X } from 'lucide-vue-next';
+import { X } from "lucide-vue-next";
 
 defineProps<{
   open: boolean;
@@ -18,11 +18,24 @@ const slots = defineSlots<{
 
 <template>
   <Teleport to="body">
-    <div v-if="open" class="modal-backdrop" role="presentation" @click="$emit('close')">
-      <section class="modal-panel" role="dialog" aria-modal="true" :aria-label="title" @click.stop>
+    <div
+      v-if="open"
+      class="modal-backdrop"
+      role="presentation"
+      @click="$emit('close')"
+    >
+      <section
+        class="modal-panel"
+        role="dialog"
+        aria-modal="true"
+        :aria-label="title"
+        @click.stop
+      >
         <header>
           <h2>{{ title }}</h2>
-          <button aria-label="Close dialog" @click="$emit('close')"><X aria-hidden="true" /></button>
+          <button aria-label="Close dialog" @click="$emit('close')">
+            <X aria-hidden="true" />
+          </button>
         </header>
         <div class="modal-body">
           <slot />
@@ -42,7 +55,7 @@ const slots = defineSlots<{
   z-index: 80;
   display: grid;
   place-items: center;
-  background: rgb(12 13 16 / 52%);
+  background: var(--overlay-backdrop);
   padding: 24px;
 }
 

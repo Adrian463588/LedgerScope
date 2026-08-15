@@ -4,10 +4,13 @@ declare(strict_types=1);
 
 namespace App\Services\Audit;
 
+use App\Events\AuditActionRecorded;
 use App\Models\DocumentRequest;
 use App\Models\Engagement;
+use App\Models\EvidenceFile;
 use App\Models\User;
 use App\Services\Notifications\NotificationService;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -18,7 +21,7 @@ use Illuminate\Support\Facades\DB;
 final class DocumentRequestService
 {
     public function __construct(
-        private readonly NotificationService $notificationService
+        private readonly NotificationService $notificationService,
     ) {}
 
     /**
@@ -26,6 +29,11 @@ final class DocumentRequestService
      */
     public function create(array $data, Engagement $engagement, User $requestedBy): DocumentRequest
     {
+        if (isset($data['assigned_to'])
+            && ! $engagement->company->users()->whereKey($data['assigned_to'])->exists()) {
+            throw new \DomainException('Assigned users must belong to the engagement company.');
+        }
+
         return DB::transaction(function () use ($data, $engagement, $requestedBy): DocumentRequest {
             /** @var DocumentRequest $request */
             $request = DocumentRequest::create(array_merge($data, [
@@ -34,6 +42,15 @@ final class DocumentRequestService
                 'requested_by' => $requestedBy->id,
                 'status' => $data['status'] ?? 'requested',
             ]));
+
+            event(new AuditActionRecorded(
+                userId: $requestedBy->id,
+                action: 'document_request.create',
+                companyId: $engagement->company_id,
+                objectType: 'DocumentRequest',
+                objectId: $request->id,
+                after: $request->toArray(),
+            ));
 
             if ($request->status === 'requested') {
                 $dueStr = $request->due_date ? $request->due_date->toDateString() : 'N/A';
@@ -47,10 +64,21 @@ final class DocumentRequestService
     /**
      * Set status to in_progress (requested -> in_progress).
      */
-    public function startWork(DocumentRequest $request): void
+    public function startWork(DocumentRequest $request, ?User $by = null): void
     {
         if ($request->status === 'requested') {
-            DB::transaction(fn () => $request->update(['status' => 'in_progress']));
+            DB::transaction(function () use ($request, $by): void {
+                $request->update(['status' => 'in_progress']);
+
+                event(new AuditActionRecorded(
+                    userId: $by?->id ?? 0,
+                    action: 'document_request.start_work',
+                    companyId: $request->company_id,
+                    objectType: 'DocumentRequest',
+                    objectId: $request->id,
+                    after: $request->fresh()->toArray(),
+                ));
+            });
         }
     }
 
@@ -64,7 +92,20 @@ final class DocumentRequestService
         }
 
         DB::transaction(function () use ($request, $evidenceFileId, $by): void {
+            EvidenceFile::query()
+                ->where('engagement_id', $request->engagement_id)
+                ->findOrFail($evidenceFileId);
+
             $request->update(['status' => 'under_review', 'evidence_file_id' => $evidenceFileId]);
+
+            event(new AuditActionRecorded(
+                userId: $by->id,
+                action: 'document_request.submit',
+                companyId: $request->company_id,
+                objectType: 'DocumentRequest',
+                objectId: $request->id,
+                after: $request->fresh()->toArray(),
+            ));
             $engagement = $request->engagement;
             if ($engagement) {
                 $this->notificationService->notifyMany(
@@ -72,7 +113,7 @@ final class DocumentRequestService
                     'Document Request Submitted',
                     "Evidence has been submitted for '{$request->title}' under engagement '{$engagement->name}' by {$by->name}.",
                     'document_request',
-                    "/engagements/{$engagement->id}/document-requests"
+                    "/engagements/{$engagement->id}/document-requests",
                 );
             }
         });
@@ -89,6 +130,16 @@ final class DocumentRequestService
 
         DB::transaction(function () use ($request, $by): void {
             $request->update(['status' => 'accepted']);
+
+            event(new AuditActionRecorded(
+                userId: $by->id,
+                action: 'document_request.accept',
+                companyId: $request->company_id,
+                objectType: 'DocumentRequest',
+                objectId: $request->id,
+                after: $request->fresh()->toArray(),
+            ));
+
             $this->notifyClients($request, 'Document Request Accepted', "The evidence submitted for '{$request->title}' has been accepted by {$by->name}.");
         });
     }
@@ -107,6 +158,17 @@ final class DocumentRequestService
 
         DB::transaction(function () use ($request, $reason, $by): void {
             $request->update(['status' => 'rejected', 'rejection_reason' => $reason]);
+
+            event(new AuditActionRecorded(
+                userId: $by->id,
+                action: 'document_request.reject',
+                companyId: $request->company_id,
+                objectType: 'DocumentRequest',
+                objectId: $request->id,
+                after: $request->fresh()->toArray(),
+                metadata: ['reason' => $reason],
+            ));
+
             $this->notifyClients($request, 'Document Request Rejected', "The evidence submitted for '{$request->title}' has been rejected by {$by->name}. Reason: {$reason}");
         });
     }
@@ -134,20 +196,21 @@ final class DocumentRequestService
                     'Document Request Overdue',
                     "The document request '{$request->title}' for engagement '{$engagement->name}' is now overdue.",
                     'document_request',
-                    "/engagements/{$engagement->id}/document-requests"
+                    "/engagements/{$engagement->id}/document-requests",
                 );
             }
             $count++;
         }
+
         return $count;
     }
 
     /**
      * Get all audit team members to notify.
      *
-     * @return \Illuminate\Support\Collection<int, User>
+     * @return Collection<int, User>
      */
-    private function getAuditorsToNotify(DocumentRequest $request): \Illuminate\Support\Collection
+    private function getAuditorsToNotify(DocumentRequest $request): Collection
     {
         $users = [];
         if ($request->requestedBy) {
@@ -165,6 +228,7 @@ final class DocumentRequestService
                 }
             }
         }
+
         return collect($users)->unique('id');
     }
 

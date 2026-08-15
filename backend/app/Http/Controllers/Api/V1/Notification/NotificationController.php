@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Notification;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\NotificationPreferenceResource;
+use App\Http\Resources\NotificationResource;
 use App\Http\Responses\ApiResponse;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -23,7 +25,11 @@ final class NotificationController extends Controller
             ->orderByDesc('created_at')
             ->paginate(20);
 
-        return ApiResponse::success($notifications);
+        return ApiResponse::paginated(
+            $notifications,
+            'Notifications loaded.',
+            static fn (DatabaseNotification $notification): NotificationResource => new NotificationResource($notification),
+        );
     }
 
     /**
@@ -57,7 +63,7 @@ final class NotificationController extends Controller
     {
         $prefs = $request->user()->notificationPreferences()->get();
 
-        return ApiResponse::success($prefs);
+        return ApiResponse::success(NotificationPreferenceResource::collection($prefs));
     }
 
     /**
@@ -68,9 +74,19 @@ final class NotificationController extends Controller
         $validated = $request->validate([
             'preferences' => ['required', 'array'],
             'preferences.*.channel' => ['required', 'string', 'in:email,app,weekly_digest'],
-            'preferences.*.event_type' => ['required', 'string', 'in:document_request,review_note,finding'],
+            'preferences.*.event_type' => ['required', 'string', 'in:document_request,review_note,finding,evidence,report'],
             'preferences.*.enabled' => ['required', 'boolean'],
         ]);
+
+        foreach ($validated['preferences'] as $preference) {
+            if (
+                $preference['channel'] === 'app'
+                && $preference['event_type'] === 'finding'
+                && $preference['enabled'] === false
+            ) {
+                return ApiResponse::domainError('Critical in-app finding notifications cannot be disabled.');
+            }
+        }
 
         $user = $request->user();
 
@@ -83,11 +99,14 @@ final class NotificationController extends Controller
                     ],
                     [
                         'enabled' => $prefData['enabled'],
-                    ]
+                    ],
                 );
             }
         });
 
-        return ApiResponse::success($user->notificationPreferences()->get(), 'Notification preferences updated.');
+        return ApiResponse::success(
+            NotificationPreferenceResource::collection($user->notificationPreferences()->get()),
+            'Notification preferences updated.',
+        );
     }
 }

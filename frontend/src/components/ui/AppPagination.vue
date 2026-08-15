@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import AppButton from './AppButton.vue';
+import AppButton from "./AppButton.vue";
 
 const page = defineModel<number>({ required: true });
 
@@ -11,8 +11,12 @@ const props = defineProps<{
 <template>
   <nav class="pagination" aria-label="Pagination">
     <span>Page {{ page }} of {{ props.totalPages }}</span>
-    <AppButton size="sm" :disabled="page <= 1" @click="page -= 1">Previous</AppButton>
-    <AppButton size="sm" :disabled="page >= props.totalPages" @click="page += 1">Next</AppButton>
+    <AppButton size="sm" :disabled="page <= 1" @click="page -= 1"
+      >Previous</AppButton
+    >
+    <AppButton size="sm" :disabled="page >= props.totalPages" @click="page += 1"
+      >Next</AppButton
+    >
   </nav>
 </template>
 

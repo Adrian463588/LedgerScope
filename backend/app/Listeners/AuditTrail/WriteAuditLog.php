@@ -6,7 +6,7 @@ namespace App\Listeners\AuditTrail;
 
 use App\Events\BaseAuditableEvent;
 use App\Models\AuditLog;
-use Illuminate\Contracts\Queue\ShouldQueue;
+use Illuminate\Contracts\Queue\ShouldQueueAfterCommit;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Support\Facades\Log;
 
@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Log;
  * Runs asynchronously on the 'audit-trail' queue.
  * Must be registered in EventServiceProvider for each event.
  */
-final class WriteAuditLog implements ShouldQueue
+final class WriteAuditLog implements ShouldQueueAfterCommit
 {
     use InteractsWithQueue;
 

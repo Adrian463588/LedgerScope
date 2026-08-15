@@ -7,8 +7,10 @@ namespace Database\Seeders;
 use App\Enums\Common\UserStatus;
 use App\Models\ChartOfAccount;
 use App\Models\Company;
+use App\Models\FiscalYear;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Accounting\FiscalYearGeneratorService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -16,6 +18,10 @@ final class DemoDataSeeder extends Seeder
 {
     public function run(): void
     {
+        if (! app()->environment(['local', 'testing'])) {
+            return;
+        }
+
         // Create demo user
         $demoUser = User::firstOrCreate(
             ['email' => 'rina@ledgerscope.test'],
@@ -72,6 +78,10 @@ final class DemoDataSeeder extends Seeder
                 ['company_id' => $company->id, 'account_code' => $accountData['account_code']],
                 $accountData,
             );
+        }
+
+        if (! FiscalYear::query()->where('company_id', $company->id)->where('year', now()->year)->exists()) {
+            app(FiscalYearGeneratorService::class)->generate($company, now()->year, $demoUser);
         }
     }
 }

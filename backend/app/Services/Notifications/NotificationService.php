@@ -20,7 +20,7 @@ final class NotificationService
     /**
      * Send a notification to multiple users.
      *
-     * @param iterable<User> $users
+     * @param  iterable<User>  $users
      */
     public function notifyMany(iterable $users, string $title, string $message, string $type, ?string $actionUrl = null): void
     {

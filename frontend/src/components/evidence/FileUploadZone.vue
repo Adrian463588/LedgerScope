@@ -1,22 +1,32 @@
 <script setup lang="ts">
-import { UploadCloud } from 'lucide-vue-next';
-import { ref } from 'vue';
+import { UploadCloud } from "lucide-vue-next";
+import { ref } from "vue";
 
-import { useFileUpload } from '@/composables/useFileUpload';
-import { useNotification } from '@/composables/useNotification';
+import { useFileUpload } from "@/composables/useFileUpload";
+import { useNotification } from "@/composables/useNotification";
 
-const fileName = ref('');
-const { progress, error, validate, simulateUpload } = useFileUpload();
+const props = defineProps<{
+  upload?: (file: File) => Promise<void>;
+}>();
+
+const fileName = ref("");
+const { progress, error, isUploading, validate, uploadFile } = useFileUpload();
 const notification = useNotification();
 
-function onFile(event: Event): void {
+async function onFile(event: Event): Promise<void> {
   const input = event.target as HTMLInputElement;
   const file = input.files?.[0];
   if (!file) return;
   if (!validate(file)) return;
   fileName.value = file.name;
-  simulateUpload();
-  notification.success('Evidence upload started.');
+  if (!props.upload) return;
+
+  try {
+    await uploadFile(file, props.upload);
+    notification.success("Evidence uploaded.");
+  } catch {
+    // The composable exposes the server error in the component state.
+  }
 }
 </script>
 
@@ -27,10 +37,16 @@ function onFile(event: Event): void {
     <p>PDF, XLSX, PNG, JPG. Max 25 MB.</p>
     <label>
       <input type="file" @change="onFile" />
-      <span class="choose-button">Choose File</span>
+      <span class="choose-button">{{
+        isUploading ? "Uploading…" : "Choose File"
+      }}</span>
     </label>
-    <p v-if="fileName" class="file-name">{{ fileName }} · {{ progress }}%</p>
-    <div v-if="progress > 0" class="bar"><i :style="{ width: `${progress}%` }" /></div>
+    <p v-if="fileName" class="file-name">
+      {{ fileName }}<span v-if="props.upload"> · {{ progress }}%</span>
+    </p>
+    <div v-if="progress > 0" class="bar">
+      <i :style="{ width: `${progress}%` }" />
+    </div>
     <p v-if="error" class="error">{{ error }}</p>
   </section>
 </template>
@@ -101,7 +117,7 @@ input {
 }
 
 .file-name {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: "IBM Plex Mono", monospace;
 }
 
 .error {

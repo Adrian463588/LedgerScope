@@ -13,6 +13,8 @@ use App\Events\Accounting\JournalRejected;
 use App\Events\Accounting\JournalReversed;
 use App\Events\Accounting\JournalSubmitted;
 use App\Models\AccountingPeriod;
+use App\Models\ChartOfAccount;
+use App\Models\Company;
 use App\Models\JournalEntry;
 use App\Models\User;
 use App\ValueObjects\Money;
@@ -41,12 +43,24 @@ final class JournalService
      *     lines: array<int, array{account_id: int, description?: string, debit: string, credit: string, currency?: string}>
      * }  $dto
      */
-    public function create(array $dto, User $user): JournalEntry
+    public function create(array $dto, User $user, ?Company $company = null): JournalEntry
     {
-        $period = AccountingPeriod::findOrFail($dto['accounting_period_id']);
+        $period = $company === null
+            ? AccountingPeriod::findOrFail($dto['accounting_period_id'])
+            : $company->accountingPeriods()->findOrFail($dto['accounting_period_id']);
 
         if (! $period->isOpen()) {
             throw new \DomainException('Cannot create a journal entry in a locked or closed period.');
+        }
+
+        $accountIds = collect($dto['lines'])->pluck('account_id')->unique()->values();
+        $companyAccountCount = ChartOfAccount::query()
+            ->where('company_id', $period->company_id)
+            ->whereIn('id', $accountIds)
+            ->count();
+
+        if ($companyAccountCount !== $accountIds->count()) {
+            throw new \DomainException('All journal accounts must belong to the selected company.');
         }
 
         return DB::transaction(function () use ($dto, $user, $period): JournalEntry {
@@ -131,60 +145,71 @@ final class JournalService
 
     public function post(JournalEntry $journal, User $user): void
     {
-        if ($journal->status !== JournalStatus::Approved) {
-            throw new \DomainException('Journal must be Approved to post.');
-        }
-
-        $period = $journal->accountingPeriod;
-
-        if ($period->isLocked()) {
-            throw new \DomainException('Cannot post to a locked period.');
-        }
-
-        if (! $period->isOpen()) {
-            throw new \DomainException('Cannot post to a locked or closed period.');
-        }
-
-        $lines = $journal->lines;
-
-        if ($lines->count() < 2) {
-            throw new \DomainException('Journal entry must have at least 2 lines.');
-        }
-
-        // Validate all accounts are active
-        foreach ($lines as $line) {
-            if (! $line->account->is_active) {
-                throw new \DomainException("Account [{$line->account->account_code}] is inactive.");
-            }
-        }
-
-        // Validate debit == credit using Money VO (bcmath)
-        $currency = $lines->first()->currency ?? 'IDR';
-        $totalDebit = Money::zero($currency);
-        $totalCredit = Money::zero($currency);
-
-        foreach ($lines as $line) {
-            $totalDebit = $totalDebit->add(new Money($line->debit, $currency));
-            $totalCredit = $totalCredit->add(new Money($line->credit, $currency));
-        }
-
-        if (! $totalDebit->equals($totalCredit)) {
-            throw new \DomainException(
-                "Journal does not balance. Debit: {$totalDebit} | Credit: {$totalCredit}",
-            );
-        }
-
-        // Validate journal date is within period
-        if ($journal->journal_date->lt($period->start_date) || $journal->journal_date->gt($period->end_date)) {
-            throw new \DomainException('Journal date is outside the accounting period range.');
-        }
-
         DB::transaction(function () use ($journal, $user): void {
-            $journalNumber = $this->generateJournalNumber($journal->company_id);
+            /** @var JournalEntry $lockedJournal */
+            $lockedJournal = JournalEntry::query()
+                ->with(['lines.account'])
+                ->lockForUpdate()
+                ->findOrFail($journal->id);
 
-            $journal->forceFill([
+            /** @var AccountingPeriod $period */
+            $period = AccountingPeriod::query()
+                ->lockForUpdate()
+                ->findOrFail($lockedJournal->accounting_period_id);
+
+            if ($lockedJournal->status !== JournalStatus::Approved) {
+                throw new \DomainException('Journal must be Approved to post.');
+            }
+
+            if ($period->isLocked()) {
+                throw new \DomainException('Cannot post to a locked period.');
+            }
+
+            if (! $period->isOpen()) {
+                throw new \DomainException('Cannot post to a locked or closed period.');
+            }
+
+            $lines = $lockedJournal->lines;
+
+            if ($lines->count() < 2) {
+                throw new \DomainException('Journal entry must have at least 2 lines.');
+            }
+
+            foreach ($lines as $line) {
+                if (! $line->account->is_active) {
+                    throw new \DomainException("Account [{$line->account->account_code}] is inactive.");
+                }
+            }
+
+            $currency = $lines->first()->currency ?? 'IDR';
+            $totalDebit = Money::zero($currency);
+            $totalCredit = Money::zero($currency);
+
+            foreach ($lines as $line) {
+                $totalDebit = $totalDebit->add(new Money($line->debit, $currency));
+                $totalCredit = $totalCredit->add(new Money($line->credit, $currency));
+            }
+
+            if (! $totalDebit->equals($totalCredit)) {
+                throw new \DomainException(
+                    "Journal does not balance. Debit: {$totalDebit} | Credit: {$totalCredit}",
+                );
+            }
+
+            if ($lockedJournal->journal_date->lt($period->start_date)
+                || $lockedJournal->journal_date->gt($period->end_date)) {
+                throw new \DomainException('Journal date is outside the accounting period range.');
+            }
+
+            // Serialise journal-number allocation for the company.
+            Company::query()
+                ->whereKey($lockedJournal->company_id)
+                ->lockForUpdate()
+                ->firstOrFail();
+
+            $lockedJournal->forceFill([
                 'status' => JournalStatus::Posted->value,
-                'journal_number' => $journalNumber,
+                'journal_number' => $this->generateJournalNumber($lockedJournal->company_id),
                 'posted_by' => $user->id,
                 'posted_at' => now(),
             ])->save();
@@ -192,11 +217,13 @@ final class JournalService
             event(new JournalPosted(
                 userId: $user->id,
                 action: 'post_journal',
-                companyId: $journal->company_id,
+                companyId: $lockedJournal->company_id,
                 objectType: 'JournalEntry',
-                objectId: $journal->id,
+                objectId: $lockedJournal->id,
             ));
         });
+
+        $journal->refresh();
     }
 
     public function reverse(JournalEntry $journal, User $user, string $reason): JournalEntry

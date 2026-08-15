@@ -32,7 +32,7 @@ final class Quarter extends Model
 
     protected static function booted(): void
     {
-        static::created(function (Quarter $quarter): void {
+        self::created(function (Quarter $quarter): void {
             $keys = [
                 'all_journals_posted',
                 'imported_data_validated',

@@ -4,9 +4,12 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
+/** @property-read Collection<int, ReviewNoteReply> $replies */
 final class ReviewNote extends Model
 {
     protected $fillable = [
@@ -38,7 +41,8 @@ final class ReviewNote extends Model
         return $this->belongsTo(User::class, 'resolved_by');
     }
 
-    public function replies(): \Illuminate\Database\Eloquent\Relations\HasMany
+    /** @return HasMany<ReviewNoteReply, self> */
+    public function replies(): HasMany
     {
         return $this->hasMany(ReviewNoteReply::class);
     }

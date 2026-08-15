@@ -49,18 +49,18 @@
                             <tr>
                                 <td class="indent">{{ $line['account_name'] }}</td>
                                 <td>{{ $line['account_code'] }}</td>
-                                <td class="amount">{{ number_format((float) $line['amount'], 2) }}</td>
+                                <td class="amount">{{ \App\Support\Decimal::format((string) $line['amount']) }}</td>
                             </tr>
                         @endforeach
                         <tr class="total-row">
                             <td colspan="2">Total {{ $title }}</td>
-                            <td class="amount">{{ number_format((float) ($data[$key]['total'] ?? 0), 2) }}</td>
+                            <td class="amount">{{ \App\Support\Decimal::format((string) ($data[$key]['total'] ?? '0.00')) }}</td>
                         </tr>
                     @endif
                 @endforeach
                 <tr class="total-row" style="background-color: #eef2f7;">
                     <td colspan="2">NET INCOME</td>
-                    <td class="amount">{{ number_format((float) ($data['net_income'] ?? 0), 2) }}</td>
+                    <td class="amount">{{ \App\Support\Decimal::format((string) ($data['net_income'] ?? '0.00')) }}</td>
                 </tr>
             </tbody>
         </table>
@@ -85,12 +85,12 @@
                         <tr>
                             <td class="indent">{{ $line['account_name'] }}</td>
                             <td>{{ $line['account_code'] }}</td>
-                            <td class="amount">{{ number_format((float) $line['amount'], 2) }}</td>
+                            <td class="amount">{{ \App\Support\Decimal::format((string) $line['amount']) }}</td>
                         </tr>
                     @endforeach
                     <tr class="total-row">
                         <td colspan="2">Total Assets</td>
-                        <td class="amount">{{ number_format((float) ($data['assets']['total'] ?? 0), 2) }}</td>
+                        <td class="amount">{{ \App\Support\Decimal::format((string) ($data['assets']['total'] ?? '0.00')) }}</td>
                     </tr>
                 @endif
 
@@ -102,12 +102,12 @@
                         <tr>
                             <td class="indent">{{ $line['account_name'] }}</td>
                             <td>{{ $line['account_code'] }}</td>
-                            <td class="amount">{{ number_format((float) $line['amount'], 2) }}</td>
+                            <td class="amount">{{ \App\Support\Decimal::format((string) $line['amount']) }}</td>
                         </tr>
                     @endforeach
                     <tr class="total-row">
                         <td colspan="2">Total Liabilities and Equity</td>
-                        <td class="amount">{{ number_format((float) ($data['liabilities_and_equity']['total'] ?? 0), 2) }}</td>
+                        <td class="amount">{{ \App\Support\Decimal::format((string) ($data['liabilities_and_equity']['total'] ?? '0.00')) }}</td>
                     </tr>
                 @endif
             </tbody>

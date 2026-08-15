@@ -1,60 +1,72 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { UploadCloud, FileText, CheckCircle2, Clock, AlertTriangle, HelpCircle } from 'lucide-vue-next';
+import { onMounted, ref } from "vue";
+import {
+  UploadCloud,
+  FileText,
+  CheckCircle2,
+  AlertTriangle,
+  HelpCircle,
+} from "lucide-vue-next";
 
-import SectionPanel from '@/components/shared/SectionPanel.vue';
-import AppButton from '@/components/ui/AppButton.vue';
-import PageHeader from '@/components/ui/PageHeader.vue';
-import StatusBadge from '@/components/ui/StatusBadge.vue';
-import { useNotification } from '@/composables/useNotification';
-import { engagementApi } from '@/api/endpoints';
-import { useUiStore } from '@/stores/ui.store';
+import SectionPanel from "@/components/shared/SectionPanel.vue";
+import AppButton from "@/components/ui/AppButton.vue";
+import PageHeader from "@/components/ui/PageHeader.vue";
+import StatusBadge from "@/components/ui/StatusBadge.vue";
+import { useNotification } from "@/composables/useNotification";
+import { useLedgerScopeApi } from "@/composables/useLedgerScopeApi";
+
+const { engagementApi } = useLedgerScopeApi();
+import { useUiStore } from "@/stores/ui.store";
+import type { ClientDocumentRequest } from "@/types";
 
 const ui = useUiStore();
 const notification = useNotification();
 
-const requests = ref<any[]>([]);
-const selectedRequest = ref<any>(null);
+const requests = ref<ClientDocumentRequest[]>([]);
+const selectedRequest = ref<ClientDocumentRequest | null>(null);
 const isLoading = ref(true);
 const isUploading = ref(false);
 
 const selectedFile = ref<File | null>(null);
-const uploadDescription = ref('');
+const uploadDescription = ref("");
 
 async function loadRequests(): Promise<void> {
   isLoading.value = true;
   try {
     const data = await engagementApi.listClientDocumentRequests();
     requests.value = data;
-    if (data.length > 0 && !selectedRequest.value) {
-      void selectRequest(data[0]);
-    } else if (selectedRequest.value) {
+    const firstRequest = data[0];
+    const currentRequest = selectedRequest.value;
+    if (firstRequest && !currentRequest) {
+      void selectRequest(firstRequest);
+    } else if (currentRequest) {
       // Refresh current selection
-      const updated = data.find((r) => r.id === selectedRequest.value.id);
+      const updated = data.find((r) => r.id === currentRequest.id);
       if (updated) selectedRequest.value = updated;
     }
-  } catch (error) {
-    notification.error('Failed to load document requests.');
+  } catch {
+    notification.error("Failed to load document requests.");
   } finally {
     isLoading.value = false;
   }
 }
 
-async function selectRequest(req: any): Promise<void> {
+async function selectRequest(req: ClientDocumentRequest): Promise<void> {
   try {
     // Calling getClientDocumentRequest will auto-transition 'requested' status to 'in_progress'
     const detailed = await engagementApi.getClientDocumentRequest(req.id);
     selectedRequest.value = detailed;
     selectedFile.value = null;
-    uploadDescription.value = '';
+    uploadDescription.value = "";
 
     // Update the request in the list with the updated status
     const index = requests.value.findIndex((r) => r.id === req.id);
-    if (index !== -1) {
-      requests.value[index].status = detailed.status;
+    const request = requests.value[index];
+    if (request) {
+      request.status = detailed.status;
     }
-  } catch (error) {
-    notification.error('Failed to retrieve request details.');
+  } catch {
+    notification.error("Failed to retrieve request details.");
   }
 }
 
@@ -70,7 +82,7 @@ async function handleUpload(): Promise<void> {
   if (!selectedRequest.value) return;
   const file = selectedFile.value;
   if (!file) {
-    notification.error('Please select a file to upload.');
+    notification.error("Please select a file to upload.");
     return;
   }
 
@@ -79,27 +91,32 @@ async function handleUpload(): Promise<void> {
     await engagementApi.uploadClientDocumentRequest(
       selectedRequest.value.id,
       file,
-      uploadDescription.value
+      uploadDescription.value,
     );
-    notification.success('Document uploaded and submitted successfully.');
+    notification.success("Document uploaded and submitted successfully.");
     selectedFile.value = null;
-    uploadDescription.value = '';
+    uploadDescription.value = "";
     await loadRequests();
-  } catch (error: any) {
-    notification.error(error.message || 'Failed to upload document.');
+  } catch (error: unknown) {
+    notification.error(
+      error instanceof Error ? error.message : "Failed to upload document.",
+    );
   } finally {
     isUploading.value = false;
   }
 }
 
 onMounted(() => {
-  ui.setBreadcrumbs(['Client Portal', 'Document Requests']);
+  ui.setBreadcrumbs(["Client Portal", "Document Requests"]);
   void loadRequests();
 });
 </script>
 
 <template>
-  <PageHeader title="Client Evidence Portal" subtitle="View document requests from your audit team and securely upload evidence.">
+  <PageHeader
+    title="Client Evidence Portal"
+    subtitle="View document requests from your audit team and securely upload evidence."
+  >
   </PageHeader>
 
   <div v-if="isLoading && requests.length === 0" class="loading-state">
@@ -126,7 +143,9 @@ onMounted(() => {
               <StatusBadge :status="req.status" />
             </div>
             <div class="card-bottom">
-              <span v-if="req.due_date" class="due-date">Due: {{ new Date(req.due_date).toLocaleDateString() }}</span>
+              <span v-if="req.due_date" class="due-date"
+                >Due: {{ new Date(req.due_date).toLocaleDateString() }}</span
+              >
             </div>
           </button>
         </div>
@@ -138,7 +157,10 @@ onMounted(() => {
       <div v-if="!selectedRequest" class="no-selection">
         <HelpCircle class="help-icon" />
         <h3>Select a request to view details</h3>
-        <p>Choose an item from the left sidebar to see instructions and upload evidence.</p>
+        <p>
+          Choose an item from the left sidebar to see instructions and upload
+          evidence.
+        </p>
       </div>
 
       <div v-else class="details-content">
@@ -150,43 +172,81 @@ onMounted(() => {
           <div class="request-details">
             <div class="detail-group">
               <h4>Instructions</h4>
-              <p class="instructions-text">{{ selectedRequest.description || 'No additional instructions provided.' }}</p>
+              <p class="instructions-text">
+                {{
+                  selectedRequest.description ||
+                  "No additional instructions provided."
+                }}
+              </p>
             </div>
 
             <div v-if="selectedRequest.due_date" class="detail-group">
               <h4>Due Date</h4>
-              <p class="due-text">{{ new Date(selectedRequest.due_date).toLocaleDateString() }}</p>
+              <p class="due-text">
+                {{ new Date(selectedRequest.due_date).toLocaleDateString() }}
+              </p>
             </div>
 
             <!-- Rejection Callout -->
-            <div v-if="selectedRequest.status === 'rejected'" class="rejection-callout">
+            <div
+              v-if="selectedRequest.status === 'rejected'"
+              class="rejection-callout"
+            >
               <AlertTriangle class="warn-icon" />
               <div>
                 <h5>Request Rejected by Auditor</h5>
-                <p>{{ selectedRequest.rejection_reason || 'No rejection reason specified.' }}</p>
+                <p>
+                  {{
+                    selectedRequest.rejection_reason ||
+                    "No rejection reason specified."
+                  }}
+                </p>
               </div>
             </div>
           </div>
         </SectionPanel>
 
         <!-- Current Evidence -->
-        <SectionPanel v-if="selectedRequest.evidence_file" title="Submitted Evidence" :icon="FileText">
+        <SectionPanel
+          v-if="selectedRequest.evidence_file"
+          title="Submitted Evidence"
+          :icon="FileText"
+        >
           <div class="submitted-evidence">
             <CheckCircle2 class="success-icon" />
             <div class="file-info">
-              <span class="file-name">{{ selectedRequest.evidence_file.original_name }}</span>
-              <span class="file-size">({{ (selectedRequest.evidence_file.file_size_bytes / 1024).toFixed(1) }} KB)</span>
+              <span class="file-name">{{
+                selectedRequest.evidence_file.original_name
+              }}</span>
+              <span class="file-size"
+                >({{
+                  (
+                    selectedRequest.evidence_file.file_size_bytes / 1024
+                  ).toFixed(1)
+                }}
+                KB)</span
+              >
               <p class="upload-time">Submitted via portal</p>
             </div>
           </div>
         </SectionPanel>
 
         <!-- Upload Form -->
-        <SectionPanel v-if="['requested', 'in_progress', 'rejected'].includes(selectedRequest.status)" title="Upload Evidence" :icon="UploadCloud">
+        <SectionPanel
+          v-if="
+            ['requested', 'in_progress', 'rejected'].includes(
+              selectedRequest.status,
+            )
+          "
+          title="Upload Evidence"
+          :icon="UploadCloud"
+        >
           <div class="upload-form">
             <div class="file-input-zone">
               <UploadCloud class="upload-icon" />
-              <p v-if="!selectedFile">Drag and drop file here, or click to browse</p>
+              <p v-if="!selectedFile">
+                Drag and drop file here, or click to browse
+              </p>
               <p v-else class="selected-file-name">{{ selectedFile.name }}</p>
               <label class="file-label">
                 <input type="file" @change="handleFileSelect" />
@@ -195,10 +255,18 @@ onMounted(() => {
             </div>
 
             <div class="form-inputs">
-              <AppInput v-model="uploadDescription" label="Comment / Description" placeholder="Explain what this file contains..." />
+              <AppInput
+                v-model="uploadDescription"
+                label="Comment / Description"
+                placeholder="Explain what this file contains..."
+              />
               <div class="form-actions">
-                <AppButton variant="primary" :disabled="isUploading || !selectedFile" @click="handleUpload">
-                  {{ isUploading ? 'Uploading...' : 'Submit Evidence' }}
+                <AppButton
+                  variant="primary"
+                  :disabled="isUploading || !selectedFile"
+                  @click="handleUpload"
+                >
+                  {{ isUploading ? "Uploading..." : "Submit Evidence" }}
                 </AppButton>
               </div>
             </div>
@@ -249,7 +317,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   text-align: left;
-  background-color: var(--bg-card);
+  background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 14px;
@@ -259,12 +327,12 @@ onMounted(() => {
 
 .request-card:hover {
   border-color: var(--border-strong);
-  background-color: var(--bg-hover);
+  background-color: var(--surface-hover);
 }
 
 .request-card.active {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 1px var(--primary);
+  border-color: var(--brand-red);
+  box-shadow: 0 0 0 1px var(--brand-red);
 }
 
 .card-top {
@@ -320,8 +388,8 @@ onMounted(() => {
 .rejection-callout {
   display: flex;
   gap: 12px;
-  background-color: rgba(239, 68, 68, 0.08);
-  border: 1px solid var(--error);
+  background-color: var(--status-danger-bg);
+  border: 1px solid var(--status-danger);
   border-radius: 8px;
   padding: 14px;
   color: var(--text-primary);
@@ -330,7 +398,7 @@ onMounted(() => {
 
 .rejection-callout h5 {
   margin: 0 0 4px;
-  color: var(--error);
+  color: var(--status-danger);
   font-weight: 600;
 }
 
@@ -341,7 +409,7 @@ onMounted(() => {
 }
 
 .warn-icon {
-  color: var(--error);
+  color: var(--status-danger);
   flex-shrink: 0;
   width: 20px;
   height: 20px;
@@ -351,7 +419,7 @@ onMounted(() => {
   display: flex;
   align-items: center;
   gap: 16px;
-  background-color: var(--bg-card);
+  background-color: var(--surface);
   border: 1px solid var(--border);
   border-radius: 8px;
   padding: 16px;
@@ -394,7 +462,7 @@ onMounted(() => {
   border-radius: 8px;
   padding: 30px;
   text-align: center;
-  background-color: var(--bg-card);
+  background-color: var(--surface);
   margin-bottom: 20px;
 }
 
@@ -418,7 +486,7 @@ onMounted(() => {
   height: 36px;
   border: 1px solid var(--border-strong);
   border-radius: 6px;
-  background-color: var(--bg-surface);
+  background-color: var(--surface-alt);
   color: var(--text-primary);
   font-weight: 500;
   padding: 0 16px;
@@ -427,13 +495,13 @@ onMounted(() => {
 }
 
 .browse-btn:hover {
-  background-color: var(--bg-hover);
+  background-color: var(--surface-hover);
 }
 
 .selected-file-name {
   font-weight: 600;
-  color: var(--primary);
-  font-family: 'IBM Plex Mono', monospace;
+  color: var(--brand-red);
+  font-family: "IBM Plex Mono", monospace;
 }
 
 .form-inputs {

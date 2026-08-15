@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Accounting;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Accounting\StatementTemplateResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Company;
 use App\Models\StatementTemplate;
@@ -18,7 +19,7 @@ final class StatementTemplateController extends Controller
         $this->authorize('view', $company);
 
         return ApiResponse::success(
-            StatementTemplate::where('company_id', $company->id)->get(),
+            StatementTemplateResource::collection(StatementTemplate::where('company_id', $company->id)->get()),
         );
     }
 
@@ -35,6 +36,6 @@ final class StatementTemplateController extends Controller
 
         $template = StatementTemplate::create(array_merge($validated, ['company_id' => $company->id]));
 
-        return ApiResponse::created($template, 'Template created.');
+        return ApiResponse::created(new StatementTemplateResource($template), 'Template created.');
     }
 }

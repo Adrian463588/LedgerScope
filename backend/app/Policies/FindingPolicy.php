@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
+use App\Models\Engagement;
 use App\Models\Finding;
 use App\Models\User;
-use App\Models\Engagement;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 final class FindingPolicy
@@ -20,7 +20,11 @@ final class FindingPolicy
         }
 
         // Firm admin / super admin can view all findings for the company
-        if ($user->hasRole('firm_admin') || $user->hasRole('super_admin')) {
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        if ($user->hasRole('firm_admin')) {
             return $user->companies()->where('companies.id', $finding->company_id)->exists();
         }
 
@@ -79,11 +83,15 @@ final class FindingPolicy
         }
 
         // Must be manager/partner on engagement, or firm admin
-        if ($user->hasRole('firm_admin') || $user->hasRole('super_admin')) {
+        if ($user->hasRole('super_admin')) {
             return true;
         }
 
-        return $finding->engagement->manager_id === $user->id 
+        if ($user->hasRole('firm_admin')) {
+            return $user->companies()->where('companies.id', $finding->company_id)->exists();
+        }
+
+        return $finding->engagement->manager_id === $user->id
             || $finding->engagement->partner_id === $user->id;
     }
 
@@ -93,13 +101,17 @@ final class FindingPolicy
             return false;
         }
 
-        if ($user->hasRole('firm_admin') || $user->hasRole('super_admin')) {
+        if ($user->hasRole('super_admin')) {
             return true;
         }
 
+        if ($user->hasRole('firm_admin')) {
+            return $user->companies()->where('companies.id', $finding->company_id)->exists();
+        }
+
         // Must be lead, manager, partner
-        return $finding->engagement->lead_auditor_id === $user->id 
-            || $finding->engagement->manager_id === $user->id 
+        return $finding->engagement->lead_auditor_id === $user->id
+            || $finding->engagement->manager_id === $user->id
             || $finding->engagement->partner_id === $user->id;
     }
 

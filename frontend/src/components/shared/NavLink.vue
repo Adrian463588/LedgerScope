@@ -1,25 +1,43 @@
 <script setup lang="ts">
-import type { Component } from 'vue';
-import { navigateTo, useRouter } from '@/router';
+import type { Component } from "vue";
+import { navigateTo, useRouter } from "@/router";
 
 const props = withDefaults(
   defineProps<{
     href: string;
     icon?: Component;
     compact?: boolean;
+    external?: boolean;
   }>(),
   {
     icon: undefined,
     compact: false,
+    external: false,
   },
 );
 
 const { currentPath } = useRouter();
+
+function handleClick(): void {
+  if (!props.external) {
+    navigateTo(props.href);
+  }
+}
 </script>
 
 <template>
-  <a class="nav-link" :class="{ active: currentPath === props.href, compact: props.compact }" :href="props.href" @click.prevent="navigateTo(props.href)">
-    <component :is="props.icon" v-if="props.icon" class="nav-link__icon" aria-hidden="true" />
+  <a
+    class="nav-link"
+    :class="{ active: currentPath === props.href, compact: props.compact }"
+    :href="props.href"
+    @click="handleClick"
+  >
+    <component
+      :is="props.icon"
+      v-if="props.icon"
+      class="nav-link__icon"
+      aria-hidden="true"
+    />
     <span v-if="!props.compact"><slot /></span>
   </a>
 </template>

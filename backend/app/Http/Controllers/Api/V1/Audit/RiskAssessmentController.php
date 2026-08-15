@@ -7,6 +7,7 @@ namespace App\Http\Controllers\Api\V1\Audit;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Audit\StoreRiskAssessmentRequest;
 use App\Http\Requests\Audit\UpdateRiskAssessmentRequest;
+use App\Http\Resources\Audit\RiskAssessmentResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Engagement;
 use App\Models\RiskAssessment;
@@ -22,11 +23,11 @@ final class RiskAssessmentController extends Controller
     {
         $this->authorize('view', $engagement);
 
-        return ApiResponse::success(
+        return ApiResponse::success(RiskAssessmentResource::collection(
             RiskAssessment::where('engagement_id', $engagement->id)
                 ->orderByDesc('created_at')
                 ->get(),
-        );
+        ));
     }
 
     public function store(StoreRiskAssessmentRequest $request, Engagement $engagement): JsonResponse
@@ -44,14 +45,14 @@ final class RiskAssessmentController extends Controller
             return $risk;
         });
 
-        return ApiResponse::created($risk, 'Risk assessment created.');
+        return ApiResponse::created(new RiskAssessmentResource($risk), 'Risk assessment created.');
     }
 
     public function show(Engagement $engagement, RiskAssessment $riskAssessment): JsonResponse
     {
         $this->authorize('view', $engagement);
 
-        return ApiResponse::success($riskAssessment);
+        return ApiResponse::success(new RiskAssessmentResource($riskAssessment));
     }
 
     public function update(UpdateRiskAssessmentRequest $request, Engagement $engagement, RiskAssessment $riskAssessment): JsonResponse
@@ -60,16 +61,20 @@ final class RiskAssessmentController extends Controller
 
         $validated = $request->validated();
 
-        $riskAssessment->update($validated);
+        DB::transaction(function () use ($riskAssessment, $validated): void {
+            $riskAssessment->update($validated);
+        });
 
-        return ApiResponse::success($riskAssessment->fresh(), 'Risk assessment updated.');
+        return ApiResponse::success(new RiskAssessmentResource($riskAssessment->fresh()), 'Risk assessment updated.');
     }
 
     public function destroy(Engagement $engagement, RiskAssessment $riskAssessment): JsonResponse
     {
         $this->authorize('update', $engagement);
 
-        $riskAssessment->delete();
+        DB::transaction(function () use ($riskAssessment): void {
+            $riskAssessment->delete();
+        });
 
         return ApiResponse::noContent();
     }

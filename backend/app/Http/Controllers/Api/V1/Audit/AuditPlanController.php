@@ -5,11 +5,12 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Audit;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Audit\UpdateAuditPlanRequest;
+use App\Http\Resources\Audit\AuditPlanResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Engagement;
 use App\Services\Audit\AuditPlanService;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Request;
 
 /**
  * AuditPlanController — EPIC 4 PRD §6.12
@@ -24,25 +25,17 @@ final class AuditPlanController extends Controller
 
         $plan = $this->service->getOrCreate($engagement);
 
-        return ApiResponse::success($plan);
+        return ApiResponse::success(new AuditPlanResource($plan));
     }
 
-    public function update(Request $request, Engagement $engagement): JsonResponse
+    public function update(UpdateAuditPlanRequest $request, Engagement $engagement): JsonResponse
     {
         $this->authorize('update', $engagement);
 
         $plan = $this->service->getOrCreate($engagement);
 
-        $validated = $request->validate([
-            'overall_materiality' => ['nullable', 'numeric', 'min:0'],
-            'performance_materiality' => ['nullable', 'numeric', 'min:0'],
-            'trivial_threshold' => ['nullable', 'numeric', 'min:0'],
-            'audit_strategy' => ['nullable', 'string'],
-            'planning_checklist' => ['nullable', 'array'],
-        ]);
+        $updatedPlan = $this->service->update($plan, $request->validated());
 
-        $updatedPlan = $this->service->update($plan, $validated);
-
-        return ApiResponse::success($updatedPlan, 'Audit plan updated.');
+        return ApiResponse::success(new AuditPlanResource($updatedPlan), 'Audit plan updated.');
     }
 }

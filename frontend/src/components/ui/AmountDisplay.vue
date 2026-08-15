@@ -1,28 +1,36 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed } from "vue";
 
-import { useCurrency } from '@/composables/useCurrency';
+import { useCurrency } from "@/composables/useCurrency";
 
 const props = withDefaults(
   defineProps<{
     value: string | number;
-    kind?: 'debit' | 'credit' | 'neutral';
+    kind?: "debit" | "credit" | "neutral";
     currency?: boolean;
   }>(),
   {
-    kind: 'neutral',
+    kind: "neutral",
     currency: false,
   },
 );
 
 const { formatAmount, formatCurrency, amountColorClass } = useCurrency();
 
-const display = computed(() => (props.currency ? formatCurrency(props.value) : formatAmount(props.value)));
-const tone = computed(() => (props.kind === 'neutral' ? 'amount-neutral' : amountColorClass(String(props.value), props.kind)));
+const display = computed(() =>
+  props.currency ? formatCurrency(props.value) : formatAmount(props.value),
+);
+const tone = computed(() =>
+  props.kind === "neutral"
+    ? "amount-neutral"
+    : amountColorClass(String(props.value), props.kind),
+);
 </script>
 
 <template>
-  <span class="amount-display font-mono-finance" :class="tone">{{ display }}</span>
+  <span class="amount-display font-mono-finance" :class="tone">{{
+    display
+  }}</span>
 </template>
 
 <style scoped>

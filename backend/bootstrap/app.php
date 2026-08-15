@@ -1,23 +1,22 @@
 <?php
 
+use App\Exceptions\FeatureUnavailableException;
+use App\Http\Middleware\EnforceSessionTimeout;
 use App\Http\Middleware\EnsureCompanyAccess;
+use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\PermissionMiddleware;
+use App\Http\Middleware\RoleMiddleware;
+use App\Http\Responses\ApiResponse;
+use Illuminate\Auth\Access\AuthorizationException;
+use Illuminate\Auth\AuthenticationException;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-
-spl_autoload_register(function ($class) {
-    if (strpos($class, 'App\\') === 0) {
-        $parts = explode('\\', substr($class, 4));
-        $filename = array_pop($parts);
-        $kebabFilename = strtolower(preg_replace('/(?<!^)[A-Z]/', '-$0', $filename));
-        $path = implode('/', $parts);
-        $file = dirname(__DIR__) . '/app/' . ($path ? $path . '/' : '') . $kebabFilename . '.php';
-        if (file_exists($file)) {
-            require_once $file;
-        }
-    }
-});
+use Illuminate\Validation\ValidationException;
+use Symfony\Component\HttpKernel\Exception\HttpExceptionInterface;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -27,76 +26,100 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // Inertia Middleware
-        $middleware->web(append: [
-            \App\Http\Middleware\HandleInertiaRequests::class,
-            \Illuminate\Http\Middleware\AddLinkHeadersForPreloadedAssets::class,
-        ]);
-
         // Sanctum session stateful domains for SPA
         $middleware->statefulApi();
+        $middleware->web(append: [HandleInertiaRequests::class]);
 
         // Register named middleware aliases
         $middleware->alias([
             'company.access' => EnsureCompanyAccess::class,
-            'session.timeout' => \App\Http\Middleware\EnforceSessionTimeout::class,
-            'role' => \App\Http\Middleware\RoleMiddleware::class,
-            'permission' => \App\Http\Middleware\PermissionMiddleware::class,
+            'session.timeout' => EnforceSessionTimeout::class,
+            'role' => RoleMiddleware::class,
+            'permission' => PermissionMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Always return structured JSON for API routes
         $exceptions->shouldRenderJsonWhen(
-            fn (Request $request): bool => $request->is('api/*') || $request->expectsJson()
+            fn (Request $request): bool => $request->is('api/*') || $request->expectsJson(),
         );
 
-        // DomainException → 422
-        $exceptions->renderable(function (\DomainException $e, Request $request): ?\Illuminate\Http\JsonResponse {
+        $exceptions->renderable(function (FeatureUnavailableException $e, Request $request): ?JsonResponse {
             if ($request->is('api/*')) {
-                return response()->json(['success' => false, 'message' => $e->getMessage()], 422);
+                return ApiResponse::unavailable($e->getMessage());
+            }
+
+            return null;
+        });
+
+        // DomainException → 422
+        $exceptions->renderable(function (DomainException $e, Request $request): ?JsonResponse {
+            if ($request->is('api/*')) {
+                return ApiResponse::domainError($e->getMessage());
             }
 
             return null;
         });
 
         // AuthenticationException → 401
-        $exceptions->renderable(function (\Illuminate\Auth\AuthenticationException $e, Request $request): ?\Illuminate\Http\JsonResponse {
+        $exceptions->renderable(function (AuthenticationException $e, Request $request): ?JsonResponse {
             if ($request->is('api/*')) {
-                return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
+                return ApiResponse::unauthorized();
             }
 
             return null;
         });
 
         // AuthorizationException → 403
-        $exceptions->renderable(function (\Illuminate\Auth\Access\AuthorizationException $e, Request $request): ?\Illuminate\Http\JsonResponse {
+        $exceptions->renderable(function (AuthorizationException $e, Request $request): ?JsonResponse {
             if ($request->is('api/*')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => $e->getMessage() ?: 'You do not have permission to perform this action.',
-                ], 403);
+                return ApiResponse::forbidden($e->getMessage() ?: 'You do not have permission to perform this action.');
+            }
+
+            return null;
+        });
+
+        $exceptions->renderable(function (HttpExceptionInterface $e, Request $request): ?JsonResponse {
+            if ($request->is('api/*')) {
+                return match ($e->getStatusCode()) {
+                    401 => ApiResponse::unauthorized($e->getMessage() ?: 'Unauthenticated.'),
+                    403 => ApiResponse::forbidden($e->getMessage() ?: 'You do not have permission to perform this action.'),
+                    404 => ApiResponse::notFound($e->getMessage() ?: 'Resource not found.'),
+                    default => ApiResponse::error(
+                        $e->getMessage() ?: 'Request failed.',
+                        $e->getStatusCode(),
+                        null,
+                        'http_error',
+                    ),
+                };
             }
 
             return null;
         });
 
         // ModelNotFoundException → 404
-        $exceptions->renderable(function (\Illuminate\Database\Eloquent\ModelNotFoundException $e, Request $request): ?\Illuminate\Http\JsonResponse {
+        $exceptions->renderable(function (ModelNotFoundException $e, Request $request): ?JsonResponse {
             if ($request->is('api/*')) {
-                return response()->json(['success' => false, 'message' => 'Resource not found.'], 404);
+                return ApiResponse::notFound();
             }
 
             return null;
         });
 
         // ValidationException → 422
-        $exceptions->renderable(function (\Illuminate\Validation\ValidationException $e, Request $request): ?\Illuminate\Http\JsonResponse {
+        $exceptions->renderable(function (ValidationException $e, Request $request): ?JsonResponse {
             if ($request->is('api/*')) {
-                return response()->json([
-                    'success' => false,
-                    'message' => 'Validation failed.',
-                    'errors'  => $e->errors(),
-                ], 422);
+                return ApiResponse::validationError($e->errors());
+            }
+
+            return null;
+        });
+
+        $exceptions->renderable(function (Throwable $e, Request $request): ?JsonResponse {
+            if ($request->is('api/*')) {
+                report($e);
+
+                return ApiResponse::serverError();
             }
 
             return null;

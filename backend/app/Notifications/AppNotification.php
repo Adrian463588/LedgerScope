@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Notifications;
 
+use App\Models\User;
 use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Notifications\Messages\MailMessage;
@@ -17,12 +18,32 @@ final class AppNotification extends Notification implements ShouldQueue
         private readonly string $title,
         private readonly string $message,
         private readonly string $type,
-        private readonly ?string $actionUrl = null
+        private readonly ?string $actionUrl = null,
     ) {}
 
+    /** @return list<string> */
     public function via(object $notifiable): array
     {
-        return ['database', 'mail'];
+        $channels = ['database', 'mail'];
+
+        if (! $notifiable instanceof User) {
+            return $channels;
+        }
+
+        $preferences = $notifiable->notificationPreferences()
+            ->whereIn('channel', ['app', 'email'])
+            ->get()
+            ->keyBy('channel');
+
+        if ($preferences->get('app')?->enabled === false) {
+            $channels = array_values(array_diff($channels, ['database']));
+        }
+
+        if ($preferences->get('email')?->enabled === false) {
+            $channels = array_values(array_diff($channels, ['mail']));
+        }
+
+        return $channels;
     }
 
     public function toMail(object $notifiable): MailMessage

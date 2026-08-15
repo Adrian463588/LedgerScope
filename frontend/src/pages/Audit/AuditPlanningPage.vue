@@ -1,84 +1,128 @@
 <script setup lang="ts">
-import { onMounted, ref } from 'vue';
-import { useRoute } from 'vue-router';
-import { Save, CheckSquare, FileText, Settings, ShieldAlert } from 'lucide-vue-next';
+import { computed, onMounted, ref } from "vue";
+import { useRoute } from "vue-router";
+import {
+  Save,
+  CheckSquare,
+  FileText,
+  Settings,
+  ShieldAlert,
+} from "lucide-vue-next";
 
-import SectionPanel from '@/components/shared/SectionPanel.vue';
-import AppButton from '@/components/ui/AppButton.vue';
-import AppInput from '@/components/ui/AppInput.vue';
-import PageHeader from '@/components/ui/PageHeader.vue';
-import { useNotification } from '@/composables/useNotification';
-import { engagementApi } from '@/api/endpoints';
-import { useUiStore } from '@/stores/ui.store';
+import SectionPanel from "@/components/shared/SectionPanel.vue";
+import AppButton from "@/components/ui/AppButton.vue";
+import AppInput from "@/components/ui/AppInput.vue";
+import PageHeader from "@/components/ui/PageHeader.vue";
+import { useNotification } from "@/composables/useNotification";
+import { useLedgerScopeApi } from "@/composables/useLedgerScopeApi";
+
+const { engagementApi } = useLedgerScopeApi();
+import { useUiStore } from "@/stores/ui.store";
+import { multiplyDecimal } from "@/utils/decimal";
 
 const route = useRoute();
 const ui = useUiStore();
 const notification = useNotification();
 
-const engagementId = Number(route.params['id'] || 1);
+const engagementId = computed<number | null>(() => {
+  const value = route.params["id"];
+  return typeof value === "string" && /^\d+$/.test(value)
+    ? Number(value)
+    : null;
+});
 const isLoading = ref(true);
 const isSaving = ref(false);
+const loadError = ref<string | null>(null);
 
-const overallMateriality = ref('0.00');
-const performanceMateriality = ref('0.00');
-const trivialThreshold = ref('0.00');
-const auditStrategy = ref('');
-const checklist = ref<Array<{ key: string; name: string; is_completed: boolean }>>([]);
+const overallMateriality = ref("0.00");
+const performanceMateriality = ref("0.00");
+const trivialThreshold = ref("0.00");
+const auditStrategy = ref("");
+const checklist = ref<
+  Array<{ key: string; name: string; is_completed: boolean }>
+>([]);
 
 async function fetchAuditPlan(): Promise<void> {
   try {
     isLoading.value = true;
-    const plan = await engagementApi.getAuditPlan(engagementId);
-    overallMateriality.value = plan.overall_materiality ? String(plan.overall_materiality) : '0.00';
-    performanceMateriality.value = plan.performance_materiality ? String(plan.performance_materiality) : '0.00';
-    trivialThreshold.value = plan.trivial_threshold ? String(plan.trivial_threshold) : '0.00';
-    auditStrategy.value = plan.audit_strategy || '';
+    loadError.value = null;
+    if (!engagementId.value) {
+      loadError.value =
+        "Select a valid engagement before opening audit planning.";
+      return;
+    }
+
+    const plan = await engagementApi.getAuditPlan(engagementId.value);
+    overallMateriality.value = plan.overall_materiality
+      ? String(plan.overall_materiality)
+      : "0.00";
+    performanceMateriality.value = plan.performance_materiality
+      ? String(plan.performance_materiality)
+      : "0.00";
+    trivialThreshold.value = plan.trivial_threshold
+      ? String(plan.trivial_threshold)
+      : "0.00";
+    auditStrategy.value = plan.audit_strategy || "";
     checklist.value = plan.planning_checklist || [];
-  } catch (error) {
-    notification.error('Failed to load audit plan.');
+  } catch (caught) {
+    loadError.value =
+      caught instanceof Error ? caught.message : "Failed to load audit plan.";
+    notification.error("Failed to load audit plan.");
   } finally {
     isLoading.value = false;
   }
 }
 
 async function saveAuditPlan(): Promise<void> {
+  if (!engagementId.value) return;
+
   try {
     isSaving.value = true;
-    await engagementApi.updateAuditPlan(engagementId, {
-      overall_materiality: Number(overallMateriality.value),
-      performance_materiality: Number(performanceMateriality.value),
-      trivial_threshold: Number(trivialThreshold.value),
+    await engagementApi.updateAuditPlan(engagementId.value, {
+      overall_materiality: overallMateriality.value,
+      performance_materiality: performanceMateriality.value,
+      trivial_threshold: trivialThreshold.value,
       audit_strategy: auditStrategy.value,
       planning_checklist: checklist.value,
     });
-    notification.success('Audit plan saved successfully.');
-  } catch (error) {
-    notification.error('Failed to save audit plan.');
+    notification.success("Audit plan saved successfully.");
+  } catch {
+    notification.error("Failed to save audit plan.");
   } finally {
     isSaving.value = false;
   }
 }
 
 function calculateDefaults(): void {
-  // Simple heuristic/calculator for materiality based on benchmark if needed
-  // Or let user input manually.
-  const overall = parseFloat(overallMateriality.value) || 0;
-  performanceMateriality.value = (overall * 0.75).toFixed(2);
-  trivialThreshold.value = (overall * 0.05).toFixed(2);
-  notification.success('Suggested thresholds calculated: 75% for performance, 5% for trivial.');
+  performanceMateriality.value = multiplyDecimal(
+    overallMateriality.value,
+    "0.75",
+  );
+  trivialThreshold.value = multiplyDecimal(overallMateriality.value, "0.05");
+  notification.success(
+    "Suggested thresholds calculated: 75% for performance, 5% for trivial.",
+  );
 }
 
 onMounted(() => {
-  ui.setBreadcrumbs(['Audit', 'Engagements', 'Planning']);
+  ui.setBreadcrumbs(["Audit", "Engagements", "Planning"]);
   void fetchAuditPlan();
 });
 </script>
 
 <template>
-  <PageHeader title="Audit Planning & Materiality" subtitle="Establish audit strategy, calculate materiality thresholds, and complete planning checklist.">
+  <PageHeader
+    title="Audit Planning & Materiality"
+    subtitle="Establish audit strategy, calculate materiality thresholds, and complete planning checklist."
+  >
     <template #actions>
-      <AppButton variant="primary" :icon="Save" :disabled="isSaving || isLoading" @click="saveAuditPlan">
-        {{ isSaving ? 'Saving...' : 'Save Audit Plan' }}
+      <AppButton
+        variant="primary"
+        :icon="Save"
+        :disabled="isSaving || isLoading"
+        @click="saveAuditPlan"
+      >
+        {{ isSaving ? "Saving..." : "Save Audit Plan" }}
       </AppButton>
     </template>
   </PageHeader>
@@ -87,27 +131,50 @@ onMounted(() => {
     <p>Loading audit plan...</p>
   </div>
 
+  <div v-else-if="loadError" class="empty-state">
+    <p>{{ loadError }}</p>
+  </div>
+
   <div v-else class="plan-grid">
     <div class="main-column">
       <SectionPanel title="Materiality Calculations" :icon="Settings">
         <p class="description">
-          Define overall planning materiality (typically 1-5% of benchmark like revenues or assets) to derive performance and trivial thresholds.
+          Define overall planning materiality (typically 1-5% of benchmark like
+          revenues or assets) to derive performance and trivial thresholds.
         </p>
 
         <div class="materiality-inputs">
-          <AppInput v-model="overallMateriality" label="Overall Materiality" amount required />
-          <AppInput v-model="performanceMateriality" label="Performance Materiality" amount required />
-          <AppInput v-model="trivialThreshold" label="Trivial Threshold (SUD)" amount required />
+          <AppInput
+            v-model="overallMateriality"
+            label="Overall Materiality"
+            amount
+            required
+          />
+          <AppInput
+            v-model="performanceMateriality"
+            label="Performance Materiality"
+            amount
+            required
+          />
+          <AppInput
+            v-model="trivialThreshold"
+            label="Trivial Threshold (SUD)"
+            amount
+            required
+          />
         </div>
 
         <div class="calculator-action">
-          <AppButton variant="secondary" @click="calculateDefaults">Calculate Suggesions (75% / 5%)</AppButton>
+          <AppButton variant="secondary" @click="calculateDefaults"
+            >Calculate Suggestions (75% / 5%)</AppButton
+          >
         </div>
       </SectionPanel>
 
       <SectionPanel title="General Audit Strategy" :icon="FileText">
         <p class="description">
-          Outline the overall strategy regarding scope, timing, direction of the audit, and key audit matters.
+          Outline the overall strategy regarding scope, timing, direction of the
+          audit, and key audit matters.
         </p>
         <textarea
           v-model="auditStrategy"
@@ -121,12 +188,19 @@ onMounted(() => {
     <div class="sidebar-column">
       <SectionPanel title="Planning Checklist" :icon="CheckSquare">
         <p class="description">
-          All planning stage procedures must be completed before starting fieldwork.
+          All planning stage procedures must be completed before starting
+          fieldwork.
         </p>
         <div class="checklist-items">
-          <label v-for="item in checklist" :key="item.key" class="checklist-item">
+          <label
+            v-for="item in checklist"
+            :key="item.key"
+            class="checklist-item"
+          >
             <input type="checkbox" v-model="item.is_completed" />
-            <span :class="{ completed: item.is_completed }">{{ item.name }}</span>
+            <span :class="{ completed: item.is_completed }">{{
+              item.name
+            }}</span>
           </label>
         </div>
       </SectionPanel>
@@ -191,7 +265,7 @@ onMounted(() => {
   padding: 12px;
   border-radius: 8px;
   border: 1px solid var(--border);
-  background-color: var(--bg-surface);
+  background-color: var(--surface-alt);
   color: var(--text-primary);
   font-size: 14px;
   resize: vertical;
@@ -214,7 +288,7 @@ onMounted(() => {
 }
 
 .checklist-item:hover {
-  background-color: var(--bg-hover);
+  background-color: var(--surface-hover);
 }
 
 .checklist-item input {

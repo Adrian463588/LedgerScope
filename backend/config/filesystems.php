@@ -38,6 +38,22 @@ return [
             'report' => false,
         ],
 
+        'private' => [
+            'driver' => env('PRIVATE_FILESYSTEM_DISK', env('FILESYSTEM_DISK', 'local')),
+            'root' => storage_path('app/private'),
+            'serve' => true,
+            'url' => rtrim(env('APP_URL', 'http://localhost'), '/').'/private-storage',
+            'visibility' => 'private',
+            'key' => env('PRIVATE_AWS_ACCESS_KEY_ID', env('AWS_ACCESS_KEY_ID')),
+            'secret' => env('PRIVATE_AWS_SECRET_ACCESS_KEY', env('AWS_SECRET_ACCESS_KEY')),
+            'region' => env('PRIVATE_AWS_DEFAULT_REGION', env('AWS_DEFAULT_REGION')),
+            'bucket' => env('PRIVATE_AWS_BUCKET', env('AWS_BUCKET')),
+            'endpoint' => env('PRIVATE_AWS_ENDPOINT', env('AWS_ENDPOINT')),
+            'use_path_style_endpoint' => env('PRIVATE_AWS_USE_PATH_STYLE_ENDPOINT', env('AWS_USE_PATH_STYLE_ENDPOINT', false)),
+            'throw' => true,
+            'report' => false,
+        ],
+
         'public' => [
             'driver' => 'local',
             'root' => storage_path('app/public'),

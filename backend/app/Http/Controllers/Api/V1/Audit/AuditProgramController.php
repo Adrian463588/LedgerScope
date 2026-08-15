@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Audit;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Audit\AuditProgramResource;
+use App\Http\Resources\Audit\AuditProgramStepResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\AuditProgram;
 use App\Models\AuditProgramStep;
@@ -24,19 +26,19 @@ final class AuditProgramController extends Controller
 
     public function index(Engagement $engagement): JsonResponse
     {
-        $this->authorize('view', $engagement->company);
+        $this->authorize('view', $engagement);
 
-        return ApiResponse::success(
+        return ApiResponse::success(AuditProgramResource::collection(
             AuditProgram::where('engagement_id', $engagement->id)
                 ->with('steps')
                 ->orderByDesc('created_at')
                 ->get(),
-        );
+        ));
     }
 
     public function store(Request $request, Engagement $engagement): JsonResponse
     {
-        $this->authorize('update', $engagement->company);
+        $this->authorize('update', $engagement);
 
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:200'],
@@ -53,19 +55,19 @@ final class AuditProgramController extends Controller
             return $program;
         });
 
-        return ApiResponse::created($program, 'Audit program created.');
+        return ApiResponse::created(new AuditProgramResource($program), 'Audit program created.');
     }
 
     public function show(Engagement $engagement, AuditProgram $auditProgram): JsonResponse
     {
-        $this->authorize('view', $engagement->company);
+        $this->authorize('view', $engagement);
 
-        return ApiResponse::success($auditProgram->load('steps'));
+        return ApiResponse::success(new AuditProgramResource($auditProgram->load('steps')));
     }
 
     public function update(Request $request, Engagement $engagement, AuditProgram $auditProgram): JsonResponse
     {
-        $this->authorize('update', $engagement->company);
+        $this->authorize('update', $engagement);
 
         $validated = $request->validate([
             'name' => ['sometimes', 'string', 'max:200'],
@@ -73,16 +75,18 @@ final class AuditProgramController extends Controller
             'status' => ['sometimes', 'string', 'in:draft,active,completed'],
         ]);
 
-        $auditProgram->update($validated);
+        DB::transaction(function () use ($auditProgram, $validated): void {
+            $auditProgram->update($validated);
+        });
 
-        return ApiResponse::success($auditProgram->fresh(), 'Audit program updated.');
+        return ApiResponse::success(new AuditProgramResource($auditProgram->fresh()), 'Audit program updated.');
     }
 
     // ─── Steps ────────────────────────────────────────────────────────────────
 
     public function addStep(Request $request, Engagement $engagement, AuditProgram $auditProgram): JsonResponse
     {
-        $this->authorize('update', $engagement->company);
+        $this->authorize('update', $engagement);
 
         $validated = $request->validate([
             'step_number' => ['required', 'string', 'max:10'],
@@ -100,12 +104,12 @@ final class AuditProgramController extends Controller
             return $step;
         });
 
-        return ApiResponse::created($step, 'Audit program step added.');
+        return ApiResponse::created(new AuditProgramStepResource($step), 'Audit program step added.');
     }
 
     public function completeStep(Request $request, Engagement $engagement, AuditProgram $auditProgram, AuditProgramStep $step): JsonResponse
     {
-        $this->authorize('update', $engagement->company);
+        $this->authorize('update', $engagement);
 
         DB::transaction(function () use ($step): void {
             $step->update([
@@ -114,6 +118,6 @@ final class AuditProgramController extends Controller
             ]);
         });
 
-        return ApiResponse::success($step->fresh(), 'Step marked complete.');
+        return ApiResponse::success(new AuditProgramStepResource($step->fresh()), 'Step marked complete.');
     }
 }

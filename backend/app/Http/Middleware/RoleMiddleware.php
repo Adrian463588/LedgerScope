@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Http\Responses\ApiResponse;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -18,7 +19,7 @@ final class RoleMiddleware
         $user = $request->user();
 
         if (! $user) {
-            return response()->json(['success' => false, 'message' => 'Unauthenticated.'], 401);
+            return ApiResponse::unauthorized();
         }
 
         foreach ($roles as $role) {
@@ -27,9 +28,6 @@ final class RoleMiddleware
             }
         }
 
-        return response()->json([
-            'success' => false,
-            'message' => 'Forbidden. You do not have the required role to access this resource.',
-        ], 403);
+        return ApiResponse::forbidden('You do not have the required role to access this resource.');
     }
 }

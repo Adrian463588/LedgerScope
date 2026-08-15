@@ -13,31 +13,38 @@ const props = withDefaults(
     placeholder?: string;
   }>(),
   {
-    hint: '',
-    error: '',
+    hint: "",
+    error: "",
     required: false,
     disabled: false,
-    type: 'text',
+    type: "text",
     amount: false,
-    placeholder: '',
+    placeholder: "",
   },
 );
 </script>
 
 <template>
   <label class="form-field">
-    <span class="form-field__label" :class="{ required: props.required }">{{ props.label }}</span>
+    <span class="form-field__label" :class="{ required: props.required }">{{
+      props.label
+    }}</span>
     <input
       v-model="model"
       class="form-field__control"
-      :class="{ 'form-field__control--amount': props.amount, 'form-field__control--error': props.error }"
+      :class="{
+        'form-field__control--amount': props.amount,
+        'form-field__control--error': props.error,
+      }"
       :type="props.type"
       :disabled="props.disabled"
       :placeholder="props.placeholder"
       :aria-invalid="Boolean(props.error)"
     />
     <span v-if="props.error" class="form-field__error">{{ props.error }}</span>
-    <span v-else-if="props.hint" class="form-field__hint">{{ props.hint }}</span>
+    <span v-else-if="props.hint" class="form-field__hint">{{
+      props.hint
+    }}</span>
   </label>
 </template>
 
@@ -50,12 +57,14 @@ const props = withDefaults(
 
 .form-field__label {
   color: var(--text-secondary);
-  font: 500 0.8125rem/1.25rem 'IBM Plex Sans', sans-serif;
+  font:
+    500 0.8125rem/1.25rem "IBM Plex Sans",
+    sans-serif;
 }
 
 .form-field__label.required::after {
   color: var(--brand-red);
-  content: ' *';
+  content: " *";
 }
 
 .form-field__control {
@@ -65,7 +74,9 @@ const props = withDefaults(
   background: white;
   color: var(--text-primary);
   padding: 0 12px;
-  transition: border-color 120ms, box-shadow 120ms;
+  transition:
+    border-color 120ms,
+    box-shadow 120ms;
 }
 
 .form-field__control:focus {
@@ -81,7 +92,7 @@ const props = withDefaults(
 }
 
 .form-field__control--amount {
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: "IBM Plex Mono", monospace;
   font-variant-numeric: tabular-nums;
   text-align: right;
 }

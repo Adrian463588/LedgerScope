@@ -19,7 +19,11 @@ final class EvidencePolicy
         }
 
         // Firm admin and super admin of the company can view
-        if ($user->hasRole('firm_admin') || $user->hasRole('super_admin')) {
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        if ($user->hasRole('firm_admin')) {
             return $user->companies()->where('companies.id', $evidenceFile->engagement->company_id)->exists();
         }
 
@@ -60,7 +64,11 @@ final class EvidencePolicy
             return false;
         }
 
-        if ($user->hasRole('firm_admin') || $user->hasRole('super_admin')) {
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        if ($user->hasRole('firm_admin')) {
             return $user->companies()->where('companies.id', $evidenceFile->engagement->company_id)->exists();
         }
 
@@ -81,7 +89,11 @@ final class EvidencePolicy
             return false;
         }
 
-        if ($user->hasRole('firm_admin') || $user->hasRole('super_admin')) {
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        if ($user->hasRole('firm_admin')) {
             return $user->companies()->where('companies.id', $evidenceFile->engagement->company_id)->exists();
         }
 

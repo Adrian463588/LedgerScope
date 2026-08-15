@@ -15,13 +15,6 @@ use Illuminate\Support\Facades\DB;
 
 final class StatementBuilderService
 {
-    /** Account types that go on each statement */
-    private const INCOME_TYPES = ['revenue', 'other_income', 'cost_of_goods_sold', 'expense', 'other_expense'];
-
-    private const BALANCE_SHEET_ASSET_TYPES = ['asset'];
-
-    private const BALANCE_SHEET_LEQ_TYPES = ['liability', 'equity'];
-
     /**
      * Build and persist a financial statement from posted journal lines.
      *
@@ -29,11 +22,10 @@ final class StatementBuilderService
      */
     public function build(Company $company, AccountingPeriod $period, string $type, User $generatedBy): FinancialStatement
     {
-        // B-04: Guard against saving stub records for unimplemented types
-        $implemented = ['income_statement', 'balance_sheet'];
+        $implemented = ['income_statement', 'balance_sheet', 'cash_flow', 'equity_changes'];
         if (! in_array($type, $implemented, true)) {
             throw new \DomainException(
-                "Financial statement type [{$type}] is not yet implemented. Supported: ".implode(', ', $implemented),
+                "Financial statement type [{$type}] is not supported. Supported: ".implode(', ', $implemented),
             );
         }
 
@@ -41,6 +33,8 @@ final class StatementBuilderService
             $data = match ($type) {
                 'income_statement' => $this->buildIncomeStatement($company, $period),
                 'balance_sheet' => $this->buildBalanceSheet($company, $period),
+                'cash_flow' => $this->buildCashFlow($company, $period),
+                'equity_changes' => $this->buildEquityChanges($company, $period),
             };
 
             /** @var FinancialStatement $statement */
@@ -142,6 +136,78 @@ final class StatementBuilderService
             'assets' => ['lines' => $assetLines, 'total' => $assets->getAmount()],
             'liabilities_and_equity' => ['lines' => $leqLines,   'total' => $totalLeq->getAmount()],
             'is_balanced' => $assets->equals($totalLeq),
+        ];
+    }
+
+    /**
+     * Build a direct cash movement statement from posted cash and bank accounts.
+     * Classification is intentionally limited to accounts explicitly named
+     * Cash or Bank; unsupported classification must never invent a value.
+     *
+     * @return array<string, mixed>
+     */
+    private function buildCashFlow(Company $company, AccountingPeriod $period): array
+    {
+        $currency = $company->currency;
+        $balances = $this->aggregatePostedBalances($company, $period);
+        $cashLines = [];
+        $netChange = Money::zero($currency);
+
+        foreach ($balances as $accountId => $data) {
+            $accountName = strtolower($data['account_name']);
+            if ($data['account_type'] !== 'asset'
+                || (! str_contains($accountName, 'cash') && ! str_contains($accountName, 'bank'))) {
+                continue;
+            }
+
+            $amount = new Money($data['net'], $currency);
+            $cashLines[] = [
+                'account_id' => $accountId,
+                'account_code' => $data['account_code'],
+                'account_name' => $data['account_name'],
+                'amount' => $amount->getAmount(),
+            ];
+            $netChange = $netChange->add($amount);
+        }
+
+        return [
+            'operating_activities' => ['lines' => $cashLines, 'total' => $netChange->getAmount()],
+            'investing_activities' => ['lines' => [], 'total' => '0.00'],
+            'financing_activities' => ['lines' => [], 'total' => '0.00'],
+            'net_change' => $netChange->getAmount(),
+        ];
+    }
+
+    /**
+     * Build an equity movement statement from posted equity account balances.
+     *
+     * @return array<string, mixed>
+     */
+    private function buildEquityChanges(Company $company, AccountingPeriod $period): array
+    {
+        $currency = $company->currency;
+        $balances = $this->aggregatePostedBalances($company, $period);
+        $equityLines = [];
+        $total = Money::zero($currency);
+
+        foreach ($balances as $accountId => $data) {
+            if ($data['account_type'] !== 'equity') {
+                continue;
+            }
+
+            $amount = new Money($data['net'], $currency);
+            $equityLines[] = [
+                'account_id' => $accountId,
+                'account_code' => $data['account_code'],
+                'account_name' => $data['account_name'],
+                'amount' => $amount->getAmount(),
+            ];
+            $total = $total->add($amount);
+        }
+
+        return [
+            'equity' => ['lines' => $equityLines, 'total' => $total->getAmount()],
+            'net_change' => $total->getAmount(),
         ];
     }
 

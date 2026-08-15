@@ -5,6 +5,9 @@ declare(strict_types=1);
 namespace App\Services\Evidence;
 
 use App\Enums\Common\EvidenceStatus;
+use App\Events\AuditActionRecorded;
+use App\Events\Evidence\EvidenceAccepted;
+use App\Events\Evidence\EvidenceRejected;
 use App\Models\Engagement;
 use App\Models\EvidenceFile;
 use App\Models\User;
@@ -13,6 +16,7 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Throwable;
 
 /**
  * EvidenceService — manages evidence file lifecycle.
@@ -26,23 +30,8 @@ use Illuminate\Support\Str;
  */
 final class EvidenceService
 {
-    private const ALLOWED_MIME_TYPES = [
-        'application/pdf',
-        'application/msword',
-        'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
-        'application/vnd.ms-excel',
-        'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-        'image/jpeg',
-        'image/png',
-        'image/gif',
-        'text/plain',
-        'application/zip',
-    ];
-
-    private const MAX_FILE_SIZE_BYTES = 52_428_800; // 50 MB
-
     public function __construct(
-        private readonly NotificationService $notificationService
+        private readonly NotificationService $notificationService,
     ) {}
 
     /**
@@ -54,38 +43,65 @@ final class EvidenceService
         User $uploadedBy,
         ?string $description = null,
     ): EvidenceFile {
-        // Validate file
-        if ($file->getSize() > self::MAX_FILE_SIZE_BYTES) {
-            throw new \DomainException('File exceeds maximum allowed size of 50 MB.');
+        $size = $file->getSize();
+        $maxSizeMb = (int) config('ledgerscope.max_file_size_mb', 50);
+        if ($size === false || $size === null || $size > $maxSizeMb * 1_048_576) {
+            throw new \DomainException("File exceeds maximum allowed size of {$maxSizeMb} MB.");
         }
 
-        if (! in_array($file->getMimeType(), self::ALLOWED_MIME_TYPES, true)) {
+        $mimeType = (string) $file->getMimeType();
+        $allowedMimeTypes = config('ledgerscope.allowed_mime_types', []);
+        if (! is_array($allowedMimeTypes) || ! in_array($mimeType, $allowedMimeTypes, true)) {
             throw new \DomainException("File type [{$file->getMimeType()}] is not allowed.");
         }
 
-        return DB::transaction(function () use ($file, $engagement, $uploadedBy, $description): EvidenceFile {
-            // Store in private disk — path: evidence/{engagement_id}/{uuid}.ext
-            $path = $file->storeAs(
-                "evidence/{$engagement->id}",
-                Str::uuid().'.'.$file->getClientOriginalExtension(),
-                'private',
-            );
+        $directory = str_replace(
+            ['{company_id}', '{engagement_id}'],
+            [(string) $engagement->company_id, (string) $engagement->id],
+            (string) config('ledgerscope.storage.evidence_path', 'evidence/{engagement_id}'),
+        );
+        $path = $file->storeAs(
+            $directory,
+            Str::uuid().'.'.$file->getClientOriginalExtension(),
+            'private',
+        );
 
-            /** @var EvidenceFile $evidence */
-            $evidence = EvidenceFile::create([
-                'engagement_id' => $engagement->id,
-                'uploaded_by' => $uploadedBy->id,
-                'original_name' => $file->getClientOriginalName(),
-                'storage_path' => $path,
-                'mime_type' => $file->getMimeType(),
-                'file_size_bytes' => $file->getSize(),
-                'checksum' => hash_file('sha256', $file->getRealPath()),
-                'status' => EvidenceStatus::Pending->value,
-                'description' => $description,
-            ]);
+        if ($path === false) {
+            throw new \RuntimeException('Evidence file could not be stored.');
+        }
 
-            return $evidence;
-        });
+        try {
+            return DB::transaction(function () use ($file, $engagement, $uploadedBy, $description, $path, $mimeType, $size): EvidenceFile {
+
+                /** @var EvidenceFile $evidence */
+                $evidence = EvidenceFile::create([
+                    'engagement_id' => $engagement->id,
+                    'uploaded_by' => $uploadedBy->id,
+                    'original_name' => $file->getClientOriginalName(),
+                    'storage_path' => $path,
+                    'mime_type' => $mimeType,
+                    'file_size_bytes' => $size,
+                    'checksum' => hash_file('sha256', $file->getRealPath()),
+                    'status' => EvidenceStatus::Pending->value,
+                    'description' => $description,
+                ]);
+
+                event(new AuditActionRecorded(
+                    userId: $uploadedBy->id,
+                    action: 'evidence.upload',
+                    companyId: $engagement->company_id,
+                    objectType: 'EvidenceFile',
+                    objectId: $evidence->id,
+                    after: $evidence->toArray(),
+                ));
+
+                return $evidence;
+            });
+        } catch (Throwable $exception) {
+            Storage::disk('private')->delete($path);
+
+            throw $exception;
+        }
     }
 
     /**
@@ -93,7 +109,7 @@ final class EvidenceService
      */
     public function accept(EvidenceFile $evidence, User $acceptedBy): void
     {
-        if ($evidence->status === EvidenceStatus::Accepted->value) {
+        if ($evidence->status === EvidenceStatus::Accepted) {
             throw new \DomainException('Evidence is already accepted.');
         }
 
@@ -104,12 +120,12 @@ final class EvidenceService
                 'accepted_at' => now(),
             ]);
 
-            event(new \App\Events\Evidence\EvidenceAccepted(
+            event(new EvidenceAccepted(
                 $acceptedBy->id,
                 'evidence.accept',
                 $evidence->engagement->company_id,
                 'EvidenceFile',
-                $evidence->id
+                $evidence->id,
             ));
 
             if ($evidence->uploadedBy) {
@@ -118,7 +134,7 @@ final class EvidenceService
                     'Evidence File Accepted',
                     "The evidence file '{$evidence->original_name}' has been accepted by {$acceptedBy->name}.",
                     'evidence',
-                    '/client/evidence'
+                    '/client/evidence',
                 );
             }
         });
@@ -133,7 +149,7 @@ final class EvidenceService
             throw new \DomainException('A rejection reason is required.');
         }
 
-        if ($evidence->status === EvidenceStatus::Rejected->value) {
+        if ($evidence->status === EvidenceStatus::Rejected) {
             throw new \DomainException('Evidence is already rejected.');
         }
 
@@ -145,14 +161,14 @@ final class EvidenceService
                 'rejection_reason' => $reason,
             ]);
 
-            event(new \App\Events\Evidence\EvidenceRejected(
+            event(new EvidenceRejected(
                 $rejectedBy->id,
                 'evidence.reject',
                 $evidence->engagement->company_id,
                 'EvidenceFile',
                 $evidence->id,
                 null,
-                ['rejection_reason' => $reason]
+                ['rejection_reason' => $reason],
             ));
 
             if ($evidence->uploadedBy) {
@@ -161,7 +177,7 @@ final class EvidenceService
                     'Evidence File Rejected',
                     "The evidence file '{$evidence->original_name}' has been rejected by {$rejectedBy->name}. Reason: {$reason}",
                     'evidence',
-                    '/client/evidence'
+                    '/client/evidence',
                 );
             }
         });
@@ -191,10 +207,20 @@ final class EvidenceService
      */
     public function delete(EvidenceFile $evidence, User $deletedBy): void
     {
-        if ($evidence->status === EvidenceStatus::Accepted->value) {
+        if ($evidence->status === EvidenceStatus::Accepted) {
             throw new \DomainException('Cannot delete accepted evidence.');
         }
 
-        $evidence->delete();
+        DB::transaction(function () use ($evidence, $deletedBy): void {
+            $evidence->delete();
+
+            event(new AuditActionRecorded(
+                userId: $deletedBy->id,
+                action: 'evidence.delete',
+                companyId: $evidence->engagement->company_id,
+                objectType: 'EvidenceFile',
+                objectId: $evidence->id,
+            ));
+        });
     }
 }

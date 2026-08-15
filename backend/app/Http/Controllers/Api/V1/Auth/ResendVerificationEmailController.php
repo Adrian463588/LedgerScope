@@ -4,9 +4,11 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
+use App\Events\AuditActionRecorded;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\User;
+use App\Notifications\EmailVerificationNotification;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
@@ -37,8 +39,17 @@ final class ResendVerificationEmailController extends Controller
             'email_verification_expires_at' => now()->addHours(24),
         ]);
 
-        // Note: In production, we would fire a notification here. For MVP, token is updated in DB.
-        
+        $user->notify(new EmailVerificationNotification((string) $user->email_verification_token));
+
+        event(new AuditActionRecorded(
+            userId: $user->id,
+            action: 'auth.verification_email.resent',
+            objectType: 'User',
+            objectId: $user->id,
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent(),
+        ));
+
         return ApiResponse::success(null, 'If the email is registered, a new verification link has been sent.');
     }
 }

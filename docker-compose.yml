@@ -1,72 +1,350 @@
+name: ledgerscope
+
 services:
-  pgsql:
+  backend-migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    environment:
+      APP_NAME: LedgerScope
+      APP_ENV: local
+      APP_DEBUG: "false"
+      APP_KEY: ${APP_KEY:-base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ledgerscope
+      DB_USERNAME: ledgerscope_user
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+    command: ["/bin/sh", "-c", "php artisan config:clear && php artisan migrate --seed --force"]
+    volumes:
+      - ./backend:/var/www/html
+      - ./backend/docker.env:/var/www/html/.env:ro
+      - backend_vendor:/var/www/html/vendor
+    depends_on:
+      postgres:
+        condition: service_healthy
+    networks:
+      - ledgerscope
+
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    ports:
+      - "8000:8000"
+    environment:
+      APP_NAME: LedgerScope
+      APP_ENV: local
+      APP_DEBUG: "true"
+      # This deterministic key is only a local-development fallback. Production
+      # Compose keeps APP_KEY mandatory in deployment/coolify/production-compose.yml.
+      APP_KEY: ${APP_KEY:-base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
+      APP_URL: ${APP_URL:-http://localhost:8000}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      LOG_CHANNEL: stderr
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ledgerscope
+      DB_USERNAME: ledgerscope_user
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      SESSION_DRIVER: ${SESSION_DRIVER:-redis}
+      SESSION_DOMAIN: ${SESSION_DOMAIN:-}
+      SESSION_SECURE_COOKIE: ${SESSION_SECURE_COOKIE:-false}
+      SESSION_SAME_SITE: ${SESSION_SAME_SITE:-lax}
+      REDIS_CLIENT: phpredis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_URL: redis://redis:6379
+      REDIS_QUEUE_CONNECTION: default
+      FILESYSTEM_DISK: s3
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-ledgerscope_minio}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-minio_secret_key}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      AWS_BUCKET: ${AWS_BUCKET:-ledgerscope-private}
+      AWS_ENDPOINT: http://minio:9000
+      AWS_USE_PATH_STYLE_ENDPOINT: "true"
+      SANCTUM_STATEFUL_DOMAINS: ${SANCTUM_STATEFUL_DOMAINS:-localhost:5173,127.0.0.1:5173}
+    command: ["/bin/sh", "-c", "php artisan config:clear && cd public && php -d variables_order=EGPCS -S 0.0.0.0:8000 ../vendor/laravel/framework/src/Illuminate/Foundation/resources/server.php"]
+    volumes:
+      - ./backend:/var/www/html
+      - ./backend/docker.env:/var/www/html/.env:ro
+      - backend_vendor:/var/www/html/vendor
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      minio-init:
+        condition: service_completed_successfully
+      backend-migrate:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8000/api/health > /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s
+    networks:
+      - ledgerscope
+
+  worker:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    environment:
+      APP_NAME: LedgerScope
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_KEY: ${APP_KEY:-base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ledgerscope
+      DB_USERNAME: ledgerscope_user
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      REDIS_CLIENT: phpredis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_URL: redis://redis:6379
+      REDIS_QUEUE_CONNECTION: default
+      FILESYSTEM_DISK: s3
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-ledgerscope_minio}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-minio_secret_key}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      AWS_BUCKET: ${AWS_BUCKET:-ledgerscope-private}
+      AWS_ENDPOINT: http://minio:9000
+      AWS_USE_PATH_STYLE_ENDPOINT: "true"
+    command: ["/bin/sh", "-c", "php artisan config:clear && php artisan horizon"]
+    volumes:
+      - ./backend:/var/www/html
+      - ./backend/docker.env:/var/www/html/.env:ro
+      - backend_vendor:/var/www/html/vendor
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - ledgerscope
+
+  scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    environment:
+      APP_NAME: LedgerScope
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_KEY: ${APP_KEY:-base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
+      FRONTEND_URL: ${FRONTEND_URL:-http://localhost:5173}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_DATABASE: ledgerscope
+      DB_USERNAME: ledgerscope_user
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      CACHE_STORE: redis
+      QUEUE_CONNECTION: redis
+      REDIS_CLIENT: phpredis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+      REDIS_URL: redis://redis:6379
+      REDIS_QUEUE_CONNECTION: default
+      FILESYSTEM_DISK: s3
+      AWS_ACCESS_KEY_ID: ${AWS_ACCESS_KEY_ID:-ledgerscope_minio}
+      AWS_SECRET_ACCESS_KEY: ${AWS_SECRET_ACCESS_KEY:-minio_secret_key}
+      AWS_DEFAULT_REGION: ${AWS_DEFAULT_REGION:-us-east-1}
+      AWS_BUCKET: ${AWS_BUCKET:-ledgerscope-private}
+      AWS_ENDPOINT: http://minio:9000
+      AWS_USE_PATH_STYLE_ENDPOINT: "true"
+    command: ["/bin/sh", "-c", "php artisan config:clear && php artisan schedule:work"]
+    volumes:
+      - ./backend:/var/www/html
+      - ./backend/docker.env:/var/www/html/.env:ro
+      - backend_vendor:/var/www/html/vendor
+    depends_on:
+      backend:
+        condition: service_healthy
+    networks:
+      - ledgerscope
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "5173:5173"
+    environment:
+      VITE_API_BASE_URL: /api/v1
+      VITE_API_PROXY_TARGET: http://backend:8000
+    volumes:
+      - ./frontend:/app
+      - frontend_node_modules:/app/node_modules
+    command: npm run dev -- --host 0.0.0.0
+    depends_on:
+      backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --spider http://127.0.0.1:5173/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+    networks:
+      - ledgerscope
+
+  backend-test:
+    profiles: ["test"]
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: development
+    environment:
+      APP_NAME: LedgerScope
+      APP_ENV: testing
+      APP_DEBUG: "false"
+      APP_KEY: ${APP_KEY:-base64:AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA=}
+      DB_CONNECTION: pgsql
+      DB_HOST: postgres_test
+      DB_PORT: 5432
+      DB_DATABASE: ledgerscope_test
+      DB_USERNAME: ledgerscope_user
+      DB_PASSWORD: ${DB_PASSWORD:-secret}
+      CACHE_STORE: array
+      QUEUE_CONNECTION: sync
+      SESSION_DRIVER: array
+      FILESYSTEM_DISK: local
+      REDIS_CLIENT: phpredis
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+    command: php artisan test
+    volumes:
+      - ./backend:/var/www/html
+      - ./backend/docker.env:/var/www/html/.env:ro
+      - backend_vendor:/var/www/html/vendor
+    depends_on:
+      postgres_test:
+        condition: service_healthy
+    networks:
+      - ledgerscope
+
+  postgres:
     image: postgres:17-alpine
-    container_name: ledgerscope_pgsql
-    restart: unless-stopped
     ports:
       - "5433:5432"
     environment:
       POSTGRES_DB: ledgerscope
       POSTGRES_USER: ledgerscope_user
-      POSTGRES_PASSWORD: secret
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
     volumes:
-      - pgsql_data:/var/lib/postgresql/data
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U ledgerscope_user -d ledgerscope"]
-      interval: 10s
+      interval: 5s
       timeout: 5s
-      retries: 5
+      retries: 10
+    networks:
+      - ledgerscope
+
+  postgres_test:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_DB: ledgerscope_test
+      POSTGRES_USER: ledgerscope_user
+      POSTGRES_PASSWORD: ${DB_PASSWORD:-secret}
+    volumes:
+      - postgres_test_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ledgerscope_user -d ledgerscope_test"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ledgerscope
 
   redis:
     image: redis:7-alpine
-    container_name: ledgerscope_redis
-    restart: unless-stopped
     ports:
       - "6379:6379"
-    command: redis-server --save 20 1 --loglevel warning
+    command: redis-server --appendonly yes
     volumes:
       - redis_data:/data
     healthcheck:
       test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - ledgerscope
 
   minio:
     image: minio/minio:latest
-    container_name: ledgerscope_minio
-    restart: unless-stopped
     ports:
       - "9000:9000"
       - "9001:9001"
     environment:
-      MINIO_ROOT_USER: ledgerscope_minio
-      MINIO_ROOT_PASSWORD: minio_secret_key
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-ledgerscope_minio}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-minio_secret_key}
     volumes:
       - minio_data:/data
     command: server /data --console-address ":9001"
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:9000/minio/health/live > /dev/null"]
       interval: 10s
       timeout: 5s
-      retries: 5
+      retries: 10
+    networks:
+      - ledgerscope
+
+  minio-init:
+    image: minio/mc:latest
+    environment:
+      MINIO_ROOT_USER: ${AWS_ACCESS_KEY_ID:-ledgerscope_minio}
+      MINIO_ROOT_PASSWORD: ${AWS_SECRET_ACCESS_KEY:-minio_secret_key}
+      AWS_BUCKET: ${AWS_BUCKET:-ledgerscope-private}
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - >-
+        mc alias set local http://minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}" &&
+        mc mb --ignore-existing "local/$${AWS_BUCKET}" &&
+        mc anonymous set none "local/$${AWS_BUCKET}"
+    depends_on:
+      minio:
+        condition: service_healthy
+    networks:
+      - ledgerscope
 
   mailpit:
     image: axllent/mailpit:latest
-    container_name: ledgerscope_mailpit
-    restart: unless-stopped
     ports:
       - "1025:1025"
       - "8025:8025"
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --spider http://localhost:8025/api/v1/info"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - ledgerscope
 
 volumes:
-  pgsql_data:
-    driver: local
+  backend_vendor:
+  frontend_node_modules:
+  postgres_data:
+  postgres_test_data:
   redis_data:
-    driver: local
   minio_data:
-    driver: local
 
 networks:
-  default:
+  ledgerscope:
     name: ledgerscope_network

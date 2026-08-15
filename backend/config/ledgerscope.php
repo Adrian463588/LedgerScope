@@ -81,6 +81,24 @@ return [
     'api_rate_limit_per_minute' => (int) env('LEDGERSCOPE_API_RATE_LIMIT', 120),
     'upload_rate_limit_per_minute' => (int) env('LEDGERSCOPE_UPLOAD_RATE_LIMIT', 20),
 
+    'red_flag' => [
+        'large_entry_threshold' => env('LEDGERSCOPE_RED_FLAG_LARGE_ENTRY_THRESHOLD', '100000'),
+        'near_threshold_percent' => env('LEDGERSCOPE_RED_FLAG_NEAR_THRESHOLD_PERCENT', '0.02'),
+    ],
+
+    'integrations' => [
+        'erp' => ['enabled' => (bool) env('LEDGERSCOPE_ERP_ENABLED', false), 'mode' => env('LEDGERSCOPE_ERP_MODE', 'unavailable')],
+        'payroll' => ['enabled' => (bool) env('LEDGERSCOPE_PAYROLL_ENABLED', false), 'mode' => env('LEDGERSCOPE_PAYROLL_MODE', 'unavailable')],
+        'inventory' => ['enabled' => (bool) env('LEDGERSCOPE_INVENTORY_ENABLED', false), 'mode' => env('LEDGERSCOPE_INVENTORY_MODE', 'unavailable')],
+        'tax' => ['enabled' => (bool) env('LEDGERSCOPE_TAX_ENABLED', false), 'mode' => env('LEDGERSCOPE_TAX_MODE', 'unavailable')],
+        'banking' => ['enabled' => (bool) env('LEDGERSCOPE_BANKING_ENABLED', false), 'mode' => env('LEDGERSCOPE_BANKING_MODE', 'unavailable')],
+        'sso' => ['enabled' => (bool) env('LEDGERSCOPE_SSO_ENABLED', false), 'mode' => env('LEDGERSCOPE_SSO_MODE', 'unavailable')],
+        'ocr' => ['enabled' => (bool) env('LEDGERSCOPE_OCR_ENABLED', false), 'mode' => env('LEDGERSCOPE_OCR_MODE', 'unavailable')],
+        'ai' => ['enabled' => (bool) env('LEDGERSCOPE_AI_ENABLED', false), 'mode' => env('LEDGERSCOPE_AI_MODE', 'unavailable')],
+        'mobile_sync' => ['enabled' => (bool) env('LEDGERSCOPE_MOBILE_SYNC_ENABLED', false), 'mode' => env('LEDGERSCOPE_MOBILE_SYNC_MODE', 'unavailable')],
+        'anomaly' => ['enabled' => (bool) env('LEDGERSCOPE_ANOMALY_ENABLED', false), 'mode' => env('LEDGERSCOPE_ANOMALY_MODE', 'unavailable')],
+    ],
+
     /*
     |--------------------------------------------------------------------------
     | Storage Paths (relative to the private disk root)

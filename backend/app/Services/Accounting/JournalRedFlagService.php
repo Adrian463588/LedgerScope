@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Services\Accounting;
 
 use App\Models\JournalEntry;
+use App\Models\JournalEntryLine;
 use Illuminate\Support\Collection;
 
 /**
@@ -16,15 +17,15 @@ use Illuminate\Support\Collection;
 final class JournalRedFlagService
 {
     /** Amount above which an entry is considered "large" (configurable via env) */
-    private float $largeEntryThreshold;
+    private string $largeEntryThreshold;
 
     /** Percentage below a round number that triggers the near-threshold rule */
-    private float $nearThresholdPercent;
+    private string $nearThresholdPercent;
 
     public function __construct()
     {
-        $this->largeEntryThreshold  = (float) config('ledger.red_flag.large_entry_threshold', 100_000);
-        $this->nearThresholdPercent = (float) config('ledger.red_flag.near_threshold_percent', 0.02);
+        $this->largeEntryThreshold = (string) config('ledgerscope.red_flag.large_entry_threshold', '100000');
+        $this->nearThresholdPercent = (string) config('ledgerscope.red_flag.near_threshold_percent', '0.02');
     }
 
     /**
@@ -73,10 +74,10 @@ final class JournalRedFlagService
     private function checkRoundNumbers(JournalEntry $journal, array &$flags): void
     {
         foreach ($journal->lines as $line) {
-            $amount = abs((float) $line->amount);
+            $amount = $this->absoluteAmount((string) $line->amount);
 
             // Flag if amount is >= 1000 and divisible by 1000 with no cents
-            if ($amount >= 1_000 && fmod($amount, 1_000) === 0.0) {
+            if (bccomp($amount, '1000', 2) >= 0 && bccomp(bcmod($amount, '1000', 2), '0', 2) === 0) {
                 $flags[] = $this->flag(
                     $journal,
                     'round_number_entry',
@@ -94,9 +95,9 @@ final class JournalRedFlagService
     private function checkLargeEntries(JournalEntry $journal, array &$flags): void
     {
         foreach ($journal->lines as $line) {
-            $amount = abs((float) $line->amount);
+            $amount = $this->absoluteAmount((string) $line->amount);
 
-            if ($amount >= $this->largeEntryThreshold) {
+            if (bccomp($amount, $this->largeEntryThreshold, 2) >= 0) {
                 $flags[] = $this->flag(
                     $journal,
                     'large_entry',
@@ -113,15 +114,19 @@ final class JournalRedFlagService
     /** @param  array<int, array<string, mixed>>  $flags */
     private function checkNearThreshold(JournalEntry $journal, array &$flags): void
     {
-        $roundTargets = [1_000, 5_000, 10_000, 50_000, 100_000, 500_000, 1_000_000];
+        $roundTargets = ['1000', '5000', '10000', '50000', '100000', '500000', '1000000'];
 
         foreach ($journal->lines as $line) {
-            $amount = abs((float) $line->amount);
+            $amount = $this->absoluteAmount((string) $line->amount);
 
             foreach ($roundTargets as $target) {
-                $lower = $target * (1 - $this->nearThresholdPercent);
+                $lower = bcmul(
+                    $target,
+                    bcsub('1', $this->nearThresholdPercent, 8),
+                    2,
+                );
 
-                if ($amount >= $lower && $amount < $target) {
+                if (bccomp($amount, $lower, 2) >= 0 && bccomp($amount, $target, 2) < 0) {
                     $flags[] = $this->flag(
                         $journal,
                         'near_threshold_amount',
@@ -144,8 +149,8 @@ final class JournalRedFlagService
         $journal->lines->loadMissing('account');
 
         $accountTypes = $journal->lines
-            ->filter(fn ($l) => $l->account !== null)
-            ->map(fn ($l) => $l->account->account_type)
+            ->filter(static fn (JournalEntryLine $line): bool => $line->account !== null)
+            ->map(static fn (JournalEntryLine $line): string => (string) $line->account->account_type)
             ->unique()
             ->values();
 
@@ -168,12 +173,21 @@ final class JournalRedFlagService
     private function flag(JournalEntry $journal, string $rule, string $message, array $context = []): array
     {
         return [
-            'journal_id'     => $journal->id,
+            'journal_id' => $journal->id,
             'journal_number' => $journal->journal_number,
-            'journal_date'   => $journal->journal_date->toDateString(),
-            'rule'           => $rule,
-            'message'        => $message,
-            'context'        => $context,
+            'journal_date' => $journal->journal_date->toDateString(),
+            'rule' => $rule,
+            'message' => $message,
+            'context' => $context,
         ];
+    }
+
+    private function absoluteAmount(string $amount): string
+    {
+        $normalised = bcadd($amount, '0', 2);
+
+        return bccomp($normalised, '0', 2) < 0
+            ? bcmul($normalised, '-1', 2)
+            : $normalised;
     }
 }

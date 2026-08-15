@@ -2,6 +2,7 @@
 
 declare(strict_types=1);
 
+use App\Models\AuditLog;
 use App\Models\Role;
 use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -15,8 +16,8 @@ function makeSuperAdmin(): User
     $user = User::factory()->create();
     $role = Role::firstOrCreate(['name' => 'super_admin'], [
         'display_name' => 'Super Admin',
-        'description'  => 'System super administrator',
-        'is_system'    => true,
+        'description' => 'System super administrator',
+        'is_system' => true,
     ]);
     $user->roles()->attach($role);
 
@@ -28,8 +29,8 @@ function makeFirmAdmin(): User
     $user = User::factory()->create();
     $role = Role::firstOrCreate(['name' => 'firm_admin'], [
         'display_name' => 'Firm Admin',
-        'description'  => 'Firm administrator',
-        'is_system'    => true,
+        'description' => 'Firm administrator',
+        'is_system' => true,
     ]);
     $user->roles()->attach($role);
 
@@ -57,7 +58,7 @@ test('regular user cannot list admin users', function (): void {
 });
 
 test('admin can update a user name', function (): void {
-    $admin  = makeSuperAdmin();
+    $admin = makeSuperAdmin();
     $target = User::factory()->create(['name' => 'Old Name']);
 
     $response = $this->actingAs($admin)
@@ -70,7 +71,7 @@ test('admin can update a user name', function (): void {
 });
 
 test('admin can suspend a user', function (): void {
-    $admin  = makeSuperAdmin();
+    $admin = makeSuperAdmin();
     $target = User::factory()->create();
 
     $response = $this->actingAs($admin)
@@ -81,7 +82,7 @@ test('admin can suspend a user', function (): void {
 });
 
 test('admin can activate a suspended user', function (): void {
-    $admin  = makeSuperAdmin();
+    $admin = makeSuperAdmin();
     $target = User::factory()->create(['status' => 'suspended']);
 
     $response = $this->actingAs($admin)
@@ -102,11 +103,11 @@ test('admin can list all roles', function (): void {
 });
 
 test('admin can assign a role to a user', function (): void {
-    $admin  = makeSuperAdmin();
+    $admin = makeSuperAdmin();
     $target = User::factory()->create();
-    $role   = Role::firstOrCreate(['name' => 'partner'], [
+    $role = Role::firstOrCreate(['name' => 'partner'], [
         'display_name' => 'Partner',
-        'is_system'    => true,
+        'is_system' => true,
     ]);
 
     $response = $this->actingAs($admin)
@@ -117,11 +118,11 @@ test('admin can assign a role to a user', function (): void {
 });
 
 test('admin can revoke a role from a user', function (): void {
-    $admin  = makeSuperAdmin();
+    $admin = makeSuperAdmin();
     $target = User::factory()->create();
-    $role   = Role::firstOrCreate(['name' => 'partner'], [
+    $role = Role::firstOrCreate(['name' => 'partner'], [
         'display_name' => 'Partner',
-        'is_system'    => true,
+        'is_system' => true,
     ]);
     $target->roles()->attach($role);
 
@@ -154,9 +155,9 @@ test('regular user cannot query the audit trail', function (): void {
 test('audit trail can be filtered by action', function (): void {
     $admin = makeFirmAdmin();
 
-    \App\Models\AuditLog::create([
-        'action'     => 'admin.user.updated',
-        'user_id'    => $admin->id,
+    AuditLog::create([
+        'action' => 'admin.user.updated',
+        'user_id' => $admin->id,
         'created_at' => now(),
     ]);
 

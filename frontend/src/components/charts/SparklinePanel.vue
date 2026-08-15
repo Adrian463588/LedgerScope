@@ -9,7 +9,11 @@ defineProps<{
   <section class="sparkline-panel">
     <h3>{{ title }}</h3>
     <div>
-      <span v-for="(value, index) in values" :key="index" :style="{ height: `${value}%` }" />
+      <span
+        v-for="(value, index) in values"
+        :key="index"
+        :style="{ height: `${value}%` }"
+      />
     </div>
   </section>
 </template>

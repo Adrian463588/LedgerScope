@@ -1,21 +1,21 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed } from "vue";
 
-import AmountDisplay from './AmountDisplay.vue';
-import SkeletonBlock from './SkeletonBlock.vue';
-import StatusBadge from './StatusBadge.vue';
+import AmountDisplay from "./AmountDisplay.vue";
+import SkeletonBlock from "./SkeletonBlock.vue";
+import StatusBadge from "./StatusBadge.vue";
 
 export interface TableColumn {
   key: string;
   label: string;
-  align?: 'left' | 'right' | 'center';
+  align?: "left" | "right" | "center";
   sortable?: boolean;
   isAmount?: boolean;
   isStatus?: boolean;
   width?: string;
 }
 
-export type TableCell = string | number | boolean | null | undefined;
+export type TableCell = string | number | boolean | object | null | undefined;
 export type TableRow = Record<string, TableCell>;
 
 const props = withDefaults(
@@ -27,11 +27,17 @@ const props = withDefaults(
   }>(),
   {
     loading: false,
-    emptyText: 'No records found.',
+    emptyText: "No records found.",
   },
 );
 
-const skeletonRows = computed(() => Array.from({ length: 6 }, (_, index) => index));
+const emit = defineEmits<{
+  "row-click": [row: TableRow, index: number];
+}>();
+
+const skeletonRows = computed(() =>
+  Array.from({ length: 6 }, (_, index) => index),
+);
 </script>
 
 <template>
@@ -39,7 +45,12 @@ const skeletonRows = computed(() => Array.from({ length: 6 }, (_, index) => inde
     <table class="data-table">
       <thead>
         <tr>
-          <th v-for="column in props.columns" :key="column.key" :class="`align-${column.align ?? 'left'}`" :style="{ width: column.width }">
+          <th
+            v-for="column in props.columns"
+            :key="column.key"
+            :class="`align-${column.align ?? 'left'}`"
+            :style="{ width: column.width }"
+          >
             {{ column.label }}
           </th>
         </tr>
@@ -52,17 +63,45 @@ const skeletonRows = computed(() => Array.from({ length: 6 }, (_, index) => inde
         </tr>
       </tbody>
       <tbody v-else-if="props.data.length > 0">
-        <tr v-for="(row, index) in props.data" :key="index">
-          <td v-for="column in props.columns" :key="column.key" :class="`align-${column.align ?? 'left'}`">
-            <AmountDisplay v-if="column.isAmount" :value="String(row[column.key] ?? '0.00')" :kind="column.key.toLowerCase().includes('credit') ? 'credit' : 'debit'" />
-            <StatusBadge v-else-if="column.isStatus" :status="String(row[column.key] ?? '')" />
+        <tr
+          v-for="(row, index) in props.data"
+          :key="index"
+          tabindex="0"
+          @click="emit('row-click', row, index)"
+          @keydown.enter="emit('row-click', row, index)"
+        >
+          <td
+            v-for="column in props.columns"
+            :key="column.key"
+            :class="`align-${column.align ?? 'left'}`"
+          >
+            <slot
+              v-if="$slots[`cell-${column.key}`]"
+              :name="`cell-${column.key}`"
+              :row="row"
+              :value="row[column.key]"
+              :index="index"
+            />
+            <AmountDisplay
+              v-else-if="column.isAmount"
+              :value="String(row[column.key] ?? '0.00')"
+              :kind="
+                column.key.toLowerCase().includes('credit') ? 'credit' : 'debit'
+              "
+            />
+            <StatusBadge
+              v-else-if="column.isStatus"
+              :status="String(row[column.key] ?? '')"
+            />
             <span v-else>{{ row[column.key] }}</span>
           </td>
         </tr>
       </tbody>
       <tbody v-else>
         <tr>
-          <td :colspan="props.columns.length" class="empty-cell">{{ props.emptyText }}</td>
+          <td :colspan="props.columns.length" class="empty-cell">
+            {{ props.emptyText }}
+          </td>
         </tr>
       </tbody>
     </table>

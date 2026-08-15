@@ -1,6 +1,6 @@
-import { storeToRefs } from 'pinia';
+import { storeToRefs } from "pinia";
 
-import { useNotificationStore } from '@/stores/notification.store';
+import { useNotificationStore } from "@/stores/notification.store";
 
 export function useNotification() {
   const store = useNotificationStore();

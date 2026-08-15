@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Future\FutureIntegrationController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
@@ -10,3 +11,6 @@ Route::get('/', function () {
         'environment' => app()->environment(),
     ]);
 });
+
+Route::middleware('auth')->get('/future/integrations', FutureIntegrationController::class)
+    ->name('future.integrations');

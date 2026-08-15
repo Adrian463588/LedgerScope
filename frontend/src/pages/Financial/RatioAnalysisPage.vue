@@ -1,67 +1,102 @@
 <script setup lang="ts">
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, ref, watch } from "vue";
 
-import SparklinePanel from '@/components/charts/SparklinePanel.vue';
-import RiskHeatmap from '@/components/audit/RiskHeatmap.vue';
-import MetricCard from '@/components/shared/MetricCard.vue';
-import SectionPanel from '@/components/shared/SectionPanel.vue';
-import PageHeader from '@/components/ui/PageHeader.vue';
-import AmountDisplay from '@/components/ui/AmountDisplay.vue';
-import { useUiStore } from '@/stores/ui.store';
-import { useCompanyStore } from '@/stores/company.store';
-import { accountingApi } from '@/api/endpoints';
+import SparklinePanel from "@/components/charts/SparklinePanel.vue";
+import RiskHeatmap from "@/components/audit/RiskHeatmap.vue";
+import MetricCard from "@/components/shared/MetricCard.vue";
+import SectionPanel from "@/components/shared/SectionPanel.vue";
+import PageHeader from "@/components/ui/PageHeader.vue";
+import AmountDisplay from "@/components/ui/AmountDisplay.vue";
+import { useUiStore } from "@/stores/ui.store";
+import { useCompanyStore } from "@/stores/company.store";
+import { useLedgerScopeApi } from "@/composables/useLedgerScopeApi";
+
+const { accountingApi } = useLedgerScopeApi();
+import { getApiError } from "@/api/client";
+import type { FinancialAnalysisRatios, FinancialTrends } from "@/types";
+import { decimalChartHeights } from "@/utils/decimal";
 
 const ui = useUiStore();
 const companyStore = useCompanyStore();
 
-const ratioData = ref<any>(null);
-const trendData = ref<any>(null);
+const ratioData = ref<FinancialAnalysisRatios | null>(null);
+const trendData = ref<FinancialTrends | null>(null);
 const isLoading = ref(false);
+const loadError = ref<string | null>(null);
 
 const ratios = computed(() => {
   if (!ratioData.value) {
     return [
-      { label: 'Current Ratio', value: '1.00x', trend: 'N/A', tone: 'info' as const },
-      { label: 'Net Profit Margin', value: '0.0%', trend: 'N/A', tone: 'info' as const },
-      { label: 'Debt to Equity', value: '0.00x', trend: 'N/A', tone: 'info' as const },
+      {
+        label: "Current Ratio",
+        value: "N/A",
+        trend: "Unavailable",
+        tone: "info" as const,
+      },
+      {
+        label: "Net Profit Margin",
+        value: "N/A",
+        trend: "Unavailable",
+        tone: "info" as const,
+      },
+      {
+        label: "Debt to Equity",
+        value: "N/A",
+        trend: "Unavailable",
+        tone: "info" as const,
+      },
     ];
   }
   return [
-    { 
-      label: 'Current Ratio', 
-      value: ratioData.value.current_ratio || '1.00x', 
-      trend: ratioData.value.quick_ratio ? `Quick: ${ratioData.value.quick_ratio}` : 'Active', 
-      tone: 'success' as const 
+    {
+      label: "Current Ratio",
+      value: ratioData.value.current_ratio || "N/A",
+      trend: ratioData.value.quick_ratio
+        ? `Quick: ${ratioData.value.quick_ratio}`
+        : "Unavailable",
+      tone: "success" as const,
     },
-    { 
-      label: 'Net Profit Margin', 
-      value: ratioData.value.net_profit_margin || '0.0%', 
-      trend: ratioData.value.gross_profit_margin ? `Gross: ${ratioData.value.gross_profit_margin}` : 'Active', 
-      tone: 'success' as const 
+    {
+      label: "Net Profit Margin",
+      value: ratioData.value.net_profit_margin || "N/A",
+      trend: ratioData.value.gross_profit_margin
+        ? `Gross: ${ratioData.value.gross_profit_margin}`
+        : "Unavailable",
+      tone: "success" as const,
     },
-    { 
-      label: 'Debt to Equity', 
-      value: ratioData.value.debt_to_equity || '0.00x', 
-      trend: 'Stable', 
-      tone: 'info' as const 
+    {
+      label: "Debt to Equity",
+      value: ratioData.value.debt_to_equity || "N/A",
+      trend: "Unavailable",
+      tone: "info" as const,
     },
   ];
 });
 
 const trendValues = computed(() => {
-  if (!trendData.value || !trendData.value.net_incomes || !trendData.value.net_incomes.length) {
+  if (
+    !trendData.value ||
+    !trendData.value.net_incomes ||
+    !trendData.value.net_incomes.length
+  ) {
     return [];
   }
-  const incomes = trendData.value.net_incomes as number[];
-  const max = Math.max(...incomes.map(Math.abs), 1);
-  return incomes.map((v) => Math.max(10, Math.round((v / max) * 100)));
+  return decimalChartHeights(trendData.value.net_incomes);
 });
 
-async function loadData() {
-  const companyId = companyStore.activeCompany?.id;
-  if (!companyId) return;
+async function loadData(): Promise<void> {
+  if (!companyStore.activeCompanyId) {
+    await companyStore.fetchCompanies();
+  }
+
+  const companyId = companyStore.activeCompanyId;
+  if (!companyId) {
+    loadError.value = "No company is available for this workspace.";
+    return;
+  }
 
   isLoading.value = true;
+  loadError.value = null;
   try {
     const [ratiosRes, trendsRes] = await Promise.all([
       accountingApi.getRatios(companyId),
@@ -69,47 +104,78 @@ async function loadData() {
     ]);
     ratioData.value = ratiosRes;
     trendData.value = trendsRes;
-  } catch (error) {
-    console.error('Failed to load ratios or trends:', error);
+  } catch (error: unknown) {
+    ratioData.value = null;
+    trendData.value = null;
+    loadError.value = getApiError(error).message;
   } finally {
     isLoading.value = false;
   }
 }
 
 onMounted(() => {
-  ui.setBreadcrumbs(['Financial', 'Ratio Analysis']);
+  ui.setBreadcrumbs(["Financial", "Ratio Analysis"]);
   void loadData();
 });
 
-watch(() => companyStore.activeCompany?.id, () => {
-  void loadData();
-});
+watch(
+  () => companyStore.activeCompanyId,
+  () => {
+    void loadData();
+  },
+);
 </script>
 
 <template>
-  <PageHeader title="Ratio Analysis" subtitle="Financial analysis dashboard with risk-aware ratio trends." />
-  
+  <PageHeader
+    title="Ratio Analysis"
+    subtitle="Financial analysis dashboard with risk-aware ratio trends."
+  />
+
   <div v-if="isLoading" class="loading-state">
     Loading ratio analysis data...
   </div>
-  
+
+  <div v-else-if="loadError" class="empty-trend-state">
+    <p>Ratio analysis is unavailable.</p>
+    <span>{{ loadError }}</span>
+  </div>
+
   <template v-else>
     <section class="ratio-grid">
       <MetricCard v-for="ratio in ratios" :key="ratio.label" v-bind="ratio" />
     </section>
-    
+
     <section class="analysis-grid">
       <SectionPanel title="Revenue & Expense Trend">
-        <div v-if="!trendData || !trendData.net_incomes || !trendData.net_incomes.length" class="empty-trend-state">
+        <div
+          v-if="
+            !trendData ||
+            !trendData.net_incomes ||
+            !trendData.net_incomes.length
+          "
+          class="empty-trend-state"
+        >
           <p>No historical trial balance data available to generate trends.</p>
-          <span>Please import trial balances for multiple periods to view trends.</span>
+          <span
+            >Please import trial balances for multiple periods to view
+            trends.</span
+          >
         </div>
         <template v-else>
           <SparklinePanel title="Net Income Trend" :values="trendValues" />
           <div class="trend-legend">
-            <div v-for="(label, i) in trendData.labels" :key="label" class="legend-item">
+            <div
+              v-for="(label, i) in trendData.labels"
+              :key="label"
+              class="legend-item"
+            >
               <span>{{ label }}</span>
-              <strong><AmountDisplay :value="trendData.net_incomes[i]" currency /></strong>
+              <strong
+                ><AmountDisplay
+                  :value="trendData.net_incomes[i] ?? '0.00'"
+                  currency
+              /></strong>
             </div>
           </div>
         </template>
@@ -150,7 +216,7 @@ watch(() => companyStore.activeCompany?.id, () => {
   justify-content: center;
   padding: 40px 20px;
   text-align: center;
-  background-color: var(--bg-card-muted, #f8f9fa);
+  background-color: var(--surface-alt);
   border: 1px dashed var(--border);
   border-radius: 8px;
   color: var(--text-secondary);

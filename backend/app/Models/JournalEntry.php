@@ -7,6 +7,7 @@ namespace App\Models;
 use App\Enums\Accounting\JournalSourceType;
 use App\Enums\Accounting\JournalStatus;
 use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -20,6 +21,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
  * @property Carbon $journal_date
  * @property JournalStatus $status
  * @property JournalSourceType $source_type
+ * @property-read Collection<int, JournalEntryLine> $lines
  */
 final class JournalEntry extends Model
 {
@@ -53,6 +55,7 @@ final class JournalEntry extends Model
         ];
     }
 
+    /** @return HasMany<JournalEntryLine, self> */
     public function lines(): HasMany
     {
         return $this->hasMany(JournalEntryLine::class);
@@ -95,10 +98,35 @@ final class JournalEntry extends Model
      */
     public function save(array $options = []): bool
     {
-        if ($this->exists && $this->isPosted()) {
+        $this->assertMutable();
+
+        return parent::save($options);
+    }
+
+    public function delete(): ?bool
+    {
+        $this->assertMutable();
+
+        return parent::delete();
+    }
+
+    private function assertMutable(): void
+    {
+        if (! $this->exists) {
+            return;
+        }
+
+        $originalStatus = $this->getRawOriginal('status');
+
+        if (($this->isPosted() && $originalStatus === JournalStatus::Posted->value)
+            || ($this->status === JournalStatus::Reversed && $originalStatus === JournalStatus::Reversed->value)) {
             throw new \DomainException('Posted journal entries are immutable. Use reversal to correct.');
         }
 
-        return parent::save($options);
+        $period = $this->accountingPeriod()->first();
+
+        if ($period?->isLocked()) {
+            throw new \DomainException('Journal entries in locked periods are immutable.');
+        }
     }
 }

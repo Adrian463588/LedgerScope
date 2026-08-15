@@ -5,58 +5,98 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Accounting;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Accounting\MatchReconciliationRequest;
+use App\Http\Requests\Accounting\StoreReconciliationRequest;
+use App\Http\Resources\Accounting\ReconciliationItemResource;
+use App\Http\Resources\Accounting\ReconciliationResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Company;
 use App\Models\Reconciliation;
+use App\Services\Accounting\ReconciliationService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 final class ReconciliationController extends Controller
 {
+    public function __construct(private readonly ReconciliationService $service) {}
+
     public function index(Company $company): JsonResponse
     {
         $this->authorize('view', $company);
 
         return ApiResponse::success(
-            Reconciliation::where('company_id', $company->id)->get(),
+            ReconciliationResource::collection(
+                Reconciliation::where('company_id', $company->id)->with('items')->get(),
+            ),
         );
     }
 
-    public function store(Request $request, Company $company): JsonResponse
+    public function store(StoreReconciliationRequest $request, Company $company): JsonResponse
     {
         $this->authorize('update', $company);
 
-        $validated = $request->validate([
-            'account_id' => ['required', 'integer', 'exists:chart_of_accounts,id'],
-            'accounting_period_id' => ['required', 'integer', 'exists:accounting_periods,id'],
-            'reconciliation_type' => ['required', 'string', 'in:bank,ar,ap'],
-        ]);
+        $validated = $request->validated();
 
-        $rec = Reconciliation::create(array_merge($validated, ['company_id' => $company->id]));
+        $accountBelongsToCompany = $company->accounts()
+            ->whereKey($validated['account_id'])
+            ->exists();
+        $periodBelongsToCompany = $company->accountingPeriods()
+            ->whereKey($validated['accounting_period_id'])
+            ->exists();
 
-        return ApiResponse::created($rec, 'Reconciliation created.');
+        if (! $accountBelongsToCompany || ! $periodBelongsToCompany) {
+            return ApiResponse::notFound('Accounting resource not found for this company.');
+        }
+
+        $rec = $this->service->create($validated, $company, $request->user());
+
+        return ApiResponse::created(new ReconciliationResource($rec), 'Reconciliation created.');
     }
 
-    public function autoMatch(Company $company, Reconciliation $reconciliation): JsonResponse
+    public function autoMatch(Request $request, Company $company, Reconciliation $reconciliation): JsonResponse
     {
         $this->authorize('update', $company);
+        $this->authorize('update', $reconciliation);
 
-        return ApiResponse::success(null, 'Auto-match queued.');
+        $matched = $this->service->autoMatch($reconciliation, $request->user());
+
+        return ApiResponse::success(new ReconciliationResource($matched), 'Reconciliation auto-match completed.');
     }
 
-    public function match(Request $request, Company $company, Reconciliation $reconciliation): JsonResponse
+    public function match(MatchReconciliationRequest $request, Company $company, Reconciliation $reconciliation): JsonResponse
     {
         $this->authorize('update', $company);
+        $this->authorize('update', $reconciliation);
 
-        return ApiResponse::success(null, 'Items matched.');
+        $validated = $request->validated();
+
+        $item = $this->service->match(
+            $reconciliation,
+            (int) $validated['item_id'],
+            (int) $validated['journal_line_id'],
+            $request->user(),
+        );
+
+        return ApiResponse::success(new ReconciliationItemResource($item), 'Reconciliation item matched.');
     }
 
     public function approve(Request $request, Company $company, Reconciliation $reconciliation): JsonResponse
     {
         $this->authorize('update', $company);
+        $this->authorize('update', $reconciliation);
 
-        $reconciliation->update(['status' => 'approved', 'approved_at' => now(), 'approved_by' => $request->user()->id]);
+        $this->service->approve($reconciliation, $request->user());
 
-        return ApiResponse::success($reconciliation->fresh(), 'Reconciliation approved.');
+        return ApiResponse::success(new ReconciliationResource($reconciliation->fresh(['items'])), 'Reconciliation approved.');
+    }
+
+    public function lock(Request $request, Company $company, Reconciliation $reconciliation): JsonResponse
+    {
+        $this->authorize('update', $company);
+        $this->authorize('update', $reconciliation);
+
+        $this->service->lock($reconciliation, $request->user());
+
+        return ApiResponse::success(new ReconciliationResource($reconciliation->fresh(['items'])), 'Reconciliation locked.');
     }
 }

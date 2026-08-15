@@ -1,13 +1,18 @@
+# syntax=docker/dockerfile:1.7
+
 # ─── Stage 1: Build stage ─────────────────────────────────────────────────────
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 
 WORKDIR /app
+
+# Cypress is installed by CI for E2E, never bundled into the production image.
+ENV CYPRESS_INSTALL_BINARY=0
 
 # Copy package.json and package-lock.json first for efficient caching
 COPY frontend/package.json frontend/package-lock.json ./
 
 # Install npm dependencies
-RUN npm ci
+RUN --mount=type=cache,target=/root/.npm npm ci --no-audit --no-fund
 
 # Copy the rest of the frontend files
 COPY frontend/ ./

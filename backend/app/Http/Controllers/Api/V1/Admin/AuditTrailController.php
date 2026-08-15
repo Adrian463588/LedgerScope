@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Admin\AuditLogResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\AuditLog;
 use Illuminate\Http\JsonResponse;
@@ -23,14 +24,14 @@ final class AuditTrailController extends Controller
         $this->authorize('viewAuditTrail', AuditLog::class);
 
         $request->validate([
-            'action'      => ['nullable', 'string', 'max:100'],
-            'user_id'     => ['nullable', 'integer', 'exists:users,id'],
-            'company_id'  => ['nullable', 'integer'],
+            'action' => ['nullable', 'string', 'max:100'],
+            'user_id' => ['nullable', 'integer', 'exists:users,id'],
+            'company_id' => ['nullable', 'integer'],
             'object_type' => ['nullable', 'string', 'max:100'],
-            'object_id'   => ['nullable', 'integer'],
-            'date_from'   => ['nullable', 'date'],
-            'date_to'     => ['nullable', 'date', 'after_or_equal:date_from'],
-            'per_page'    => ['nullable', 'integer', 'min:10', 'max:200'],
+            'object_id' => ['nullable', 'integer'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
+            'per_page' => ['nullable', 'integer', 'min:10', 'max:200'],
         ]);
 
         $logs = AuditLog::with('user:id,name,email')
@@ -44,6 +45,10 @@ final class AuditTrailController extends Controller
             ->orderByDesc('created_at')
             ->paginate((int) $request->input('per_page', 50));
 
-        return ApiResponse::paginated($logs, 'Audit trail loaded.');
+        return ApiResponse::paginated(
+            $logs,
+            'Audit trail loaded.',
+            static fn (AuditLog $log): AuditLogResource => new AuditLogResource($log),
+        );
     }
 }

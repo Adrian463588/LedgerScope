@@ -4,10 +4,11 @@ declare(strict_types=1);
 
 namespace App\Services\Accounting;
 
+use App\Enums\Accounting\AccountType;
 use App\Models\Company;
 use App\Models\TrialBalance;
 use App\Models\TrialBalanceLine;
-use App\Enums\Accounting\AccountType;
+use App\Support\Decimal;
 
 final class FinancialAnalysisService
 {
@@ -19,111 +20,61 @@ final class FinancialAnalysisService
     public function calculateRatios(Company $company, ?int $periodId = null, array $filters = []): array
     {
         $query = TrialBalance::where('company_id', $company->id);
+
         if ($periodId !== null) {
             $query->where('accounting_period_id', $periodId);
         }
-        $tb = $query->latest('generated_at')->first();
 
-        if (! $tb) {
-            return [
-                'current_ratio' => '1.00x',
-                'net_profit_margin' => '0.0%',
-                'debt_to_equity' => '0.00x',
-                'quick_ratio' => '1.00x',
-                'roa' => '0.0%',
-                'roe' => '0.0%',
-                'gross_profit_margin' => '0.0%',
-            ];
+        /** @var TrialBalance|null $trialBalance */
+        $trialBalance = $query->latest('generated_at')->first();
+
+        if ($trialBalance === null) {
+            return $this->emptyRatios();
         }
 
-        $currentAssets = $quickAssets = $totalAssets = 0.0;
-        $currentLiabilities = $totalLiabilities = $totalEquity = 0.0;
-        $revenue = $cogs = $expenses = 0.0;
+        $totals = $this->collectTotals($trialBalance);
+        $netIncome = Decimal::subtract(
+            Decimal::subtract($totals['revenue'], $totals['cogs']),
+            $totals['expenses'],
+        );
 
-        $lines = TrialBalanceLine::where('trial_balance_id', $tb->id)->with('account')->get();
-
-        foreach ($lines as $line) {
-            if (! $account = $line->account) continue;
-            $type = $account->account_type;
-            $code = $account->account_code;
-            $balance = $type->isCreditNormal()
-                ? (float) $line->closing_credit - (float) $line->closing_debit
-                : (float) $line->closing_debit - (float) $line->closing_credit;
-
-            switch ($type) {
-                case AccountType::Asset:
-                    $totalAssets += $balance;
-                    if ($code < '1500') {
-                        $currentAssets += $balance;
-                        if (! str_starts_with($code, '13') && stripos($account->account_name, 'inventory') === false) {
-                            $quickAssets += $balance;
-                        }
-                    }
-                    break;
-                case AccountType::Liability:
-                    $totalLiabilities += $balance;
-                    if ($code < '2500') $currentLiabilities += $balance;
-                    break;
-                case AccountType::Equity:
-                    $totalEquity += $balance;
-                    break;
-                case AccountType::Revenue:
-                case AccountType::OtherIncome:
-                    $revenue += $balance;
-                    break;
-                case AccountType::Cogs:
-                    $cogs += $balance;
-                    break;
-                case AccountType::Expense:
-                case AccountType::OtherExpense:
-                    $expenses += $balance;
-                    break;
-            }
-        }
-
-        $netIncome = $revenue - $cogs - $expenses;
-
-        $currentRatioVal = $currentLiabilities > 0 ? $currentAssets / $currentLiabilities : ($currentAssets > 0 ? $currentAssets / 1.0 : 1.0);
-        $quickRatioVal = $currentLiabilities > 0 ? $quickAssets / $currentLiabilities : ($quickAssets > 0 ? $quickAssets / 1.0 : 1.0);
-        $debtToEquityVal = $totalEquity > 0 ? $totalLiabilities / $totalEquity : 0.0;
-        $gpmVal = $revenue > 0 ? (($revenue - $cogs) / $revenue) * 100 : 0.0;
-        $npmVal = $revenue > 0 ? ($netIncome / $revenue) * 100 : 0.0;
-        $roaVal = $totalAssets > 0 ? ($netIncome / $totalAssets) * 100 : 0.0;
-        $roeVal = $totalEquity > 0 ? ($netIncome / $totalEquity) * 100 : 0.0;
+        $currentRatio = Decimal::divide($totals['current_assets'], $totals['current_liabilities']);
+        $quickRatio = Decimal::divide($totals['quick_assets'], $totals['current_liabilities']);
+        $debtToEquity = Decimal::divide($totals['total_liabilities'], $totals['total_equity']);
+        $grossProfitMargin = Decimal::percentage(
+            Decimal::subtract($totals['revenue'], $totals['cogs']),
+            $totals['revenue'],
+        );
+        $netProfitMargin = Decimal::percentage($netIncome, $totals['revenue']);
+        $roa = Decimal::percentage($netIncome, $totals['total_assets']);
+        $roe = Decimal::percentage($netIncome, $totals['total_equity']);
 
         return [
-            'current_ratio' => number_format($currentRatioVal, 2) . 'x',
-            'quick_ratio' => number_format($quickRatioVal, 2) . 'x',
-            'debt_to_equity' => number_format($debtToEquityVal, 2) . 'x',
-            'gross_profit_margin' => number_format($gpmVal, 1) . '%',
-            'net_profit_margin' => number_format($npmVal, 1) . '%',
-            'roa' => number_format($roaVal, 1) . '%',
-            'roe' => number_format($roeVal, 1) . '%',
+            'current_ratio' => $this->formatRatio($currentRatio),
+            'quick_ratio' => $this->formatRatio($quickRatio),
+            'debt_to_equity' => $this->formatRatio($debtToEquity),
+            'gross_profit_margin' => $this->formatPercentage($grossProfitMargin),
+            'net_profit_margin' => $this->formatPercentage($netProfitMargin),
+            'roa' => $this->formatPercentage($roa),
+            'roe' => $this->formatPercentage($roe),
             'raw' => [
-                'current_assets' => $currentAssets,
-                'current_liabilities' => $currentLiabilities,
-                'quick_assets' => $quickAssets,
-                'total_assets' => $totalAssets,
-                'total_liabilities' => $totalLiabilities,
-                'total_equity' => $totalEquity,
-                'revenue' => $revenue,
-                'cogs' => $cogs,
-                'expenses' => $expenses,
+                ...$totals,
                 'net_income' => $netIncome,
-            ]
+            ],
         ];
     }
 
     /**
-     * Calculate 4-quarter or multi-period trends.
+     * Calculate up to eight trial-balance periods without converting amounts
+     * to floating point values.
      *
-     * @return array<string, mixed>
+     * @return array<string, array<int, string>|array<int, string>>
      */
     public function getTrends(Company $company, array $filters = []): array
     {
-        $tbs = TrialBalance::where('company_id', $company->id)
+        $trialBalances = TrialBalance::where('company_id', $company->id)
             ->with(['period', 'lines.account'])
-            ->orderBy('generated_at', 'asc')
+            ->orderBy('generated_at')
             ->take(8)
             ->get();
 
@@ -132,38 +83,33 @@ final class FinancialAnalysisService
         $expenses = [];
         $netIncomes = [];
 
-        foreach ($tbs as $tb) {
-            $labels[] = $tb->period?->period_name ?? (new \Carbon\Carbon($tb->generated_at))->format('Y-M');
-            $rev = $exp = $cogs = 0.0;
+        foreach ($trialBalances as $trialBalance) {
+            $labels[] = $trialBalance->period?->period_name
+                ?? $trialBalance->generated_at->format('Y-M');
 
-            foreach ($tb->lines as $line) {
-                if (! $account = $line->account) continue;
-                $type = $account->account_type;
-                $balance = $type->isCreditNormal()
-                    ? (float) $line->closing_credit - (float) $line->closing_debit
-                    : (float) $line->closing_debit - (float) $line->closing_credit;
+            $revenue = '0.00';
+            $expense = '0.00';
+            $cogs = '0.00';
 
-                if ($type === AccountType::Revenue || $type === AccountType::OtherIncome) {
-                    $rev += $balance;
-                } elseif ($type === AccountType::Expense || $type === AccountType::OtherExpense) {
-                    $exp += $balance;
-                } elseif ($type === AccountType::Cogs) {
-                    $cogs += $balance;
+            foreach ($trialBalance->lines as $line) {
+                if ($line->account === null) {
+                    continue;
+                }
+
+                $balance = $this->closingBalance($line, $line->account->account_type);
+
+                if (in_array($line->account->account_type, [AccountType::Revenue, AccountType::OtherIncome], true)) {
+                    $revenue = Decimal::add($revenue, $balance);
+                } elseif (in_array($line->account->account_type, [AccountType::Expense, AccountType::OtherExpense], true)) {
+                    $expense = Decimal::add($expense, $balance);
+                } elseif ($line->account->account_type === AccountType::Cogs) {
+                    $cogs = Decimal::add($cogs, $balance);
                 }
             }
 
-            $revenues[] = $rev;
-            $expenses[] = $exp + $cogs;
-            $netIncomes[] = $rev - $exp - $cogs;
-        }
-
-        if (empty($labels)) {
-            return [
-                'labels' => [],
-                'revenues' => [],
-                'expenses' => [],
-                'net_incomes' => [],
-            ];
+            $revenues[] = $revenue;
+            $expenses[] = Decimal::add($expense, $cogs);
+            $netIncomes[] = Decimal::subtract(Decimal::subtract($revenue, $expense), $cogs);
         }
 
         return [
@@ -176,110 +122,211 @@ final class FinancialAnalysisService
 
     /**
      * Calculate variance between two periods.
+     *
+     * @return array<string, mixed>
      */
     public function calculateVariance(Company $company, ?int $periodId = null, ?int $comparePeriodId = null, array $filters = []): array
     {
         $query = TrialBalance::where('company_id', $company->id);
+
         if ($periodId !== null) {
             $query->where('accounting_period_id', $periodId);
         }
-        $tbCurrent = $query->latest('generated_at')->first();
 
-        if (! $tbCurrent) {
+        /** @var TrialBalance|null $current */
+        $current = $query->latest('generated_at')->first();
+
+        if ($current === null) {
             return [
                 'period' => 'N/A',
                 'compare_period' => 'N/A',
-                'variances' => []
+                'variances' => [],
             ];
         }
 
-        $queryCompare = TrialBalance::where('company_id', $company->id);
+        $compareQuery = TrialBalance::where('company_id', $company->id);
+
         if ($comparePeriodId !== null) {
-            $queryCompare->where('accounting_period_id', $comparePeriodId);
+            $compareQuery->where('accounting_period_id', $comparePeriodId);
         } else {
-            $queryCompare->where('id', '!=', $tbCurrent->id)
-                ->where('generated_at', '<', $tbCurrent->generated_at);
+            $compareQuery->where('id', '!=', $current->id)
+                ->where('generated_at', '<', $current->generated_at);
         }
-        $tbCompare = $queryCompare->latest('generated_at')->first();
 
-        $currentBalances = $this->getBalancesByCategory($tbCurrent, $filters);
-        $compareBalances = $tbCompare ? $this->getBalancesByCategory($tbCompare, $filters) : [];
-
-        $categories = ['Revenue', 'COGS', 'Expense', 'Asset', 'Liability', 'Equity'];
+        /** @var TrialBalance|null $compare */
+        $compare = $compareQuery->latest('generated_at')->first();
+        $currentBalances = $this->getBalancesByCategory($current, $filters);
+        $compareBalances = $compare === null ? [] : $this->getBalancesByCategory($compare, $filters);
         $variances = [];
 
-        foreach ($categories as $cat) {
-            $current = $currentBalances[$cat] ?? 0.0;
-            $compare = $compareBalances[$cat] ?? 0.0;
-            $diff = $current - $compare;
-            $pct = $compare != 0 ? ($diff / $compare) * 100 : 0.0;
+        foreach (['Revenue', 'COGS', 'Expense', 'Asset', 'Liability', 'Equity'] as $category) {
+            $currentValue = $currentBalances[$category] ?? '0.00';
+            $compareValue = $compareBalances[$category] ?? '0.00';
+            $difference = Decimal::subtract($currentValue, $compareValue);
+            $percentage = Decimal::percentage($difference, $compareValue);
 
             $variances[] = [
-                'category' => $cat,
-                'current' => number_format($current, 2, '.', ''),
-                'compare' => number_format($compare, 2, '.', ''),
-                'variance' => number_format($diff, 2, '.', ''),
-                'percentage' => number_format($pct, 1) . '%',
+                'category' => $category,
+                'current' => Decimal::format($currentValue),
+                'compare' => Decimal::format($compareValue),
+                'variance' => Decimal::format($difference),
+                'percentage' => $this->formatPercentage($percentage),
             ];
         }
 
         return [
-            'period' => $tbCurrent->period?->period_name ?? (new \Carbon\Carbon($tbCurrent->generated_at))->format('Y-M'),
-            'compare_period' => $tbCompare ? ($tbCompare->period?->period_name ?? (new \Carbon\Carbon($tbCompare->generated_at))->format('Y-M')) : 'N/A',
+            'period' => $this->periodName($current),
+            'compare_period' => $compare === null ? 'N/A' : $this->periodName($compare),
             'variances' => $variances,
         ];
     }
 
-    private function getBalancesByCategory(TrialBalance $tb, array $filters): array
+    /**
+     * @return array<string, string>
+     */
+    private function collectTotals(TrialBalance $trialBalance): array
     {
-        $balances = [
-            'Revenue' => 0.0,
-            'COGS' => 0.0,
-            'Expense' => 0.0,
-            'Asset' => 0.0,
-            'Liability' => 0.0,
-            'Equity' => 0.0,
+        $totals = [
+            'current_assets' => '0.00',
+            'current_liabilities' => '0.00',
+            'quick_assets' => '0.00',
+            'total_assets' => '0.00',
+            'total_liabilities' => '0.00',
+            'total_equity' => '0.00',
+            'revenue' => '0.00',
+            'cogs' => '0.00',
+            'expenses' => '0.00',
         ];
 
-        $lines = TrialBalanceLine::where('trial_balance_id', $tb->id)->with('account')->get();
+        $lines = TrialBalanceLine::where('trial_balance_id', $trialBalance->id)
+            ->with('account')
+            ->get();
 
         foreach ($lines as $line) {
-            if (! $account = $line->account) continue;
-            $type = $account->account_type;
-            
-            // Apply account_category filter if provided
-            if (! empty($filters['account_category']) && stripos($type->value, $filters['account_category']) === false) {
+            if ($line->account === null) {
                 continue;
             }
 
-            $balance = $type->isCreditNormal()
-                ? (float) $line->closing_credit - (float) $line->closing_debit
-                : (float) $line->closing_debit - (float) $line->closing_credit;
+            $type = $line->account->account_type;
+            $balance = $this->closingBalance($line, $type);
 
             switch ($type) {
                 case AccountType::Asset:
-                    $balances['Asset'] += $balance;
+                    $totals['total_assets'] = Decimal::add($totals['total_assets'], $balance);
+
+                    if ($line->account->account_code < '1500') {
+                        $totals['current_assets'] = Decimal::add($totals['current_assets'], $balance);
+
+                        if (! str_starts_with($line->account->account_code, '13')
+                            && stripos($line->account->account_name, 'inventory') === false) {
+                            $totals['quick_assets'] = Decimal::add($totals['quick_assets'], $balance);
+                        }
+                    }
                     break;
                 case AccountType::Liability:
-                    $balances['Liability'] += $balance;
+                    $totals['total_liabilities'] = Decimal::add($totals['total_liabilities'], $balance);
+
+                    if ($line->account->account_code < '2500') {
+                        $totals['current_liabilities'] = Decimal::add($totals['current_liabilities'], $balance);
+                    }
                     break;
                 case AccountType::Equity:
-                    $balances['Equity'] += $balance;
+                    $totals['total_equity'] = Decimal::add($totals['total_equity'], $balance);
                     break;
                 case AccountType::Revenue:
                 case AccountType::OtherIncome:
-                    $balances['Revenue'] += $balance;
+                    $totals['revenue'] = Decimal::add($totals['revenue'], $balance);
                     break;
                 case AccountType::Cogs:
-                    $balances['COGS'] += $balance;
+                    $totals['cogs'] = Decimal::add($totals['cogs'], $balance);
                     break;
                 case AccountType::Expense:
                 case AccountType::OtherExpense:
-                    $balances['Expense'] += $balance;
+                    $totals['expenses'] = Decimal::add($totals['expenses'], $balance);
                     break;
             }
         }
 
+        return $totals;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function getBalancesByCategory(TrialBalance $trialBalance, array $filters): array
+    {
+        $balances = array_fill_keys(['Revenue', 'COGS', 'Expense', 'Asset', 'Liability', 'Equity'], '0.00');
+        $lines = TrialBalanceLine::where('trial_balance_id', $trialBalance->id)->with('account')->get();
+
+        foreach ($lines as $line) {
+            if ($line->account === null) {
+                continue;
+            }
+
+            $type = $line->account->account_type;
+
+            if (! $type instanceof AccountType) {
+                continue;
+            }
+
+            if (! empty($filters['account_category']) && stripos($type->value, (string) $filters['account_category']) === false) {
+                continue;
+            }
+
+            $category = match ($type) {
+                AccountType::Asset => 'Asset',
+                AccountType::Liability => 'Liability',
+                AccountType::Equity => 'Equity',
+                AccountType::Revenue, AccountType::OtherIncome => 'Revenue',
+                AccountType::Cogs => 'COGS',
+                AccountType::Expense, AccountType::OtherExpense => 'Expense',
+            };
+
+            $balances[$category] = Decimal::add(
+                $balances[$category],
+                $this->closingBalance($line, $type),
+            );
+        }
+
         return $balances;
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function emptyRatios(): array
+    {
+        return [
+            'current_ratio' => 'N/A',
+            'net_profit_margin' => 'N/A',
+            'debt_to_equity' => 'N/A',
+            'quick_ratio' => 'N/A',
+            'roa' => 'N/A',
+            'roe' => 'N/A',
+            'gross_profit_margin' => 'N/A',
+        ];
+    }
+
+    private function closingBalance(TrialBalanceLine $line, AccountType $type): string
+    {
+        return $type->isCreditNormal()
+            ? Decimal::subtract((string) $line->closing_credit, (string) $line->closing_debit)
+            : Decimal::subtract((string) $line->closing_debit, (string) $line->closing_credit);
+    }
+
+    private function formatRatio(?string $value): string
+    {
+        return $value === null ? 'N/A' : Decimal::format($value).'x';
+    }
+
+    private function formatPercentage(?string $value): string
+    {
+        return $value === null ? 'N/A' : Decimal::format($value, 1).'%';
+    }
+
+    private function periodName(TrialBalance $trialBalance): string
+    {
+        return $trialBalance->period?->period_name
+            ?? $trialBalance->generated_at->format('Y-M');
     }
 }

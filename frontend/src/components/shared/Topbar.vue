@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { Menu, Search, Settings2 } from 'lucide-vue-next';
-import { storeToRefs } from 'pinia';
+import { Menu, Search, Settings2 } from "lucide-vue-next";
+import { storeToRefs } from "pinia";
 
-import { useAuthStore } from '@/stores/auth.store';
-import { useUiStore } from '@/stores/ui.store';
-import NotificationBell from '@/components/shared/notification-bell.vue';
+import { useAuthStore } from "@/stores/auth.store";
+import { useUiStore } from "@/stores/ui.store";
+import NotificationBell from "@/components/shared/notification-bell.vue";
+import { navigateTo } from "@/router";
 
 const ui = useUiStore();
 const auth = useAuthStore();
@@ -15,12 +16,22 @@ const { userInitials } = storeToRefs(auth);
 <template>
   <header class="topbar">
     <div class="topbar__left">
-      <button aria-label="Toggle navigation" @click="ui.setMobileSidebar(true); ui.toggleSidebar()"><Menu aria-hidden="true" /></button>
+      <button
+        aria-label="Toggle navigation"
+        @click="
+          ui.setMobileSidebar(true);
+          ui.toggleSidebar();
+        "
+      >
+        <Menu aria-hidden="true" />
+      </button>
       <nav aria-label="Breadcrumb">
         <ol>
           <li v-for="(crumb, index) in breadcrumbs" :key="crumb">
             <span>{{ crumb }}</span>
-            <span v-if="index < breadcrumbs.length - 1" class="separator">/</span>
+            <span v-if="index < breadcrumbs.length - 1" class="separator"
+              >/</span
+            >
           </li>
         </ol>
       </nav>
@@ -31,8 +42,20 @@ const { userInitials } = storeToRefs(auth);
         <input placeholder="Search records..." />
       </label>
       <NotificationBell />
-      <button class="icon-button" aria-label="Settings"><Settings2 aria-hidden="true" /></button>
-      <div class="avatar" :title="auth.user?.name ?? 'User'" aria-label="Current user">{{ userInitials }}</div>
+      <button
+        class="icon-button"
+        aria-label="Settings"
+        @click="navigateTo('/settings')"
+      >
+        <Settings2 aria-hidden="true" />
+      </button>
+      <div
+        class="avatar"
+        :title="auth.user?.name ?? 'User'"
+        aria-label="Current user"
+      >
+        {{ userInitials }}
+      </div>
     </div>
   </header>
 </template>
@@ -134,7 +157,9 @@ li:last-child {
   border-radius: 50%;
   background: var(--brand-red);
   color: white;
-  font: 500 0.625rem 'IBM Plex Mono', monospace;
+  font:
+    500 0.625rem "IBM Plex Mono",
+    monospace;
 }
 
 .avatar {

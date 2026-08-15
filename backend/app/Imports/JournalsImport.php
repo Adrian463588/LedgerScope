@@ -20,13 +20,15 @@ use Maatwebsite\Excel\Concerns\WithHeadingRow;
 final class JournalsImport implements ToCollection, WithHeadingRow
 {
     private array $errors = [];
+
     private int $successCount = 0;
+
     private int $failedCount = 0;
 
     public function __construct(
         private readonly int $companyId,
         private readonly ImportBatch $batch,
-        private readonly int $userId
+        private readonly int $userId,
     ) {}
 
     public function collection(Collection $rows): void
@@ -47,14 +49,14 @@ final class JournalsImport implements ToCollection, WithHeadingRow
             $ref = isset($row['reference']) ? trim((string) $row['reference']) : '';
             $desc = isset($row['description']) ? trim((string) $row['description']) : '';
 
-            $groupKey = ! empty($ref) ? 'ref_' . $ref : 'date_desc_' . md5($date . '_' . $desc);
+            $groupKey = ! empty($ref) ? 'ref_'.$ref : 'date_desc_'.md5($date.'_'.$desc);
             $groups[$groupKey][] = $row;
         }
 
         foreach ($groups as $groupKey => $groupRows) {
             $firstRow = $groupRows[0];
             $rowNums = array_column($groupRows, 'row_num');
-            $rowNumbersStr = 'Rows ' . implode(', ', $rowNums);
+            $rowNumbersStr = 'Rows '.implode(', ', $rowNums);
 
             $dateStr = isset($firstRow['journal_date']) ? trim((string) $firstRow['journal_date']) : '';
             $ref = isset($firstRow['reference']) ? trim((string) $firstRow['reference']) : null;
@@ -63,6 +65,7 @@ final class JournalsImport implements ToCollection, WithHeadingRow
             if (empty($dateStr) || empty($desc)) {
                 $this->failedCount += count($groupRows);
                 $this->errors[] = "{$rowNumbersStr}: Journal Date and Description are required.";
+
                 continue;
             }
 
@@ -71,6 +74,7 @@ final class JournalsImport implements ToCollection, WithHeadingRow
             } catch (\Throwable) {
                 $this->failedCount += count($groupRows);
                 $this->errors[] = "{$rowNumbersStr}: Invalid date format '{$dateStr}'.";
+
                 continue;
             }
 
@@ -83,18 +87,21 @@ final class JournalsImport implements ToCollection, WithHeadingRow
             if (! $period) {
                 $this->failedCount += count($groupRows);
                 $this->errors[] = "{$rowNumbersStr}: No accounting period found for date {$date->toDateString()}.";
+
                 continue;
             }
 
             if (! $period->isOpen()) {
                 $this->failedCount += count($groupRows);
                 $this->errors[] = "{$rowNumbersStr}: Accounting period for date {$date->toDateString()} is locked or closed.";
+
                 continue;
             }
 
             if (count($groupRows) < 2) {
                 $this->failedCount += count($groupRows);
                 $this->errors[] = "{$rowNumbersStr}: Journal entry must have at least 2 lines.";
+
                 continue;
             }
 
@@ -108,7 +115,7 @@ final class JournalsImport implements ToCollection, WithHeadingRow
                     foreach ($groupRows as $row) {
                         $code = isset($row['account_code']) ? trim((string) $row['account_code']) : '';
                         if (empty($code)) {
-                            throw new \Exception("Account code is missing on one of the lines.");
+                            throw new \Exception('Account code is missing on one of the lines.');
                         }
 
                         $account = ChartOfAccount::where('company_id', $this->companyId)
@@ -163,7 +170,7 @@ final class JournalsImport implements ToCollection, WithHeadingRow
                 });
             } catch (\Throwable $e) {
                 $this->failedCount += count($groupRows);
-                $this->errors[] = "{$rowNumbersStr}: " . $e->getMessage();
+                $this->errors[] = "{$rowNumbersStr}: ".$e->getMessage();
             }
         }
 

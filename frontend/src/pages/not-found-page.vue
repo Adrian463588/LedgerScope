@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { navigateTo } from '@/router';
+import { navigateTo } from "@/router";
 </script>
 
 <template>
@@ -26,9 +26,7 @@ h1 {
   font-size: 6rem;
   font-weight: 800;
   margin: 0;
-  background: linear-gradient(135deg, var(--brand-red) 0%, #7b1fa2 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
+  color: var(--brand-red);
 }
 
 h2 {

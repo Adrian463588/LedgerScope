@@ -1,57 +1,27 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { useCompanyStore } from '@/stores/company.store';
+import { watch } from "vue";
+
+import { useCompanyStore } from "@/stores/company.store";
+import { usePeriodStore } from "@/stores/period.store";
 
 const companyStore = useCompanyStore();
+const periodStore = usePeriodStore();
+const model = defineModel<number | null>({ default: null });
 
-/**
- * Build period options from the active company's fiscal years.
- * Falls back to a reasonable set of quarters when fiscal year data
- * hasn't been fetched yet (e.g. first load).
- */
-const periodOptions = computed<string[]>(() => {
-  const activeCompany = companyStore.activeCompany;
-
-  // If the API returned fiscal years with quarters, list them.
-  // The company shape from the dashboard API may not include fiscal years,
-  // so we guard and fall back gracefully.
-  const fyCompany = activeCompany as (typeof activeCompany & {
-    fiscal_years?: Array<{
-      quarters?: Array<{ label?: string; period_label?: string; name?: string }>;
-    }>;
-  }) | null;
-
-  const quarters =
-    fyCompany?.fiscal_years?.flatMap(
-      (fy) =>
-        fy.quarters?.map(
-          (q) => q.label ?? q.period_label ?? q.name ?? '',
-        ) ?? [],
-    ) ?? [];
-
-  if (quarters.length > 0) return quarters;
-
-  // Fallback: current and previous quarters.
-  const now = new Date();
-  const year = now.getFullYear();
-  const q = Math.ceil((now.getMonth() + 1) / 3);
-  return [
-    `Q${q} ${year}`,
-    q > 1 ? `Q${q - 1} ${year}` : `Q4 ${year - 1}`,
-    `FY ${year - 1}`,
-  ];
-});
-
-const model = defineModel<string>({ default: '' });
-
-// Auto-select the first option when options load.
-import { watch } from 'vue';
 watch(
-  periodOptions,
-  (opts) => {
-    if (!model.value && opts.length > 0) {
-      model.value = opts[0]!;
-    }
+  () => companyStore.activeCompanyId,
+  (companyId) => {
+    model.value = null;
+    if (companyId !== null) void periodStore.fetchForCompany(companyId);
+    else periodStore.reset();
+  },
+  { immediate: true },
+);
+
+watch(
+  () => periodStore.selectedPeriodId,
+  (periodId) => {
+    if (model.value === null && periodId !== null) model.value = periodId;
   },
   { immediate: true },
 );
@@ -60,11 +30,29 @@ watch(
 <template>
   <label class="period-selector">
     <span>Period</span>
-    <select v-model="model">
-      <option v-for="option in periodOptions" :key="option" :value="option">
-        {{ option }}
+    <select
+      v-if="periodStore.options.length > 0"
+      v-model="model"
+      :disabled="periodStore.isLoading"
+      aria-label="Reporting period"
+    >
+      <option
+        v-for="option in periodStore.options"
+        :key="option.id"
+        :value="option.id"
+      >
+        {{ option.label }}
       </option>
     </select>
+    <span v-else class="period-status" role="status">
+      {{
+        periodStore.isLoading
+          ? "Loading…"
+          : periodStore.error
+            ? "Unavailable"
+            : "No periods"
+      }}
+    </span>
   </label>
 </template>
 
@@ -72,16 +60,21 @@ watch(
 .period-selector {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-2);
   color: var(--text-secondary);
 }
 
 select {
   height: 36px;
   border: 1px solid var(--border-strong);
-  border-radius: 4px;
-  background: white;
+  border-radius: var(--radius-sm);
+  background: var(--surface);
   color: var(--text-primary);
-  padding: 0 10px;
+  padding: 0 var(--spacing-3);
+}
+
+.period-status {
+  color: var(--text-muted);
+  font-size: 0.8125rem;
 }
 </style>

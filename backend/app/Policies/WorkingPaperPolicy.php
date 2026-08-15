@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace App\Policies;
 
+use App\Models\Engagement;
 use App\Models\User;
 use App\Models\WorkingPaper;
-use App\Models\Engagement;
 use Illuminate\Auth\Access\HandlesAuthorization;
 
 final class WorkingPaperPolicy
@@ -20,13 +20,17 @@ final class WorkingPaperPolicy
         }
 
         // Firm admin / super admin of the company can view
-        if ($user->hasRole('firm_admin') || $user->hasRole('super_admin')) {
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        if ($user->hasRole('firm_admin')) {
             return $user->companies()->where('companies.id', $workingPaper->engagement->company_id)->exists();
         }
 
         // Engagement lead, manager, partner can view
-        if ($workingPaper->engagement->lead_auditor_id === $user->id 
-            || $workingPaper->engagement->manager_id === $user->id 
+        if ($workingPaper->engagement->lead_auditor_id === $user->id
+            || $workingPaper->engagement->manager_id === $user->id
             || $workingPaper->engagement->partner_id === $user->id) {
             return true;
         }
@@ -72,13 +76,17 @@ final class WorkingPaperPolicy
             return false;
         }
 
-        if ($user->hasRole('firm_admin') || $user->hasRole('super_admin')) {
+        if ($user->hasRole('super_admin')) {
             return true;
         }
 
+        if ($user->hasRole('firm_admin')) {
+            return $user->companies()->where('companies.id', $workingPaper->engagement->company_id)->exists();
+        }
+
         // Must be lead auditor, manager, or partner for this engagement
-        return $workingPaper->engagement->lead_auditor_id === $user->id 
-            || $workingPaper->engagement->manager_id === $user->id 
+        return $workingPaper->engagement->lead_auditor_id === $user->id
+            || $workingPaper->engagement->manager_id === $user->id
             || $workingPaper->engagement->partner_id === $user->id;
     }
 

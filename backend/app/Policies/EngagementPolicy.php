@@ -23,12 +23,16 @@ final class EngagementPolicy
             return false;
         }
 
-        if ($user->hasRole('firm_admin') || $user->hasRole('super_admin')) {
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        if ($user->hasRole('firm_admin')) {
             return $user->companies()->where('companies.id', $engagement->company_id)->exists();
         }
 
-        if ($engagement->lead_auditor_id === $user->id 
-            || $engagement->manager_id === $user->id 
+        if ($engagement->lead_auditor_id === $user->id
+            || $engagement->manager_id === $user->id
             || $engagement->partner_id === $user->id) {
             return true;
         }
@@ -47,12 +51,16 @@ final class EngagementPolicy
             return false;
         }
 
-        if ($user->hasRole('firm_admin') || $user->hasRole('super_admin')) {
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        if ($user->hasRole('firm_admin')) {
             return $user->companies()->where('companies.id', $engagement->company_id)->exists();
         }
 
-        if ($engagement->lead_auditor_id === $user->id 
-            || $engagement->manager_id === $user->id 
+        if ($engagement->lead_auditor_id === $user->id
+            || $engagement->manager_id === $user->id
             || $engagement->partner_id === $user->id) {
             return true;
         }
@@ -65,9 +73,9 @@ final class EngagementPolicy
 
     public function delete(User $user, Engagement $engagement): bool
     {
-        return $user->hasPermission('engagement.update') 
-            && ($user->hasRole('firm_admin') || $user->hasRole('super_admin'))
-            && $user->companies()->where('companies.id', $engagement->company_id)->exists();
+        return $user->hasPermission('engagement.update')
+            && ($user->hasRole('super_admin')
+                || ($user->hasRole('firm_admin') && $user->companies()->where('companies.id', $engagement->company_id)->exists()));
     }
 
     public function manageMembers(User $user, Engagement $engagement): bool
@@ -76,12 +84,16 @@ final class EngagementPolicy
             return false;
         }
 
-        if ($user->hasRole('firm_admin') || $user->hasRole('super_admin')) {
+        if ($user->hasRole('super_admin')) {
+            return true;
+        }
+
+        if ($user->hasRole('firm_admin')) {
             return $user->companies()->where('companies.id', $engagement->company_id)->exists();
         }
 
-        return $engagement->lead_auditor_id === $user->id 
-            || $engagement->manager_id === $user->id 
+        return $engagement->lead_auditor_id === $user->id
+            || $engagement->manager_id === $user->id
             || $engagement->partner_id === $user->id;
     }
 }

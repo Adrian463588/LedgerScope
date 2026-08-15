@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { navigateTo } from '@/router';
-import NotificationBell from '@/components/shared/notification-bell.vue';
+import { navigateTo } from "@/router";
+import NotificationBell from "@/components/shared/notification-bell.vue";
 </script>
 
 <template>
@@ -44,7 +44,7 @@ button {
   border: 0;
   background: transparent;
   color: var(--brand-red);
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: "DM Serif Display", Georgia, serif;
   font-size: 1.5rem;
 }
 

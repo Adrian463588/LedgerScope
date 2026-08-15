@@ -2,8 +2,12 @@
 
 namespace Tests;
 
+use App\Models\AccountingPeriod;
+use App\Models\ChartOfAccount;
 use App\Models\Company;
 use App\Models\Engagement;
+use App\Models\FiscalYear;
+use App\Models\TrialBalance;
 use App\Models\User;
 use App\Services\Audit\WorkingPaperService;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
@@ -16,11 +20,11 @@ use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
  * @property Engagement $engagement
  * @property WorkingPaperService $service
  * @property User $user
- * @property \App\Models\FiscalYear $fy
- * @property \App\Models\AccountingPeriod $period
- * @property \App\Models\TrialBalance $tb
- * @property \App\Models\ChartOfAccount $cash
- * @property \App\Models\ChartOfAccount $revenue
+ * @property FiscalYear $fy
+ * @property AccountingPeriod $period
+ * @property TrialBalance $tb
+ * @property ChartOfAccount $cash
+ * @property ChartOfAccount $revenue
  */
 abstract class TestCase extends BaseTestCase
 {

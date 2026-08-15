@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Company;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Company\CompanyContactResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Company;
 use App\Services\Company\CompanyService;
@@ -19,7 +20,7 @@ final class CompanyContactController extends Controller
     {
         $this->authorize('view', $company);
 
-        return ApiResponse::success($this->service->listContacts($company));
+        return ApiResponse::success(CompanyContactResource::collection($this->service->listContacts($company)));
     }
 
     public function store(Request $request, Company $company): JsonResponse
@@ -36,6 +37,6 @@ final class CompanyContactController extends Controller
 
         $contact = $this->service->addContact($company, $validated);
 
-        return ApiResponse::created($contact, 'Contact added.');
+        return ApiResponse::created(new CompanyContactResource($contact), 'Contact added.');
     }
 }
