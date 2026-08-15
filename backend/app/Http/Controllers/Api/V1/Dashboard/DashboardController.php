@@ -5,12 +5,19 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Dashboard;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Dashboard\DashboardRequest;
 use App\Http\Responses\ApiResponse;
+use App\Models\AccountingPeriod;
 use App\Models\Company;
+use App\Models\DocumentRequest;
 use App\Models\Engagement;
 use App\Models\Finding;
 use App\Models\JournalEntry;
+use App\Models\Report;
+use App\Models\TrialBalance;
 use App\Models\User;
+use App\Models\WorkingPaper;
+use App\Support\Decimal;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\Auth;
 
@@ -21,14 +28,34 @@ final class DashboardController extends Controller
      *
      * Registered as a single-action invokable: Route::get('/dashboard', DashboardController::class)
      */
-    public function __invoke(): JsonResponse
+    public function __invoke(DashboardRequest $request): JsonResponse
     {
         /** @var User $user */
         $user = Auth::user();
 
         // Get user's companies
         $companies = $user->companies()->get();
-        $companyIds = $companies->pluck('id')->toArray();
+        $validated = $request->validated();
+        $selectedCompanyId = $validated['company_id'] ?? null;
+        $companyIds = $selectedCompanyId === null
+            ? $companies->pluck('id')->all()
+            : $companies->where('id', $selectedCompanyId)->pluck('id')->all();
+
+        if ($selectedCompanyId !== null && $companyIds === []) {
+            return ApiResponse::notFound('Company not found.');
+        }
+
+        $period = null;
+        if (isset($validated['period_id'])) {
+            $period = AccountingPeriod::query()
+                ->whereKey($validated['period_id'])
+                ->whereIn('company_id', $companyIds)
+                ->first();
+
+            if ($period === null) {
+                return ApiResponse::notFound('Accounting period not found.');
+            }
+        }
 
         // KPI: Active Engagements count
         $activeEngagements = Engagement::whereIn('company_id', $companyIds)
@@ -36,8 +63,11 @@ final class DashboardController extends Controller
             ->count();
 
         // KPI: Outstanding Document Requests (status not accepted/closed)
-        // Uses real query — table may be empty if PBC module not yet seeded
-        $outstandingRequests = 0; // DocumentRequest module (EPIC 5) — placeholder until routes added
+        $outstandingRequests = empty($companyIds)
+            ? 0
+            : DocumentRequest::whereHas('engagement', fn ($q) => $q->whereIn('company_id', $companyIds))
+                ->whereNotIn('status', ['accepted', 'closed'])
+                ->count();
 
         // KPI: Open Findings — real query on audit_findings table
         $openFindings = empty($companyIds) ? 0 : Finding::whereHas(
@@ -49,32 +79,44 @@ final class DashboardController extends Controller
         $currentYear = now()->year;
         $currentMonth = now()->month;
 
+        $journalScope = static function ($query) use ($companyIds, $period, $currentYear, $currentMonth): void {
+            $query->whereIn('journal_entries.company_id', $companyIds)
+                ->where('journal_entries.status', 'posted');
+
+            if ($period !== null) {
+                $query->whereBetween('journal_entries.journal_date', [$period->start_date, $period->end_date]);
+
+                return;
+            }
+
+            $query->whereYear('journal_entries.journal_date', $currentYear)
+                ->whereMonth('journal_entries.journal_date', '<=', $currentMonth);
+        };
+
         // Revenue (credit balances in revenue accounts) — returned as string by SUM
-        $revenueRaw = (string) JournalEntry::whereIn('company_id', $companyIds)
-            ->where('status', 'posted')
-            ->whereYear('journal_date', $currentYear)
-            ->whereMonth('journal_date', '<=', $currentMonth)
+        $revenueRaw = (string) JournalEntry::query()
+            ->tap($journalScope)
             ->join('journal_entry_lines', 'journal_entries.id', '=', 'journal_entry_lines.journal_entry_id')
             ->join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.id')
             ->where('chart_of_accounts.account_type', 'revenue')
-            ->sum('credit');
+            ->sum('journal_entry_lines.credit');
 
         // Expenses (debit balances in expense accounts)
-        $expensesRaw = (string) JournalEntry::whereIn('company_id', $companyIds)
-            ->where('status', 'posted')
-            ->whereYear('journal_date', $currentYear)
-            ->whereMonth('journal_date', '<=', $currentMonth)
+        $expensesRaw = (string) JournalEntry::query()
+            ->tap($journalScope)
             ->join('journal_entry_lines', 'journal_entries.id', '=', 'journal_entry_lines.journal_entry_id')
             ->join('chart_of_accounts', 'journal_entry_lines.account_id', '=', 'chart_of_accounts.id')
             ->whereIn('chart_of_accounts.account_type', ['expense', 'cost_of_goods_sold'])
-            ->sum('debit');
+            ->sum('journal_entry_lines.debit');
 
         // bcmath string arithmetic — NO float casts
-        $revenue = bcadd($revenueRaw, '0', 2);
-        $expenses = bcadd($expensesRaw, '0', 2);
-        $netProfit = bcsub($revenue, $expenses, 2);
+        $revenue = Decimal::normalize($revenueRaw);
+        $expenses = Decimal::normalize($expensesRaw);
+        $netProfit = Decimal::subtract($revenue, $expenses);
 
-        $recentActivitiesRaw = JournalEntry::whereIn('company_id', $companyIds)
+        $recentActivitiesRaw = JournalEntry::query()
+            ->whereIn('company_id', $companyIds)
+            ->when($period !== null, fn ($query) => $query->whereBetween('journal_date', [$period->start_date, $period->end_date]))
             ->with(['createdBy'])
             ->orderBy('updated_at', 'desc')
             ->limit(10)
@@ -94,9 +136,9 @@ final class DashboardController extends Controller
         // Quick Access
         $quickAccess = [
             ['label' => 'Journal Entries', 'hasData' => JournalEntry::whereIn('company_id', $companyIds)->exists()],
-            ['label' => 'Trial Balance',   'hasData' => ! empty($companyIds)],
-            ['label' => 'Working Papers',  'hasData' => Engagement::whereIn('company_id', $companyIds)->exists()],
-            ['label' => 'Reports',         'hasData' => ! empty($companyIds)],
+            ['label' => 'Trial Balance',   'hasData' => TrialBalance::whereIn('company_id', $companyIds)->exists()],
+            ['label' => 'Working Papers',  'hasData' => WorkingPaper::whereHas('engagement', fn ($q) => $q->whereIn('company_id', $companyIds))->exists()],
+            ['label' => 'Reports',         'hasData' => Report::whereIn('company_id', $companyIds)->exists()],
         ];
 
         return ApiResponse::success([
@@ -104,21 +146,21 @@ final class DashboardController extends Controller
                 [
                     'label' => 'Total Active Engagements',
                     'value' => (string) $activeEngagements,
-                    'change' => '+0',
+                    'change' => null,
                     'changeType' => 'up',
                     'isPrimary' => true,
                 ],
                 [
                     'label' => 'Outstanding Document Requests',
                     'value' => (string) $outstandingRequests,
-                    'change' => '-0',
+                    'change' => null,
                     'changeType' => 'down',
                     'isPrimary' => false,
                 ],
                 [
                     'label' => 'Open Findings',
                     'value' => (string) $openFindings,
-                    'change' => '+0',
+                    'change' => null,
                     'changeType' => $openFindings > 0 ? 'up' : 'down',
                     'isPrimary' => false,
                 ],
@@ -126,21 +168,21 @@ final class DashboardController extends Controller
             'quarterlySnapshot' => [
                 [
                     'label' => 'Revenue',
-                    'value' => 'IDR '.number_format((int) $revenue, 0, ',', '.'),
-                    'change' => '+0%',
+                    'value' => 'IDR '.Decimal::format($revenue, 0),
+                    'change' => null,
                     'changeType' => 'up',
                 ],
                 [
                     'label' => 'Expenses',
-                    'value' => 'IDR '.number_format((int) $expenses, 0, ',', '.'),
-                    'change' => '+0%',
+                    'value' => 'IDR '.Decimal::format($expenses, 0),
+                    'change' => null,
                     'changeType' => 'down',
                 ],
                 [
                     'label' => 'Net Profit',
-                    'value' => 'IDR '.number_format((int) $netProfit, 0, ',', '.'),
-                    'change' => bccomp($netProfit, '0', 2) >= 0 ? '+0%' : '-0%',
-                    'changeType' => bccomp($netProfit, '0', 2) >= 0 ? 'up' : 'down',
+                    'value' => 'IDR '.Decimal::format($netProfit, 0),
+                    'change' => null,
+                    'changeType' => Decimal::compare($netProfit, '0') >= 0 ? 'up' : 'down',
                 ],
             ],
             'recentActivities' => $recentActivities,

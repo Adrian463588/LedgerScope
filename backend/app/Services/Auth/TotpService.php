@@ -16,6 +16,7 @@ final class TotpService
         for ($i = 0; $i < 16; $i++) {
             $secret .= $chars[random_int(0, 31)];
         }
+
         return $secret;
     }
 
@@ -26,6 +27,7 @@ final class TotpService
     {
         $issuer = rawurlencode('LedgerScope');
         $label = rawurlencode($email);
+
         return "otpauth://totp/{$issuer}:{$label}?secret={$secret}&issuer={$issuer}&algorithm=SHA1&digits=6&period=30";
     }
 
@@ -66,18 +68,18 @@ final class TotpService
     private function calculateOtp(string $key, float $slice): string
     {
         // Pack time slice as a 64-bit integer (big-endian)
-        $time = pack('N*', 0) . pack('N*', (int) $slice);
+        $time = pack('N*', 0).pack('N*', (int) $slice);
 
         // HMAC-SHA1
         $hmac = hash_hmac('sha1', $time, $key, true);
 
         // Dynamic truncation
-        $offset = ord($hmac[19]) & 0xf;
+        $offset = ord($hmac[19]) & 0xF;
         $otpPart = (
-            (ord($hmac[$offset]) & 0x7f) << 24 |
-            (ord($hmac[$offset + 1]) & 0xff) << 16 |
-            (ord($hmac[$offset + 2]) & 0xff) << 8 |
-            (ord($hmac[$offset + 3]) & 0xff)
+            (ord($hmac[$offset]) & 0x7F) << 24 |
+            (ord($hmac[$offset + 1]) & 0xFF) << 16 |
+            (ord($hmac[$offset + 2]) & 0xFF) << 8 |
+            (ord($hmac[$offset + 3]) & 0xFF)
         );
 
         $otp = $otpPart % 1000000;
@@ -112,7 +114,7 @@ final class TotpService
 
             if ($bits >= 8) {
                 $bits -= 8;
-                $buffer .= chr(($val >> $bits) & 0xff);
+                $buffer .= chr(($val >> $bits) & 0xFF);
             }
         }
 

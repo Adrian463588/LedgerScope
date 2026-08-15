@@ -25,12 +25,17 @@ final class PeriodLockService
             throw new AuthorizationException('You do not have permission to lock periods.');
         }
 
-        if ($period->isLocked()) {
-            throw new \DomainException("Period [{$period->period_name}] is already locked.");
-        }
-
         DB::transaction(function () use ($period, $user): void {
-            $period->forceFill([
+            /** @var AccountingPeriod $lockedPeriod */
+            $lockedPeriod = AccountingPeriod::query()
+                ->lockForUpdate()
+                ->findOrFail($period->id);
+
+            if ($lockedPeriod->isLocked()) {
+                throw new \DomainException("Period [{$lockedPeriod->period_name}] is already locked.");
+            }
+
+            $lockedPeriod->forceFill([
                 'is_locked' => true,
                 'locked_at' => now(),
                 'locked_by' => $user->id,
@@ -41,10 +46,10 @@ final class PeriodLockService
             event(new PeriodLocked(
                 userId: $user->id,
                 action: 'lock_period',
-                companyId: $period->company_id,
+                companyId: $lockedPeriod->company_id,
                 objectType: 'AccountingPeriod',
-                objectId: $period->id,
-                metadata: ['period_name' => $period->period_name],
+                objectId: $lockedPeriod->id,
+                metadata: ['period_name' => $lockedPeriod->period_name],
             ));
         });
     }
@@ -55,16 +60,21 @@ final class PeriodLockService
             throw new AuthorizationException('You do not have permission to unlock periods.');
         }
 
-        if (! $period->isLocked()) {
-            throw new \DomainException("Period [{$period->period_name}] is not locked.");
-        }
-
         if (trim($reason) === '') {
             throw new \DomainException('An unlock reason is required.');
         }
 
         DB::transaction(function () use ($period, $user, $reason): void {
-            $period->forceFill([
+            /** @var AccountingPeriod $lockedPeriod */
+            $lockedPeriod = AccountingPeriod::query()
+                ->lockForUpdate()
+                ->findOrFail($period->id);
+
+            if (! $lockedPeriod->isLocked()) {
+                throw new \DomainException("Period [{$lockedPeriod->period_name}] is not locked.");
+            }
+
+            $lockedPeriod->forceFill([
                 'is_locked' => false,
                 'locked_at' => null,
                 'locked_by' => null,
@@ -76,10 +86,10 @@ final class PeriodLockService
             event(new PeriodUnlocked(
                 userId: $user->id,
                 action: 'unlock_period',
-                companyId: $period->company_id,
+                companyId: $lockedPeriod->company_id,
                 objectType: 'AccountingPeriod',
-                objectId: $period->id,
-                metadata: ['period_name' => $period->period_name, 'reason' => $reason],
+                objectId: $lockedPeriod->id,
+                metadata: ['period_name' => $lockedPeriod->period_name, 'reason' => $reason],
             ));
         });
     }

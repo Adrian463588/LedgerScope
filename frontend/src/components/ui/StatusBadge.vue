@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed } from "vue";
 
-import type { StatusTone } from '@/types';
+import type { StatusTone } from "@/types";
 
 const props = defineProps<{
   status: string;
@@ -9,17 +9,45 @@ const props = defineProps<{
 
 const tone = computed<StatusTone>(() => {
   const status = props.status.toLowerCase();
-  if (['posted', 'approved', 'accepted', 'completed', 'balanced', 'ready'].includes(status)) return 'success';
-  if (['draft', 'planning', 'submitted', 'under review', 'review'].includes(status)) return 'neutral';
-  if (['fieldwork', 'generating', 'medium', 'in progress'].includes(status)) return 'warning';
-  if (['rejected', 'failed', 'critical', 'high', 'overdue', 'unbalanced'].includes(status)) return 'danger';
-  if (['locked', 'archived'].includes(status)) return 'locked';
-  return 'info';
+  if (
+    [
+      "posted",
+      "approved",
+      "accepted",
+      "completed",
+      "balanced",
+      "ready",
+    ].includes(status)
+  )
+    return "success";
+  if (
+    ["draft", "planning", "submitted", "under review", "review"].includes(
+      status,
+    )
+  )
+    return "neutral";
+  if (["fieldwork", "generating", "medium", "in progress"].includes(status))
+    return "warning";
+  if (
+    [
+      "rejected",
+      "failed",
+      "critical",
+      "high",
+      "overdue",
+      "unbalanced",
+    ].includes(status)
+  )
+    return "danger";
+  if (["locked", "archived"].includes(status)) return "locked";
+  return "info";
 });
 </script>
 
 <template>
-  <span class="status-badge" :class="`status-badge--${tone}`">{{ props.status }}</span>
+  <span class="status-badge" :class="`status-badge--${tone}`">{{
+    props.status
+  }}</span>
 </template>
 
 <style scoped>
@@ -29,10 +57,14 @@ const tone = computed<StatusTone>(() => {
   border: 1px solid;
   border-radius: 999px;
   padding: 2px 8px;
-  font: 600 0.6875rem/1rem 'IBM Plex Sans', sans-serif;
+  font:
+    600 0.6875rem/1rem "IBM Plex Sans",
+    sans-serif;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  transition: background 200ms, color 200ms;
+  transition:
+    background 200ms,
+    color 200ms;
 }
 
 .status-badge--neutral {

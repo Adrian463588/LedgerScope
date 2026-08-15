@@ -1,8 +1,9 @@
 <script setup lang="ts">
-import { onMounted, onUnmounted, ref } from 'vue';
-import { Bell, Loader2 } from 'lucide-vue-next';
-import { navigateTo } from '@/router';
-import { useUserNotificationStore } from '@/stores/user-notification.store';
+import { onMounted, onUnmounted, ref } from "vue";
+import { Bell, Loader2 } from "lucide-vue-next";
+import { navigateTo } from "@/router";
+import { useUserNotificationStore } from "@/stores/user-notification.store";
+import type { DbNotification } from "@/types";
 
 const store = useUserNotificationStore();
 const isOpen = ref(false);
@@ -15,7 +16,7 @@ function toggleDropdown(): void {
   }
 }
 
-function handleNotificationClick(item: any): void {
+function handleNotificationClick(item: DbNotification): void {
   void store.markAsRead(item.id);
   isOpen.value = false;
   if (item.data?.action_url) {
@@ -35,11 +36,11 @@ onMounted(() => {
     void store.fetchNotifications(true);
   }, 30000);
 
-  document.addEventListener('click', closeDropdown);
+  document.addEventListener("click", closeDropdown);
 
   onUnmounted(() => {
     window.clearInterval(interval);
-    document.removeEventListener('click', closeDropdown);
+    document.removeEventListener("click", closeDropdown);
   });
 });
 </script>
@@ -53,18 +54,35 @@ onMounted(() => {
       @click="toggleDropdown"
     >
       <Bell aria-hidden="true" />
-      <span v-if="store.unreadCount > 0" class="badge">{{ store.unreadCount }}</span>
+      <span v-if="store.unreadCount > 0" class="badge">{{
+        store.unreadCount
+      }}</span>
     </button>
 
     <Transition name="slide-up">
       <div v-if="isOpen" class="dropdown">
         <div class="dropdown-header">
           <h3>Notifications</h3>
-          <span v-if="store.unreadCount > 0" class="unread-tag">{{ store.unreadCount }} new</span>
+          <span v-if="store.unreadCount > 0" class="unread-tag"
+            >{{ store.unreadCount }} new</span
+          >
         </div>
+        <button
+          class="view-all"
+          type="button"
+          @click="
+            navigateTo('/notifications');
+            isOpen = false;
+          "
+        >
+          View all notifications
+        </button>
 
         <div class="dropdown-content">
-          <div v-if="store.isLoading && store.notifications.length === 0" class="loading-state">
+          <div
+            v-if="store.isLoading && store.notifications.length === 0"
+            class="loading-state"
+          >
             <Loader2 class="animate-spin text-red" aria-hidden="true" />
             <p>Loading notifications...</p>
           </div>
@@ -80,7 +98,9 @@ onMounted(() => {
               @click="handleNotificationClick(item)"
             >
               <div class="item-header">
-                <span class="item-title">{{ item.data?.title || 'Notification' }}</span>
+                <span class="item-title">{{
+                  item.data?.title || "Notification"
+                }}</span>
                 <span v-if="!item.read_at" class="unread-dot"></span>
               </div>
               <p class="item-message">{{ item.data?.message }}</p>
@@ -94,7 +114,11 @@ onMounted(() => {
               :disabled="store.isLoading"
               @click.stop="store.fetchNotifications()"
             >
-              <Loader2 v-if="store.isLoading" class="animate-spin" aria-hidden="true" />
+              <Loader2
+                v-if="store.isLoading"
+                class="animate-spin"
+                aria-hidden="true"
+              />
               <span v-else>Load More</span>
             </button>
           </div>
@@ -124,7 +148,8 @@ onMounted(() => {
   transition: all 0.2s ease;
 }
 
-.icon-button:hover, .icon-button.active {
+.icon-button:hover,
+.icon-button.active {
   background: var(--surface-hover);
   color: var(--text-primary);
 }
@@ -140,7 +165,9 @@ onMounted(() => {
   border-radius: 50%;
   background: var(--brand-red);
   color: white;
-  font: 500 0.625rem 'IBM Plex Mono', monospace;
+  font:
+    500 0.625rem "IBM Plex Mono",
+    monospace;
 }
 
 .dropdown {
@@ -152,7 +179,7 @@ onMounted(() => {
   border: 1px solid var(--border);
   border-radius: 8px;
   background: white;
-  box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  box-shadow: var(--shadow-dropdown);
 }
 
 .dropdown-header {
@@ -184,7 +211,8 @@ onMounted(() => {
   overflow-y: auto;
 }
 
-.loading-state, .empty-state {
+.loading-state,
+.empty-state {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -194,7 +222,8 @@ onMounted(() => {
   color: var(--text-secondary);
 }
 
-.loading-state p, .empty-state p {
+.loading-state p,
+.empty-state p {
   margin: 8px 0 0 0;
   font-size: 0.875rem;
 }
@@ -283,15 +312,21 @@ onMounted(() => {
 }
 
 @keyframes spin {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-.slide-up-enter-active, .slide-up-leave-active {
+.slide-up-enter-active,
+.slide-up-leave-active {
   transition: all 0.2s ease-out;
 }
 
-.slide-up-enter-from, .slide-up-leave-to {
+.slide-up-enter-from,
+.slide-up-leave-to {
   transform: translateY(10px);
   opacity: 0;
 }

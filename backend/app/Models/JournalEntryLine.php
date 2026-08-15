@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Models;
 
+use App\Enums\Accounting\JournalStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -47,5 +48,36 @@ final class JournalEntryLine extends Model
     public function account(): BelongsTo
     {
         return $this->belongsTo(ChartOfAccount::class, 'account_id');
+    }
+
+    public function save(array $options = []): bool
+    {
+        $this->assertMutable();
+
+        return parent::save($options);
+    }
+
+    public function delete(): ?bool
+    {
+        $this->assertMutable();
+
+        return parent::delete();
+    }
+
+    private function assertMutable(): void
+    {
+        $journal = $this->journalEntry()->with('accountingPeriod')->first();
+
+        if ($journal === null) {
+            return;
+        }
+
+        if ($journal->isPosted() || $journal->status === JournalStatus::Reversed) {
+            throw new \DomainException('Lines of posted journal entries are immutable.');
+        }
+
+        if ($journal->accountingPeriod?->isLocked()) {
+            throw new \DomainException('Journal lines in locked periods are immutable.');
+        }
     }
 }

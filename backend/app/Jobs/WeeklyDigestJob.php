@@ -31,7 +31,7 @@ final class WeeklyDigestJob implements ShouldQueue
                 continue;
             }
 
-            Mail::raw("Weekly Digest for " . $user->name . ":\n\nYou have " . $notifications->count() . " unread notifications in the past week.", function ($message) use ($user) {
+            Mail::raw('Weekly Digest for '.$user->name.":\n\nYou have ".$notifications->count().' unread notifications in the past week.', function ($message) use ($user) {
                 $message->to($user->email)
                     ->subject('LedgerScope Weekly Notification Digest');
             });

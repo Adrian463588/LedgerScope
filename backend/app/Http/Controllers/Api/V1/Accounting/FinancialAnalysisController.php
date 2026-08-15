@@ -10,6 +10,7 @@ use App\Models\Company;
 use App\Services\Accounting\FinancialAnalysisService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 
 /**
  * FinancialAnalysisController — EPIC 5
@@ -22,7 +23,7 @@ final class FinancialAnalysisController extends Controller
     {
         $this->authorize('view', $company);
 
-        $periodId = $request->query('accounting_period_id') ? (int) $request->query('accounting_period_id') : null;
+        $periodId = $this->scopedPeriodId($request, $company, 'accounting_period_id');
         $filters = [
             'department' => $request->query('department'),
             'account_category' => $request->query('account_category'),
@@ -51,8 +52,8 @@ final class FinancialAnalysisController extends Controller
     {
         $this->authorize('view', $company);
 
-        $periodId = $request->query('accounting_period_id') ? (int) $request->query('accounting_period_id') : null;
-        $comparePeriodId = $request->query('compare_period_id') ? (int) $request->query('compare_period_id') : null;
+        $periodId = $this->scopedPeriodId($request, $company, 'accounting_period_id');
+        $comparePeriodId = $this->scopedPeriodId($request, $company, 'compare_period_id');
         $filters = [
             'department' => $request->query('department'),
             'account_category' => $request->query('account_category'),
@@ -61,5 +62,26 @@ final class FinancialAnalysisController extends Controller
         $variance = $this->service->calculateVariance($company, $periodId, $comparePeriodId, $filters);
 
         return ApiResponse::success($variance);
+    }
+
+    private function scopedPeriodId(Request $request, Company $company, string $key): ?int
+    {
+        $raw = $request->query($key);
+
+        if ($raw === null || $raw === '') {
+            return null;
+        }
+
+        $periodId = filter_var($raw, FILTER_VALIDATE_INT);
+
+        if ($periodId === false || $periodId < 1) {
+            throw ValidationException::withMessages([
+                $key => ['The selected period is invalid.'],
+            ]);
+        }
+
+        $company->accountingPeriods()->findOrFail($periodId);
+
+        return $periodId;
     }
 }

@@ -18,6 +18,7 @@ final class QuarterClosingChecklist extends Model
     protected $fillable = [
         'quarter_id',
         'checklist_key',
+        'is_required',
         'is_completed',
         'completed_at',
         'completed_by',
@@ -31,6 +32,7 @@ final class QuarterClosingChecklist extends Model
     {
         return [
             'is_completed' => 'boolean',
+            'is_required' => 'boolean',
             'completed_at' => 'datetime',
         ];
     }

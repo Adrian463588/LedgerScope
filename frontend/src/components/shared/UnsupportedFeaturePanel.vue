@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { PlugZap } from 'lucide-vue-next';
+import { PlugZap } from "lucide-vue-next";
 
-import EmptyState from '@/components/ui/EmptyState.vue';
-import type { UnsupportedFeature } from '@/types';
+import EmptyState from "@/components/ui/EmptyState.vue";
+import type { UnsupportedFeature } from "@/types";
 
 defineProps<{
   feature: UnsupportedFeature;

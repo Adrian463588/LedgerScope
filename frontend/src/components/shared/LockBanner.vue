@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Lock } from 'lucide-vue-next';
+import { Lock } from "lucide-vue-next";
 </script>
 
 <template>
@@ -7,7 +7,10 @@ import { Lock } from 'lucide-vue-next';
     <Lock aria-hidden="true" />
     <div>
       <strong>This period is locked</strong>
-      <p>Q1 2026 was locked after review. Request unlock before editing posted records.</p>
+      <p>
+        Q1 2026 was locked after review. Request unlock before editing posted
+        records.
+      </p>
     </div>
   </aside>
 </template>

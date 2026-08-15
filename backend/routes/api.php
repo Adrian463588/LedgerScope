@@ -3,13 +3,13 @@
 declare(strict_types=1);
 
 use App\Http\Controllers\Api\V1\Accounting\AccountController;
+use App\Http\Controllers\Api\V1\Accounting\FinancialAnalysisController;
 use App\Http\Controllers\Api\V1\Accounting\FinancialStatementController;
 use App\Http\Controllers\Api\V1\Accounting\FiscalYearController;
 use App\Http\Controllers\Api\V1\Accounting\JournalController;
 use App\Http\Controllers\Api\V1\Accounting\JournalRedFlagController;
 use App\Http\Controllers\Api\V1\Accounting\QuarterController;
 use App\Http\Controllers\Api\V1\Accounting\ReconciliationController;
-use App\Http\Controllers\Api\V1\Accounting\FinancialAnalysisController;
 use App\Http\Controllers\Api\V1\Accounting\StatementTemplateController;
 use App\Http\Controllers\Api\V1\Accounting\TrialBalanceController;
 use App\Http\Controllers\Api\V1\Admin\AdminRoleController;
@@ -42,12 +42,15 @@ use App\Http\Controllers\Api\V1\Company\CompanyUserController;
 use App\Http\Controllers\Api\V1\Dashboard\DashboardController;
 use App\Http\Controllers\Api\V1\Engagement\EngagementController;
 use App\Http\Controllers\Api\V1\Evidence\EvidenceController;
+use App\Http\Controllers\Api\V1\Future\ExternalIntegrationController;
 use App\Http\Controllers\Api\V1\Notification\NotificationController;
 use App\Http\Controllers\Api\V1\Reporting\ReportController;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Facades\Redis;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Storage;
 
 /*
 |--------------------------------------------------------------------------
@@ -64,20 +67,38 @@ Route::get('/health', function (): JsonResponse {
     $checks = [
         'database' => 'ok',
         'redis' => 'ok',
-        'queue' => 'ok',
-        'storage' => 'ok',
+        'queue' => 'unknown',
+        'storage' => 'unknown',
     ];
 
     try {
         DB::connection()->getPdo();
-    } catch (Exception) {
+    } catch (Throwable $exception) {
+        report($exception);
         $checks['database'] = 'error';
     }
 
     try {
-        Redis::ping();
-    } catch (Exception) {
+        Redis::connection()->ping();
+    } catch (Throwable $exception) {
+        report($exception);
         $checks['redis'] = 'error';
+    }
+
+    try {
+        Queue::connection('redis')->size();
+        $checks['queue'] = 'ok';
+    } catch (Throwable $exception) {
+        report($exception);
+        $checks['queue'] = 'error';
+    }
+
+    try {
+        Storage::disk((string) config('filesystems.default'))->exists('.healthcheck');
+        $checks['storage'] = 'ok';
+    } catch (Throwable $exception) {
+        report($exception);
+        $checks['storage'] = 'error';
     }
 
     $status = in_array('error', $checks, true) ? 'degraded' : 'ok';
@@ -115,6 +136,12 @@ Route::prefix('v1')->group(function (): void {
         Route::put('/notifications/preferences', [NotificationController::class, 'updatePreferences'])->name('notifications.preferences.update');
         Route::post('/notifications/{notification}/read', [NotificationController::class, 'markRead'])->name('notifications.read');
 
+        // Future integrations are explicit and fail closed until a provider adapter is configured.
+        Route::prefix('future/integrations')->group(function (): void {
+            Route::get('/', [ExternalIntegrationController::class, 'index'])->name('future.integrations.index');
+            Route::post('/{integration}/execute', [ExternalIntegrationController::class, 'execute'])->name('future.integrations.execute');
+        });
+
         // Auth
         Route::prefix('auth')->group(function (): void {
             Route::post('/logout', LogoutController::class)->name('auth.logout');
@@ -148,7 +175,7 @@ Route::prefix('v1')->group(function (): void {
         });
 
         // ─── Companies ───────────────────────────────────────────────────────
-        Route::prefix('companies')->group(function (): void {
+        Route::prefix('companies')->scopeBindings()->middleware('company.access')->group(function (): void {
             Route::get('/', [CompanyController::class, 'index'])->name('companies.index');
             Route::post('/', [CompanyController::class, 'store'])->name('companies.store');
             Route::get('/{company}', [CompanyController::class, 'show'])->name('companies.show');
@@ -198,16 +225,17 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/{company}/reconciliations/{reconciliation}/auto-match', [ReconciliationController::class, 'autoMatch'])->name('reconciliations.auto-match');
             Route::post('/{company}/reconciliations/{reconciliation}/match', [ReconciliationController::class, 'match'])->name('reconciliations.match');
             Route::post('/{company}/reconciliations/{reconciliation}/approve', [ReconciliationController::class, 'approve'])->name('reconciliations.approve');
+            Route::post('/{company}/reconciliations/{reconciliation}/lock', [ReconciliationController::class, 'lock'])->name('reconciliations.lock');
 
             // Financial Statements (Phase 7)
             Route::get('/{company}/statement-templates', [StatementTemplateController::class, 'index'])->name('statement-templates.index');
             Route::post('/{company}/statement-templates', [StatementTemplateController::class, 'store'])->name('statement-templates.store');
             Route::post('/{company}/financial-statements/generate', [FinancialStatementController::class, 'generate'])->name('financial-statements.generate');
             Route::get('/{company}/financial-statements', [FinancialStatementController::class, 'index'])->name('financial-statements.index');
-            Route::get('/{company}/financial-statements/{version}', [FinancialStatementController::class, 'show'])->name('financial-statements.show');
-            Route::post('/{company}/financial-statements/{version}/approve', [FinancialStatementController::class, 'approve'])->name('financial-statements.approve');
-            Route::post('/{company}/financial-statements/{version}/lock', [FinancialStatementController::class, 'lock'])->name('financial-statements.lock');
-            Route::get('/{company}/financial-statements/{version}/export', [FinancialStatementController::class, 'export'])->name('financial-statements.export');
+            Route::get('/{company}/financial-statements/{financialStatement}', [FinancialStatementController::class, 'show'])->name('financial-statements.show');
+            Route::post('/{company}/financial-statements/{financialStatement}/approve', [FinancialStatementController::class, 'approve'])->name('financial-statements.approve');
+            Route::post('/{company}/financial-statements/{financialStatement}/lock', [FinancialStatementController::class, 'lock'])->name('financial-statements.lock');
+            Route::get('/{company}/financial-statements/{financialStatement}/export', [FinancialStatementController::class, 'export'])->name('financial-statements.export');
 
             // Financial Analysis (EPIC 5)
             Route::get('/{company}/financial-analysis/ratios', [FinancialAnalysisController::class, 'ratios'])->name('financial-analysis.ratios');
@@ -222,11 +250,12 @@ Route::prefix('v1')->group(function (): void {
             Route::post('/{company}/reports/generate', [ReportController::class, 'generate'])->name('reports.generate');
             Route::get('/{company}/reports', [ReportController::class, 'index'])->name('reports.index');
             Route::get('/{company}/reports/{report}', [ReportController::class, 'show'])->name('reports.show');
+            Route::post('/{company}/reports/{report}/approve', [ReportController::class, 'approve'])->name('reports.approve');
             Route::get('/{company}/reports/{report}/download', [ReportController::class, 'download'])->name('reports.download');
         });
 
         // ─── Engagements (standalone) ──────────────────────────────────────────
-        Route::prefix('engagements')->middleware(['role:super_admin,firm_admin,partner,audit_manager,senior_auditor,junior_auditor'])->group(function (): void {
+        Route::prefix('engagements')->scopeBindings()->middleware(['role:super_admin,firm_admin,partner,audit_manager,senior_auditor,junior_auditor'])->group(function (): void {
             Route::get('/{engagement}', [EngagementController::class, 'show'])->name('engagements.show');
             Route::put('/{engagement}', [EngagementController::class, 'update'])->name('engagements.update');
             Route::post('/{engagement}/members', [EngagementController::class, 'addMember'])->name('engagements.members.store');

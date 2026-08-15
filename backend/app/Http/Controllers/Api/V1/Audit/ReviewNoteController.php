@@ -6,6 +6,8 @@ namespace App\Http\Controllers\Api\V1\Audit;
 
 use App\Events\Audit\ReviewNoteResolved;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Audit\ReviewNoteReplyResource;
+use App\Http\Resources\Audit\ReviewNoteResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Engagement;
 use App\Models\ReviewNote;
@@ -22,7 +24,7 @@ use Illuminate\Support\Facades\DB;
 final class ReviewNoteController extends Controller
 {
     public function __construct(
-        private readonly NotificationService $notificationService
+        private readonly NotificationService $notificationService,
     ) {}
 
     public function index(Engagement $engagement): JsonResponse
@@ -35,7 +37,7 @@ final class ReviewNoteController extends Controller
             ->orderByDesc('created_at')
             ->get();
 
-        return ApiResponse::success($notes);
+        return ApiResponse::success(ReviewNoteResource::collection($notes));
     }
 
     public function store(Request $request, Engagement $engagement): JsonResponse
@@ -67,11 +69,11 @@ final class ReviewNoteController extends Controller
                 'New Review Note Assigned',
                 "A new review note has been created on your working paper '{$workingPaper->title}' by {$request->user()->name}.",
                 'review_note',
-                "/engagements/{$engagement->id}/working-papers/{$workingPaper->id}"
+                "/engagements/{$engagement->id}/working-papers/{$workingPaper->id}",
             );
         }
 
-        return ApiResponse::created($note->load('createdBy'), 'Review note created.');
+        return ApiResponse::created(new ReviewNoteResource($note->load('createdBy')), 'Review note created.');
     }
 
     public function resolve(Request $request, Engagement $engagement, ReviewNote $reviewNote): JsonResponse
@@ -101,11 +103,11 @@ final class ReviewNoteController extends Controller
                 ['status' => 'resolved'],
                 $request->ip(),
                 $request->userAgent(),
-                ['content' => $reviewNote->content]
+                ['content' => $reviewNote->content],
             ));
         });
 
-        return ApiResponse::success($reviewNote->fresh(), 'Review note resolved.');
+        return ApiResponse::success(new ReviewNoteResource($reviewNote->fresh()), 'Review note resolved.');
     }
 
     public function destroy(Request $request, Engagement $engagement, ReviewNote $reviewNote): JsonResponse
@@ -145,7 +147,7 @@ final class ReviewNoteController extends Controller
             return $reply;
         });
 
-        return ApiResponse::created($reply->load('user'), 'Reply added.');
+        return ApiResponse::created(new ReviewNoteReplyResource($reply->load('user')), 'Reply added.');
     }
 
     public function reopen(Request $request, Engagement $engagement, ReviewNote $reviewNote): JsonResponse
@@ -164,6 +166,6 @@ final class ReviewNoteController extends Controller
             ]);
         });
 
-        return ApiResponse::success($reviewNote->fresh(), 'Review note reopened.');
+        return ApiResponse::success(new ReviewNoteResource($reviewNote->fresh()), 'Review note reopened.');
     }
 }

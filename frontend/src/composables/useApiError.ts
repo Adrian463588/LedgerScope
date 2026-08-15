@@ -1,4 +1,4 @@
-import { getApiError } from '@/api/client';
+import { getApiError } from "@/api/client";
 
 export function useApiError() {
   function friendlyMessage(error: unknown): string {

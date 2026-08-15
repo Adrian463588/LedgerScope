@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1\Audit;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Audit\StoreDocumentRequestRequest;
+use App\Http\Resources\Audit\DocumentRequestResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\DocumentRequest;
 use App\Models\Engagement;
@@ -35,12 +36,12 @@ final class DocumentRequestController extends Controller
     {
         $this->authorize('view', $engagement);
 
-        return ApiResponse::success(
+        return ApiResponse::success(DocumentRequestResource::collection(
             $engagement->documentRequests()
                 ->with(['requestedBy', 'assignedTo', 'evidenceFile'])
                 ->orderByDesc('created_at')
                 ->get(),
-        );
+        ));
     }
 
     public function store(StoreDocumentRequestRequest $request, Engagement $engagement): JsonResponse
@@ -51,21 +52,23 @@ final class DocumentRequestController extends Controller
 
         $docRequest = $this->service->create($validated, $engagement, $request->user());
 
-        return ApiResponse::created($docRequest, 'Document request created.');
+        return ApiResponse::created(new DocumentRequestResource($docRequest), 'Document request created.');
     }
 
     public function show(Engagement $engagement, DocumentRequest $documentRequest): JsonResponse
     {
         $this->authorize('view', $engagement);
+        $this->authorize('view', $documentRequest);
 
-        return ApiResponse::success(
+        return ApiResponse::success(new DocumentRequestResource(
             $documentRequest->load(['requestedBy', 'assignedTo', 'evidenceFile']),
-        );
+        ));
     }
 
     public function submit(Request $request, Engagement $engagement, DocumentRequest $documentRequest): JsonResponse
     {
         $this->authorize('update', $engagement);
+        $this->authorize('update', $documentRequest);
 
         $validated = $request->validate([
             'evidence_file_id' => ['required', 'integer', 'exists:evidence_files,id'],
@@ -73,21 +76,23 @@ final class DocumentRequestController extends Controller
 
         $this->service->submit($documentRequest, $validated['evidence_file_id'], $request->user());
 
-        return ApiResponse::success($documentRequest->fresh(), 'Document submitted.');
+        return ApiResponse::success(new DocumentRequestResource($documentRequest->fresh()), 'Document submitted.');
     }
 
     public function accept(Request $request, Engagement $engagement, DocumentRequest $documentRequest): JsonResponse
     {
         $this->authorize('update', $engagement);
+        $this->authorize('update', $documentRequest);
 
         $this->service->accept($documentRequest, $request->user());
 
-        return ApiResponse::success($documentRequest->fresh(), 'Document request accepted.');
+        return ApiResponse::success(new DocumentRequestResource($documentRequest->fresh()), 'Document request accepted.');
     }
 
     public function reject(Request $request, Engagement $engagement, DocumentRequest $documentRequest): JsonResponse
     {
         $this->authorize('update', $engagement);
+        $this->authorize('update', $documentRequest);
 
         $validated = $request->validate([
             'reason' => ['required', 'string', 'min:5'],
@@ -95,12 +100,13 @@ final class DocumentRequestController extends Controller
 
         $this->service->reject($documentRequest, $request->user(), $validated['reason']);
 
-        return ApiResponse::success($documentRequest->fresh(), 'Document request rejected.');
+        return ApiResponse::success(new DocumentRequestResource($documentRequest->fresh()), 'Document request rejected.');
     }
 
     public function destroy(Request $request, Engagement $engagement, DocumentRequest $documentRequest): JsonResponse
     {
         $this->authorize('update', $engagement);
+        $this->authorize('delete', $documentRequest);
 
         if (! in_array($documentRequest->status, ['draft', 'requested', 'rejected'], true)) {
             return ApiResponse::domainError('Only draft, requested, or rejected requests can be cancelled.');

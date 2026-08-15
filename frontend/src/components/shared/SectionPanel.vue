@@ -5,8 +5,8 @@ withDefaults(
     subtitle?: string;
   }>(),
   {
-    title: '',
-    subtitle: '',
+    title: "",
+    subtitle: "",
   },
 );
 

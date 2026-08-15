@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Company;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Company\CompanyUserResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Company;
 use App\Models\User;
@@ -30,7 +31,7 @@ final class CompanyUserController extends Controller
         $user = User::findOrFail((int) $validated['user_id']);
         $companyUser = $this->service->assignUser($company, $user, $validated);
 
-        return ApiResponse::created($companyUser, 'User assigned to company.');
+        return ApiResponse::created(new CompanyUserResource($companyUser), 'User assigned to company.');
     }
 
     public function destroy(Company $company, User $user): JsonResponse

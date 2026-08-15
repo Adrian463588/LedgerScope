@@ -51,9 +51,9 @@ it('verifies MFA code and logs the user in', function (): void {
     $this->withSession(['mfa:user_id' => $user->id]);
 
     // Calculate valid OTP code
-    $totpService = new TotpService();
+    $totpService = new TotpService;
     $timeSlice = floor(time() / 30);
-    $key = pack('N*', 0) . pack('N*', (int)$timeSlice);
+    $key = pack('N*', 0).pack('N*', (int) $timeSlice);
     // Decode secret key
     $secretKey = '';
     $alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
@@ -65,20 +65,20 @@ it('verifies MFA code and logs the user in', function (): void {
         $bits += 5;
         if ($bits >= 8) {
             $bits -= 8;
-            $decodedSecret .= chr(($val >> $bits) & 0xff);
+            $decodedSecret .= chr(($val >> $bits) & 0xFF);
         }
     }
-    
+
     $hmac = hash_hmac('sha1', $key, $decodedSecret, true);
-    $offset = ord($hmac[19]) & 0xf;
+    $offset = ord($hmac[19]) & 0xF;
     $otpPart = (
-        (ord($hmac[$offset]) & 0x7f) << 24 |
-        (ord($hmac[$offset + 1]) & 0xff) << 16 |
-        (ord($hmac[$offset + 2]) & 0xff) << 8 |
-        (ord($hmac[$offset + 3]) & 0xff)
+        (ord($hmac[$offset]) & 0x7F) << 24 |
+        (ord($hmac[$offset + 1]) & 0xFF) << 16 |
+        (ord($hmac[$offset + 2]) & 0xFF) << 8 |
+        (ord($hmac[$offset + 3]) & 0xFF)
     );
     $otp = $otpPart % 1000000;
-    $validCode = str_pad((string)$otp, 6, '0', STR_PAD_LEFT);
+    $validCode = str_pad((string) $otp, 6, '0', STR_PAD_LEFT);
 
     $response = $this->postJson('/api/v1/auth/mfa/verify', [
         'code' => $validCode,
@@ -115,7 +115,7 @@ it('enforces session inactivity timeout', function (): void {
         'password' => bcrypt('Password123!'),
         'status' => UserStatus::Active,
     ]);
-    
+
     $headers = [
         'Referer' => 'http://localhost',
     ];
@@ -141,7 +141,7 @@ it('allows user access when not timed out', function (): void {
         'password' => bcrypt('Password123!'),
         'status' => UserStatus::Active,
     ]);
-    
+
     $headers = [
         'Referer' => 'http://localhost',
     ];

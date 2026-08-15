@@ -1,14 +1,20 @@
-import { ref } from 'vue';
+import { ref } from "vue";
 
 export function useFileUpload(maxMegabytes = 25) {
   const progress = ref(0);
   const error = ref<string | null>(null);
+  const isUploading = ref(false);
 
   function validate(file: File): boolean {
     error.value = null;
-    const allowed = ['application/pdf', 'image/png', 'image/jpeg', 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'];
+    const allowed = [
+      "application/pdf",
+      "image/png",
+      "image/jpeg",
+      "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    ];
     if (!allowed.includes(file.type)) {
-      error.value = 'Use PDF, PNG, JPG, or XLSX files.';
+      error.value = "Use PDF, PNG, JPG, or XLSX files.";
       return false;
     }
 
@@ -20,15 +26,25 @@ export function useFileUpload(maxMegabytes = 25) {
     return true;
   }
 
-  function simulateUpload(): void {
+  async function uploadFile(
+    file: File,
+    uploader: (file: File) => Promise<void>,
+  ): Promise<void> {
+    if (!validate(file)) return;
+
     progress.value = 0;
-    const timer = window.setInterval(() => {
-      progress.value = Math.min(100, progress.value + 20);
-      if (progress.value === 100) {
-        window.clearInterval(timer);
-      }
-    }, 120);
+    isUploading.value = true;
+    try {
+      await uploader(file);
+      progress.value = 100;
+    } catch (caught) {
+      error.value =
+        caught instanceof Error ? caught.message : "File upload failed.";
+      throw caught;
+    } finally {
+      isUploading.value = false;
+    }
   }
 
-  return { progress, error, validate, simulateUpload };
+  return { progress, error, isUploading, validate, uploadFile };
 }

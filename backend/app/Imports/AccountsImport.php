@@ -7,19 +7,21 @@ namespace App\Imports;
 use App\Models\ChartOfAccount;
 use App\Models\ImportBatch;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\DB;
 use Maatwebsite\Excel\Concerns\ToCollection;
 use Maatwebsite\Excel\Concerns\WithHeadingRow;
-use Illuminate\Support\Facades\DB;
 
 final class AccountsImport implements ToCollection, WithHeadingRow
 {
     private array $errors = [];
+
     private int $successCount = 0;
+
     private int $failedCount = 0;
 
     public function __construct(
         private readonly int $companyId,
-        private readonly ImportBatch $batch
+        private readonly ImportBatch $batch,
     ) {}
 
     public function collection(Collection $rows): void
@@ -41,13 +43,15 @@ final class AccountsImport implements ToCollection, WithHeadingRow
             if (empty($code) || empty($name) || empty($type)) {
                 $this->failedCount++;
                 $this->errors[] = "Row {$rowNum}: Account Code, Name, and Type are required.";
+
                 continue;
             }
 
             $validTypes = ['asset', 'liability', 'equity', 'revenue', 'cost_of_goods_sold', 'expense', 'other_income', 'other_expense'];
             if (! in_array($type, $validTypes, true)) {
                 $this->failedCount++;
-                $this->errors[] = "Row {$rowNum}: Invalid account type '{$type}'. Must be one of " . implode(', ', $validTypes);
+                $this->errors[] = "Row {$rowNum}: Invalid account type '{$type}'. Must be one of ".implode(', ', $validTypes);
+
                 continue;
             }
 
@@ -88,7 +92,7 @@ final class AccountsImport implements ToCollection, WithHeadingRow
                 });
             } catch (\Throwable $e) {
                 $this->failedCount++;
-                $this->errors[] = "Row {$rowNum}: " . $e->getMessage();
+                $this->errors[] = "Row {$rowNum}: ".$e->getMessage();
             }
         }
 

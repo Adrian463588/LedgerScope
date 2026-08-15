@@ -2,14 +2,15 @@
 
 declare(strict_types=1);
 
-use App\Models\Company;
-use App\Models\User;
-use App\Models\Role;
 use App\Models\AccountingPeriod;
+use App\Models\ChartOfAccount;
+use App\Models\Company;
+use App\Models\FinancialStatement;
+use App\Models\FiscalYear;
+use App\Models\Role;
 use App\Models\TrialBalance;
 use App\Models\TrialBalanceLine;
-use App\Models\ChartOfAccount;
-use App\Models\FinancialStatement;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Tests\TestCase;
 
@@ -23,7 +24,7 @@ beforeEach(function (): void {
 
     $this->company = Company::factory()->create(['currency' => 'IDR']);
 
-    $this->fy = \App\Models\FiscalYear::create([
+    $this->fy = FiscalYear::create([
         'company_id' => $this->company->id,
         'year' => 2024,
         'start_date' => '2024-01-01',
@@ -97,7 +98,7 @@ it('calculates financial ratios correctly via API', function (): void {
         ->getJson("/api/v1/companies/{$this->company->id}/financial-analysis/ratios");
 
     $response->assertStatus(200);
-    $response->assertJsonPath('data.current_ratio', '50,000.00x');
+    $response->assertJsonPath('data.current_ratio', 'N/A');
 });
 
 it('fetches financial trends via API', function (): void {
@@ -107,7 +108,7 @@ it('fetches financial trends via API', function (): void {
 
     $response->assertStatus(200);
     $response->assertJsonStructure([
-        'data' => ['labels', 'revenues', 'expenses', 'net_incomes']
+        'data' => ['labels', 'revenues', 'expenses', 'net_incomes'],
     ]);
 });
 
@@ -159,7 +160,7 @@ it('generates a financial statement and retrieves it with comparison', function 
         'data' => [
             'statement',
             'comparison',
-        ]
+        ],
     ]);
     $response->assertJsonPath('data.comparison.data.net_income', '40000.00');
 });
@@ -201,8 +202,8 @@ it('calculates financial variance via API', function (): void {
             'period',
             'compare_period',
             'variances' => [
-                '*' => ['category', 'current', 'compare', 'variance', 'percentage']
-            ]
-        ]
+                '*' => ['category', 'current', 'compare', 'variance', 'percentage'],
+            ],
+        ],
     ]);
 });

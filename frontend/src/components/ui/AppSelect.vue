@@ -4,7 +4,7 @@ export interface SelectOption {
   value: string | number;
 }
 
-const model = defineModel<string | number>({ required: true });
+const model = defineModel<string | number | null>({ required: true });
 
 withDefaults(
   defineProps<{
@@ -19,7 +19,13 @@ withDefaults(
   <label class="select-field">
     <span>{{ label }}</span>
     <select v-model="model">
-      <option v-for="option in options" :key="option.value" :value="option.value">{{ option.label }}</option>
+      <option
+        v-for="option in options"
+        :key="option.value"
+        :value="option.value"
+      >
+        {{ option.label }}
+      </option>
     </select>
   </label>
 </template>

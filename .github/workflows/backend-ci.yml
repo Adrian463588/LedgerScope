@@ -156,7 +156,7 @@ jobs:
         run: php artisan migrate --force --env=testing
 
       - name: Run Pest tests
-        run: php artisan test --parallel
+        run: php artisan test
 
   # ─── Docker Build & Image Security Scan ──────────────────────────────────────
   docker-build:

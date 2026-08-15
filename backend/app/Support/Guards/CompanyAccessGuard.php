@@ -31,8 +31,9 @@ final class CompanyAccessGuard
      */
     public static function check(User $user, int $companyId): bool
     {
-        // Super admin bypasses all company access checks
-        if ($user->hasRole('super_admin') || $user->hasRole('firm_admin')) {
+        // Super admin is the only global role. Firm admins remain scoped to
+        // the companies explicitly assigned to them.
+        if ($user->hasRole('super_admin')) {
             return true;
         }
 

@@ -14,11 +14,18 @@ final class SuperAdminSeeder extends Seeder
 {
     public function run(): void
     {
+        $email = trim((string) env('LEDGERSCOPE_SUPERADMIN_EMAIL', ''));
+        $password = (string) env('LEDGERSCOPE_SUPERADMIN_PASSWORD', '');
+
+        if ($email === '' || $password === '') {
+            return;
+        }
+
         $superAdmin = User::firstOrCreate(
-            ['email' => 'superadmin@ledgerscope.test'],
+            ['email' => $email],
             [
-                'name' => 'Super Admin',
-                'password' => Hash::make('Admin@LedgerScope2026!'),
+                'name' => (string) env('LEDGERSCOPE_SUPERADMIN_NAME', 'Super Admin'),
+                'password' => Hash::make($password),
                 'status' => UserStatus::Active,
                 'email_verified_at' => now(),
             ],

@@ -4,19 +4,23 @@ declare(strict_types=1);
 
 namespace App\Providers;
 
+use App\Events\Accounting\FiscalYearCreated;
 use App\Events\Accounting\JournalApproved;
 use App\Events\Accounting\JournalCreated;
 use App\Events\Accounting\JournalPosted;
 use App\Events\Accounting\JournalRejected;
 use App\Events\Accounting\JournalReversed;
 use App\Events\Accounting\JournalSubmitted;
+use App\Events\Accounting\PeriodLocked;
+use App\Events\Accounting\PeriodUnlocked;
+use App\Events\Audit\FindingStatusChanged;
+use App\Events\Audit\ReviewNoteResolved;
+use App\Events\Audit\WorkingPaperSignedOff;
+use App\Events\AuditActionRecorded;
 use App\Events\Auth\UserActivated;
 use App\Events\Auth\UserLoggedIn;
 use App\Events\Auth\UserLoggedOut;
 use App\Events\Auth\UserLoginFailed;
-use App\Events\Audit\FindingStatusChanged;
-use App\Events\Audit\WorkingPaperSignedOff;
-use App\Events\Audit\ReviewNoteResolved;
 use App\Events\Evidence\EvidenceAccepted;
 use App\Events\Evidence\EvidenceRejected;
 use App\Listeners\AuditTrail\WriteAuditLog;
@@ -32,6 +36,8 @@ class EventServiceProvider extends ServiceProvider
      * @var array<class-string, list<class-string>>
      */
     protected $listen = [
+        AuditActionRecorded::class => [WriteAuditLog::class],
+
         // ─── Auth events ──────────────────────────────────────────────────────
         UserLoggedIn::class => [WriteAuditLog::class],
         UserLoggedOut::class => [WriteAuditLog::class],
@@ -45,6 +51,9 @@ class EventServiceProvider extends ServiceProvider
         JournalPosted::class => [WriteAuditLog::class],
         JournalRejected::class => [WriteAuditLog::class],
         JournalReversed::class => [WriteAuditLog::class],
+        FiscalYearCreated::class => [WriteAuditLog::class],
+        PeriodLocked::class => [WriteAuditLog::class],
+        PeriodUnlocked::class => [WriteAuditLog::class],
 
         // ─── Finding events ───────────────────────────────────────────────────
         FindingStatusChanged::class => [WriteAuditLog::class],

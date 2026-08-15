@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
+use App\Events\AuditActionRecorded;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\User;
@@ -73,6 +74,15 @@ final class MfaSetupController extends Controller
 
         $user->update(['mfa_enabled' => true]);
 
+        event(new AuditActionRecorded(
+            userId: $user->id,
+            action: 'auth.mfa.enabled',
+            objectType: 'User',
+            objectId: $user->id,
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent(),
+        ));
+
         return ApiResponse::success(null, 'MFA enabled successfully.');
     }
 
@@ -102,6 +112,15 @@ final class MfaSetupController extends Controller
             'mfa_enabled' => false,
             'mfa_secret' => null,
         ]);
+
+        event(new AuditActionRecorded(
+            userId: $user->id,
+            action: 'auth.mfa.disabled',
+            objectType: 'User',
+            objectId: $user->id,
+            ipAddress: $request->ip(),
+            userAgent: $request->userAgent(),
+        ));
 
         return ApiResponse::success(null, 'MFA disabled successfully.');
     }

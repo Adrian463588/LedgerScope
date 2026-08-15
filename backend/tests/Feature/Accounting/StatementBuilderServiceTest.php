@@ -36,17 +36,20 @@ beforeEach(function (): void {
         'accounting_period_id' => $this->period->id,
         'description' => 'Revenue recognised',
         'journal_date' => '2024-01-10',
-        'journal_number' => 'JNL-1-2024-00001',
-        'status' => JournalStatus::Posted->value,
+        'status' => JournalStatus::Draft->value,
         'source_type' => 'manual',
         'created_by' => $this->user->id,
-        'posted_by' => $this->user->id,
-        'posted_at' => now(),
     ]);
     $journal->lines()->createMany([
         ['account_id' => $this->cash->id,    'debit' => '1000000', 'credit' => '0',       'currency' => 'IDR'],
         ['account_id' => $this->revenue->id, 'debit' => '0',       'credit' => '1000000', 'currency' => 'IDR'],
     ]);
+    $journal->forceFill([
+        'journal_number' => 'JNL-1-2024-00001',
+        'status' => JournalStatus::Posted->value,
+        'posted_by' => $this->user->id,
+        'posted_at' => now(),
+    ])->save();
 
     $this->service = app(StatementBuilderService::class);
 });
@@ -72,4 +75,12 @@ it('persists financial statement record', function (): void {
 
     expect(FinancialStatement::where('id', $stmt->id)->exists())->toBeTrue();
     expect($stmt->status)->toBe('draft');
+});
+
+it('builds cash flow and equity changes statements from posted balances', function (): void {
+    $cashFlow = $this->service->build($this->company, $this->period, 'cash_flow', $this->user);
+    $equityChanges = $this->service->build($this->company, $this->period, 'equity_changes', $this->user);
+
+    expect($cashFlow->data)->toHaveKey('net_change')
+        ->and($equityChanges->data)->toHaveKey('equity');
 });

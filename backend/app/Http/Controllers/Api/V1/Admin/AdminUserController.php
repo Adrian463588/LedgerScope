@@ -6,6 +6,7 @@ namespace App\Http\Controllers\Api\V1\Admin;
 
 use App\Enums\Common\UserStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Auth\UserResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\User;
 use App\Services\Audit\AuditLogService;
@@ -30,12 +31,16 @@ final class AdminUserController extends Controller
             ->when($request->input('status'), fn ($q, $s) => $q->where('status', $s))
             ->when($request->input('search'), fn ($q, $s) => $q->where(function ($q) use ($s): void {
                 $q->where('name', 'ilike', "%{$s}%")
-                  ->orWhere('email', 'ilike', "%{$s}%");
+                    ->orWhere('email', 'ilike', "%{$s}%");
             }))
             ->orderBy('name')
             ->paginate(25);
 
-        return ApiResponse::paginated($users, 'Users loaded.');
+        return ApiResponse::paginated(
+            $users,
+            'Users loaded.',
+            static fn (User $user): UserResource => new UserResource($user),
+        );
     }
 
     public function show(User $user): JsonResponse
@@ -43,7 +48,7 @@ final class AdminUserController extends Controller
         $this->authorize('view', $user);
 
         return ApiResponse::success(
-            $user->load('roles:id,name,display_name'),
+            new UserResource($user->load('roles:id,name,display_name')),
         );
     }
 
@@ -52,8 +57,8 @@ final class AdminUserController extends Controller
         $this->authorize('update', $user);
 
         $validated = $request->validate([
-            'name'   => ['sometimes', 'string', 'max:150'],
-            'phone'  => ['nullable', 'string', 'max:30'],
+            'name' => ['sometimes', 'string', 'max:150'],
+            'phone' => ['nullable', 'string', 'max:30'],
             'status' => ['sometimes', 'string', 'in:active,inactive,suspended'],
         ]);
 
@@ -71,7 +76,7 @@ final class AdminUserController extends Controller
             );
         });
 
-        return ApiResponse::success($user->fresh()->load('roles:id,name,display_name'), 'User updated.');
+        return ApiResponse::success(new UserResource($user->fresh()->load('roles:id,name,display_name')), 'User updated.');
     }
 
     public function destroy(Request $request, User $user): JsonResponse
@@ -95,7 +100,7 @@ final class AdminUserController extends Controller
 
         $this->auditLog->log($request, 'admin.user.suspended', $user, $before, ['status' => UserStatus::Suspended]);
 
-        return ApiResponse::success(null, 'User suspended.');
+        return ApiResponse::success(new UserResource($user->fresh()->load('roles:id,name,display_name')), 'User suspended.');
     }
 
     public function activate(Request $request, User $user): JsonResponse
@@ -107,6 +112,6 @@ final class AdminUserController extends Controller
 
         $this->auditLog->log($request, 'admin.user.activated', $user, $before, ['status' => UserStatus::Active]);
 
-        return ApiResponse::success(null, 'User activated.');
+        return ApiResponse::success(new UserResource($user->fresh()->load('roles:id,name,display_name')), 'User activated.');
     }
 }

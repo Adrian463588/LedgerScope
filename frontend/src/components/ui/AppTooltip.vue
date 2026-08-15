@@ -17,7 +17,7 @@ defineProps<{
   display: inline-flex;
 }
 
-[role='tooltip'] {
+[role="tooltip"] {
   position: absolute;
   bottom: calc(100% + 8px);
   left: 50%;
@@ -34,7 +34,7 @@ defineProps<{
   transition: opacity 140ms ease;
 }
 
-.tooltip:hover [role='tooltip'] {
+.tooltip:hover [role="tooltip"] {
   opacity: 1;
 }
 </style>

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { StatusTone } from '@/types';
+import type { StatusTone } from "@/types";
 
 defineProps<{
   label: string;
@@ -39,14 +39,14 @@ p {
 }
 
 strong {
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: "DM Serif Display", Georgia, serif;
   font-size: 1.875rem;
   font-weight: 600;
 }
 
 span {
   color: var(--status-success);
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: "IBM Plex Mono", monospace;
   font-size: 0.8125rem;
 }
 

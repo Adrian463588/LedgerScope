@@ -13,7 +13,14 @@ defineProps<{
 
 <template>
   <div class="tabs" role="tablist">
-    <button v-for="tab in tabs" :key="tab.value" role="tab" :aria-selected="model === tab.value" :class="{ active: model === tab.value }" @click="model = tab.value">
+    <button
+      v-for="tab in tabs"
+      :key="tab.value"
+      role="tab"
+      :aria-selected="model === tab.value"
+      :class="{ active: model === tab.value }"
+      @click="model = tab.value"
+    >
       {{ tab.label }}
     </button>
   </div>

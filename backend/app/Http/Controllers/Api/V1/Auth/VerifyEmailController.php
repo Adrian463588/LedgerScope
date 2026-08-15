@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Controllers\Api\V1\Auth;
 
+use App\Events\AuditActionRecorded;
 use App\Http\Controllers\Controller;
 use App\Http\Responses\ApiResponse;
 use App\Models\User;
@@ -29,6 +30,13 @@ final class VerifyEmailController extends Controller
             'email_verification_token' => null,
             'email_verification_expires_at' => null,
         ]);
+
+        event(new AuditActionRecorded(
+            userId: $user->id,
+            action: 'auth.email_verified',
+            objectType: 'User',
+            objectId: $user->id,
+        ));
 
         return ApiResponse::success(null, 'Email verified successfully. You can now log in.');
     }

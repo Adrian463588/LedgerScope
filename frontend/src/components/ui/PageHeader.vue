@@ -43,7 +43,7 @@ const slots = defineSlots<{
 h1 {
   margin: 0;
   color: var(--text-primary);
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: "DM Serif Display", Georgia, serif;
   font-size: clamp(2rem, 4vw, 2.5rem);
   font-weight: 600;
   line-height: 1.05;

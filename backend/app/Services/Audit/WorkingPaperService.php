@@ -110,7 +110,7 @@ final class WorkingPaperService
                 ['status' => 'reviewed'],
                 request()->ip(),
                 request()->userAgent(),
-                ['title' => $wp->title]
+                ['title' => $wp->title],
             ));
         });
     }

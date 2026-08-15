@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import { Building2 } from 'lucide-vue-next';
-import { storeToRefs } from 'pinia';
-import { useCompanyStore } from '@/stores/company.store';
+import { Building2 } from "lucide-vue-next";
+import { storeToRefs } from "pinia";
+import { useCompanyStore } from "@/stores/company.store";
 
 const companyStore = useCompanyStore();
 const { companies, activeCompanyId } = storeToRefs(companyStore);
@@ -17,7 +17,11 @@ function switchCompany() {
   <label class="company-switcher">
     <span><Building2 aria-hidden="true" /> Company</span>
     <select v-model.number="activeCompanyId" @change="switchCompany">
-      <option v-for="company in companies" :key="company.id" :value="company.id">
+      <option
+        v-for="company in companies"
+        :key="company.id"
+        :value="company.id"
+      >
         {{ company.name }}
       </option>
     </select>

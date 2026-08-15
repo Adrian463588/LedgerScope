@@ -1,111 +1,341 @@
-import { createRouter, createWebHistory } from 'vue-router';
-import type { Component } from 'vue';
-import { computed } from 'vue';
+import { createRouter, createWebHistory } from "vue-router";
+import type { Component } from "vue";
+import { computed } from "vue";
 
-import { useAuthStore } from '@/stores/auth.store';
+import { useAuthStore } from "@/stores/auth.store";
 
-import AuditEngagementsPage from '@/pages/Audit/AuditEngagementsPage.vue';
-import AuditFindingsPage from '@/pages/Audit/AuditFindingsPage.vue';
-import AuditPlanningPage from '@/pages/Audit/AuditPlanningPage.vue';
-import AuditProgramPage from '@/pages/Audit/AuditProgramPage.vue';
-import RiskAssessmentPage from '@/pages/Audit/RiskAssessmentPage.vue';
-import RiskControlMatrixPage from '@/pages/Audit/RiskControlMatrixPage.vue';
-import WorkingPaperPage from '@/pages/Audit/WorkingPaperPage.vue';
-import ChartOfAccountsPage from '@/pages/Accounting/ChartOfAccountsPage.vue';
-import JournalEntriesPage from '@/pages/Accounting/JournalEntriesPage.vue';
-import NewJournalPage from '@/pages/Accounting/NewJournalPage.vue';
-import QuarterlyClosingPage from '@/pages/Accounting/QuarterlyClosingPage.vue';
-import ReconciliationPage from '@/pages/Accounting/ReconciliationPage.vue';
-import TrialBalancePage from '@/pages/Accounting/TrialBalancePage.vue';
-import LoginPage from '@/pages/Auth/LoginPage.vue';
-import MfaPage from '@/pages/Auth/MfaPage.vue';
-import ClientEvidencePortalPage from '@/pages/Client/ClientEvidencePortalPage.vue';
-import CompaniesPage from '@/pages/Companies/CompaniesPage.vue';
-import CompanyProfilePage from '@/pages/Companies/CompanyProfilePage.vue';
-import DashboardPage from '@/pages/Dashboard/DashboardPage.vue';
-import EvidencePage from '@/pages/Evidence/EvidencePage.vue';
-import FinancialStatementsPage from '@/pages/Financial/FinancialStatementsPage.vue';
-import RatioAnalysisPage from '@/pages/Financial/RatioAnalysisPage.vue';
-import StatementBuilderPage from '@/pages/Financial/StatementBuilderPage.vue';
-import ReportingHubPage from '@/pages/Reports/ReportingHubPage.vue';
-import NotFoundPage from '@/pages/not-found-page.vue';
+import AuditEngagementsPage from "@/pages/Audit/AuditEngagementsPage.vue";
+import AuditFindingsPage from "@/pages/Audit/AuditFindingsPage.vue";
+import AuditPlanningPage from "@/pages/Audit/AuditPlanningPage.vue";
+import AuditProgramPage from "@/pages/Audit/AuditProgramPage.vue";
+import RiskAssessmentPage from "@/pages/Audit/RiskAssessmentPage.vue";
+import RiskControlMatrixPage from "@/pages/Audit/RiskControlMatrixPage.vue";
+import WorkingPaperPage from "@/pages/Audit/WorkingPaperPage.vue";
+import ChartOfAccountsPage from "@/pages/Accounting/ChartOfAccountsPage.vue";
+import JournalEntriesPage from "@/pages/Accounting/JournalEntriesPage.vue";
+import NewJournalPage from "@/pages/Accounting/NewJournalPage.vue";
+import QuarterlyClosingPage from "@/pages/Accounting/QuarterlyClosingPage.vue";
+import ReconciliationPage from "@/pages/Accounting/ReconciliationPage.vue";
+import TrialBalancePage from "@/pages/Accounting/TrialBalancePage.vue";
+import LoginPage from "@/pages/Auth/LoginPage.vue";
+import MfaPage from "@/pages/Auth/MfaPage.vue";
+import ForgotPasswordPage from "@/pages/Auth/ForgotPasswordPage.vue";
+import ResetPasswordPage from "@/pages/Auth/ResetPasswordPage.vue";
+import AcceptInvitationPage from "@/pages/Auth/AcceptInvitationPage.vue";
+import VerifyEmailPage from "@/pages/Auth/VerifyEmailPage.vue";
+import ClientEvidencePortalPage from "@/pages/Client/ClientEvidencePortalPage.vue";
+import CompaniesPage from "@/pages/Companies/CompaniesPage.vue";
+import CompanyProfilePage from "@/pages/Companies/CompanyProfilePage.vue";
+import DashboardPage from "@/pages/Dashboard/DashboardPage.vue";
+import EvidencePage from "@/pages/Evidence/EvidencePage.vue";
+import FinancialStatementsPage from "@/pages/Financial/FinancialStatementsPage.vue";
+import RatioAnalysisPage from "@/pages/Financial/RatioAnalysisPage.vue";
+import StatementBuilderPage from "@/pages/Financial/StatementBuilderPage.vue";
+import ReportingHubPage from "@/pages/Reports/ReportingHubPage.vue";
+import NotFoundPage from "@/pages/not-found-page.vue";
 
-import RedFlagScanPage from '@/pages/Audit/red-flag-scan-page.vue';
-import AdminUsersPage from '@/pages/Admin/admin-users-page.vue';
-import AuditTrailPage from '@/pages/Admin/audit-trail-page.vue';
-
+import RedFlagScanPage from "@/pages/Audit/red-flag-scan-page.vue";
+import AdminUsersPage from "@/pages/Admin/admin-users-page.vue";
+import AuditTrailPage from "@/pages/Admin/audit-trail-page.vue";
+import NotificationsPage from "@/pages/Notifications/NotificationsPage.vue";
+import SettingsPage from "@/pages/Settings/SettingsPage.vue";
 
 export interface AppRoute {
   path: string;
   label: string;
   component: Component;
-  layout: 'app' | 'auth' | 'client';
+  layout: "app" | "auth" | "client";
   group?: string;
+  external?: boolean;
 }
 
 export const routes: AppRoute[] = [
-  { path: '/login', label: 'Login', component: LoginPage, layout: 'auth' },
-  { path: '/mfa', label: 'MFA Verification', component: MfaPage, layout: 'auth' },
-  { path: '/', label: 'Home', component: DashboardPage, layout: 'app' },
-  { path: '/dashboard', label: 'Dashboard', component: DashboardPage, layout: 'app', group: 'Main' },
-  { path: '/companies', label: 'Companies', component: CompaniesPage, layout: 'app', group: 'Main' },
-  { path: '/companies/:id', label: 'Company Profile', component: CompanyProfilePage, layout: 'app', group: 'Main' },
-  { path: '/chart-of-accounts', label: 'Chart of Accounts', component: ChartOfAccountsPage, layout: 'app', group: 'Accounting' },
-  { path: '/journal-entries', label: 'Journal Entries', component: JournalEntriesPage, layout: 'app', group: 'Accounting' },
-  { path: '/journal-entries/new', label: 'New Journal', component: NewJournalPage, layout: 'app', group: 'Accounting' },
-  { path: '/trial-balance', label: 'Trial Balance', component: TrialBalancePage, layout: 'app', group: 'Accounting' },
-  { path: '/quarterly-closing', label: 'Quarterly Closing', component: QuarterlyClosingPage, layout: 'app', group: 'Accounting' },
-  { path: '/reconciliation', label: 'Reconciliation', component: ReconciliationPage, layout: 'app', group: 'Accounting' },
-  { path: '/financial-statements', label: 'Financial Statements', component: FinancialStatementsPage, layout: 'app', group: 'Financial' },
-  { path: '/statement-builder', label: 'Statement Builder', component: StatementBuilderPage, layout: 'app', group: 'Financial' },
-  { path: '/ratio-analysis', label: 'Ratio Analysis', component: RatioAnalysisPage, layout: 'app', group: 'Financial' },
-  { path: '/audit-engagements', label: 'Audit Engagements', component: AuditEngagementsPage, layout: 'app', group: 'Audit' },
-  { path: '/risk-assessment', label: 'Risk Assessment', component: RiskAssessmentPage, layout: 'app', group: 'Audit' },
-  { path: '/risk-control-matrix', label: 'Risk Control Matrix', component: RiskControlMatrixPage, layout: 'app', group: 'Audit' },
-  { path: '/engagements/:id/risk-assessment', label: 'Risk Assessment', component: RiskAssessmentPage, layout: 'app' },
-  { path: '/engagements/:id/risk-control-matrix', label: 'Risk Control Matrix', component: RiskControlMatrixPage, layout: 'app' },
-  { path: '/audit-program', label: 'Audit Program', component: AuditProgramPage, layout: 'app', group: 'Audit' },
-  { path: '/working-paper', label: 'Working Paper', component: WorkingPaperPage, layout: 'app', group: 'Audit' },
-  { path: '/engagements/:id/working-papers/:wpId', label: 'Working Paper Details', component: WorkingPaperPage, layout: 'app' },
-  { path: '/engagements/:id/audit-plan', label: 'Audit Planning', component: AuditPlanningPage, layout: 'app' },
-  { path: '/audit-findings', label: 'Audit Findings', component: AuditFindingsPage, layout: 'app', group: 'Audit' },
-  { path: '/red-flag-scan', label: 'Journal Red-Flags', component: RedFlagScanPage, layout: 'app', group: 'Audit' },
-  { path: '/evidence', label: 'Evidence', component: EvidencePage, layout: 'app', group: 'Evidence' },
-  { path: '/client/evidence', label: 'Client Evidence Portal', component: ClientEvidencePortalPage, layout: 'client', group: 'Evidence' },
-  { path: '/reports', label: 'Reporting Hub', component: ReportingHubPage, layout: 'app', group: 'Reports' },
-  { path: '/admin/users', label: 'User Management', component: AdminUsersPage, layout: 'app', group: 'Admin' },
-  { path: '/admin/audit-trail', label: 'Audit Trail', component: AuditTrailPage, layout: 'app', group: 'Admin' },
+  { path: "/login", label: "Login", component: LoginPage, layout: "auth" },
+  {
+    path: "/mfa",
+    label: "MFA Verification",
+    component: MfaPage,
+    layout: "auth",
+  },
+  {
+    path: "/forgot-password",
+    label: "Forgot Password",
+    component: ForgotPasswordPage,
+    layout: "auth",
+  },
+  {
+    path: "/reset-password",
+    label: "Reset Password",
+    component: ResetPasswordPage,
+    layout: "auth",
+  },
+  {
+    path: "/invite/:token",
+    label: "Accept Invitation",
+    component: AcceptInvitationPage,
+    layout: "auth",
+  },
+  {
+    path: "/verify-email/:token",
+    label: "Verify Email",
+    component: VerifyEmailPage,
+    layout: "auth",
+  },
+  { path: "/", label: "Home", component: DashboardPage, layout: "app" },
+  {
+    path: "/dashboard",
+    label: "Dashboard",
+    component: DashboardPage,
+    layout: "app",
+    group: "Main",
+  },
+  {
+    path: "/companies",
+    label: "Companies",
+    component: CompaniesPage,
+    layout: "app",
+    group: "Main",
+  },
+  {
+    path: "/companies/:id",
+    label: "Company Profile",
+    component: CompanyProfilePage,
+    layout: "app",
+    group: "Main",
+  },
+  {
+    path: "/chart-of-accounts",
+    label: "Chart of Accounts",
+    component: ChartOfAccountsPage,
+    layout: "app",
+    group: "Accounting",
+  },
+  {
+    path: "/journal-entries",
+    label: "Journal Entries",
+    component: JournalEntriesPage,
+    layout: "app",
+    group: "Accounting",
+  },
+  {
+    path: "/journal-entries/new",
+    label: "New Journal",
+    component: NewJournalPage,
+    layout: "app",
+    group: "Accounting",
+  },
+  {
+    path: "/trial-balance",
+    label: "Trial Balance",
+    component: TrialBalancePage,
+    layout: "app",
+    group: "Accounting",
+  },
+  {
+    path: "/quarterly-closing",
+    label: "Quarterly Closing",
+    component: QuarterlyClosingPage,
+    layout: "app",
+    group: "Accounting",
+  },
+  {
+    path: "/reconciliation",
+    label: "Reconciliation",
+    component: ReconciliationPage,
+    layout: "app",
+    group: "Accounting",
+  },
+  {
+    path: "/financial-statements",
+    label: "Financial Statements",
+    component: FinancialStatementsPage,
+    layout: "app",
+    group: "Financial",
+  },
+  {
+    path: "/statement-builder",
+    label: "Statement Builder",
+    component: StatementBuilderPage,
+    layout: "app",
+    group: "Financial",
+  },
+  {
+    path: "/ratio-analysis",
+    label: "Ratio Analysis",
+    component: RatioAnalysisPage,
+    layout: "app",
+    group: "Financial",
+  },
+  {
+    path: "/audit-engagements",
+    label: "Audit Engagements",
+    component: AuditEngagementsPage,
+    layout: "app",
+    group: "Audit",
+  },
+  {
+    path: "/risk-assessment",
+    label: "Risk Assessment",
+    component: RiskAssessmentPage,
+    layout: "app",
+    group: "Audit",
+  },
+  {
+    path: "/risk-control-matrix",
+    label: "Risk Control Matrix",
+    component: RiskControlMatrixPage,
+    layout: "app",
+    group: "Audit",
+  },
+  {
+    path: "/engagements/:id/risk-assessment",
+    label: "Risk Assessment",
+    component: RiskAssessmentPage,
+    layout: "app",
+  },
+  {
+    path: "/engagements/:id/risk-control-matrix",
+    label: "Risk Control Matrix",
+    component: RiskControlMatrixPage,
+    layout: "app",
+  },
+  {
+    path: "/audit-program",
+    label: "Audit Program",
+    component: AuditProgramPage,
+    layout: "app",
+    group: "Audit",
+  },
+  {
+    path: "/working-paper",
+    label: "Working Paper",
+    component: WorkingPaperPage,
+    layout: "app",
+    group: "Audit",
+  },
+  {
+    path: "/engagements/:id/working-papers/:wpId",
+    label: "Working Paper Details",
+    component: WorkingPaperPage,
+    layout: "app",
+  },
+  {
+    path: "/engagements/:id/audit-plan",
+    label: "Audit Planning",
+    component: AuditPlanningPage,
+    layout: "app",
+  },
+  {
+    path: "/audit-findings",
+    label: "Audit Findings",
+    component: AuditFindingsPage,
+    layout: "app",
+    group: "Audit",
+  },
+  {
+    path: "/red-flag-scan",
+    label: "Journal Red-Flags",
+    component: RedFlagScanPage,
+    layout: "app",
+    group: "Audit",
+  },
+  {
+    path: "/evidence",
+    label: "Evidence",
+    component: EvidencePage,
+    layout: "app",
+    group: "Evidence",
+  },
+  {
+    path: "/client/evidence",
+    label: "Client Evidence Portal",
+    component: ClientEvidencePortalPage,
+    layout: "client",
+    group: "Evidence",
+  },
+  {
+    path: "/reports",
+    label: "Reporting Hub",
+    component: ReportingHubPage,
+    layout: "app",
+    group: "Reports",
+  },
+  {
+    path: "/admin/users",
+    label: "User Management",
+    component: AdminUsersPage,
+    layout: "app",
+    group: "Admin",
+  },
+  {
+    path: "/admin/audit-trail",
+    label: "Audit Trail",
+    component: AuditTrailPage,
+    layout: "app",
+    group: "Admin",
+  },
+  {
+    path: "/future/integrations",
+    label: "External Integrations",
+    component: NotFoundPage,
+    layout: "app",
+    group: "Admin",
+    external: true,
+  },
+  {
+    path: "/notifications",
+    label: "Notifications",
+    component: NotificationsPage,
+    layout: "app",
+    group: "Main",
+  },
+  {
+    path: "/settings",
+    label: "Settings",
+    component: SettingsPage,
+    layout: "app",
+    group: "Admin",
+  },
 ];
 
 export const router = createRouter({
   history: createWebHistory(),
   routes: [
-    ...routes.map((r) => ({
-      path: r.path,
-      component: r.component,
-      meta: {
-        label: r.label,
-        layout: r.layout,
-        group: r.group,
+    ...routes
+      .filter((r) => !r.external)
+      .map((r) => ({
+        path: r.path,
         component: r.component,
-      },
-    })),
+        meta: {
+          label: r.label,
+          layout: r.layout,
+          group: r.group,
+          component: r.component,
+        },
+      })),
     // Fallback 404
     {
-      path: '/:pathMatch(.*)*',
-      name: 'NotFound',
+      path: "/:pathMatch(.*)*",
+      name: "NotFound",
       component: NotFoundPage,
-      meta: { label: 'Not Found', layout: 'auth', component: NotFoundPage },
+      meta: { label: "Not Found", layout: "auth", component: NotFoundPage },
     },
   ],
 });
 
-router.beforeEach(async (to, from, next) => {
+router.beforeEach(async (to, _from, next) => {
   const authStore = useAuthStore();
+  const isPublicRoute =
+    to.path === "/login" ||
+    to.path === "/mfa" ||
+    to.path === "/forgot-password" ||
+    to.path === "/reset-password" ||
+    to.path.startsWith("/invite/") ||
+    to.path.startsWith("/verify-email/");
 
   // Attempt to fetch user profile once if not logged in and not currently loading,
   // to support page refresh/initial load.
-  if (authStore.user === null && !authStore.isLoading && to.path !== '/login') {
+  if (!authStore.isHydrated && !isPublicRoute) {
     try {
       await authStore.fetchMe();
     } catch {
@@ -115,25 +345,25 @@ router.beforeEach(async (to, from, next) => {
 
   const isAuthenticated = authStore.isAuthenticated;
 
-  if ((to.path === '/login' || to.path === '/mfa') && isAuthenticated) {
-    next('/dashboard');
-  } else if (to.path !== '/login' && to.path !== '/mfa' && !isAuthenticated) {
-    next('/login');
+  if ((to.path === "/login" || to.path === "/mfa") && isAuthenticated) {
+    next("/dashboard");
+  } else if (!isPublicRoute && !isAuthenticated) {
+    next("/login");
   } else {
     // Role-based layout isolation guard
     if (isAuthenticated && authStore.user) {
       const isClient = authStore.user.roles?.some(
-        (r) => r.name === 'client_user' || r.name === 'client_admin'
+        (r) => r.name === "client_user" || r.name === "client_admin",
       );
-      const routeLayout = to.meta?.['layout'];
+      const routeLayout = to.meta?.["layout"];
 
-      if (isClient && routeLayout === 'app') {
-        next('/client/evidence');
+      if (isClient && routeLayout === "app") {
+        next("/client/evidence");
         return;
       }
 
-      if (!isClient && routeLayout === 'client') {
-        next('/dashboard');
+      if (!isClient && routeLayout === "client") {
+        next("/dashboard");
         return;
       }
     }
@@ -151,10 +381,13 @@ export function useRouter() {
     const matchedRoute = router.currentRoute.value;
     return {
       path: matchedRoute.path,
-      label: (matchedRoute.meta['label'] || '') as string,
-      component: (matchedRoute.meta['component'] || NotFoundPage) as Component,
-      layout: (matchedRoute.meta['layout'] || 'app') as 'app' | 'auth' | 'client',
-      group: matchedRoute.meta['group'] as string | undefined,
+      label: (matchedRoute.meta["label"] || "") as string,
+      component: (matchedRoute.meta["component"] || NotFoundPage) as Component,
+      layout: (matchedRoute.meta["layout"] || "app") as
+        | "app"
+        | "auth"
+        | "client",
+      group: matchedRoute.meta["group"] as string | undefined,
     };
   });
 

@@ -5,10 +5,11 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Accounting;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Accounting\TrialBalanceLineResource;
+use App\Http\Resources\Accounting\TrialBalanceResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\Company;
 use App\Models\TrialBalance;
-use App\Models\AccountingPeriod;
 use App\Services\Accounting\TrialBalanceService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -19,10 +20,14 @@ final class TrialBalanceController extends Controller
     {
         $this->authorize('view', $company);
 
-        return ApiResponse::success(
-            TrialBalance::where('company_id', $company->id)
-                ->orderByDesc('created_at')->get(),
-        );
+        $trialBalance = TrialBalance::where('company_id', $company->id)
+            ->with('lines.account')
+            ->latest('created_at')
+            ->first();
+
+        return ApiResponse::success(TrialBalanceLineResource::collection(
+            $trialBalance?->lines ?? collect(),
+        ));
     }
 
     public function generate(Request $request, Company $company, TrialBalanceService $service): JsonResponse
@@ -33,12 +38,9 @@ final class TrialBalanceController extends Controller
             'accounting_period_id' => ['required', 'integer', 'exists:accounting_periods,id'],
         ]);
 
-        $period = AccountingPeriod::query()->findOrFail($validated['accounting_period_id']);
-        if (!($period instanceof AccountingPeriod)) {
-            throw new \RuntimeException('Failed to load accounting period.');
-        }
+        $period = $company->accountingPeriods()->findOrFail($validated['accounting_period_id']);
         $tb = $service->generate($company, $period, $request->user());
 
-        return ApiResponse::success($tb, 'Trial balance generated successfully.');
+        return ApiResponse::success(new TrialBalanceResource($tb->load('lines.account')), 'Trial balance generated successfully.');
     }
 }

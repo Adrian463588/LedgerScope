@@ -28,8 +28,8 @@ final class JournalRedFlagController extends Controller
 
         $request->validate([
             'accounting_period_id' => ['nullable', 'integer', 'exists:accounting_periods,id'],
-            'date_from'            => ['nullable', 'date'],
-            'date_to'              => ['nullable', 'date', 'after_or_equal:date_from'],
+            'date_from' => ['nullable', 'date'],
+            'date_to' => ['nullable', 'date', 'after_or_equal:date_from'],
         ]);
 
         $journals = JournalEntry::with(['lines.account'])
@@ -43,8 +43,8 @@ final class JournalRedFlagController extends Controller
 
         return ApiResponse::success([
             'total_journals_scanned' => $journals->count(),
-            'total_flags'            => count($flags),
-            'flags'                  => $flags,
+            'total_flags' => count($flags),
+            'flags' => $flags,
         ], count($flags) === 0 ? 'No red flags detected.' : count($flags).' red flag(s) detected.');
     }
 }

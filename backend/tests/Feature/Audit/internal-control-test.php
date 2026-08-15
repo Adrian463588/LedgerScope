@@ -15,11 +15,11 @@ uses(RefreshDatabase::class);
 
 function makeAdminUser(): User
 {
-    $user  = User::factory()->create();
-    $role  = Role::firstOrCreate(['name' => 'firm_admin'], [
+    $user = User::factory()->create();
+    $role = Role::firstOrCreate(['name' => 'firm_admin'], [
         'display_name' => 'Firm Admin',
-        'description'  => 'Firm administrator',
-        'is_system'    => true,
+        'description' => 'Firm administrator',
+        'is_system' => true,
     ]);
     $user->roles()->attach($role);
 
@@ -31,26 +31,26 @@ function makeEngagement(User $user): Engagement
     $company = Company::factory()->create();
 
     return Engagement::create([
-        'company_id'       => $company->id,
-        'name'             => 'Audit 2026',
-        'engagement_type'  => 'audit',
-        'status'           => 'planning',
-        'start_date'       => '2026-01-01',
-        'end_date'         => '2026-12-31',
-        'lead_auditor_id'  => $user->id,
+        'company_id' => $company->id,
+        'name' => 'Audit 2026',
+        'engagement_type' => 'audit',
+        'status' => 'planning',
+        'start_date' => '2026-01-01',
+        'end_date' => '2026-12-31',
+        'lead_auditor_id' => $user->id,
     ]);
 }
 
 // ─── Internal Controls CRUD ───────────────────────────────────────────────────
 
 test('can list internal controls for an engagement', function (): void {
-    $user       = makeAdminUser();
+    $user = makeAdminUser();
     $engagement = makeEngagement($user);
 
     InternalControl::create([
         'engagement_id' => $engagement->id,
-        'name'          => 'Segregation of Duties',
-        'control_type'  => 'preventive',
+        'name' => 'Segregation of Duties',
+        'control_type' => 'preventive',
     ]);
 
     $response = $this->actingAs($user)
@@ -62,15 +62,15 @@ test('can list internal controls for an engagement', function (): void {
 });
 
 test('can create an internal control', function (): void {
-    $user       = makeAdminUser();
+    $user = makeAdminUser();
     $engagement = makeEngagement($user);
 
     $response = $this->actingAs($user)
         ->postJson("/api/v1/engagements/{$engagement->id}/internal-controls", [
-            'name'          => 'Monthly Bank Reconciliation',
-            'control_type'  => 'detective',
-            'category'      => 'financial reporting',
-            'frequency'     => 'monthly',
+            'name' => 'Monthly Bank Reconciliation',
+            'control_type' => 'detective',
+            'category' => 'financial reporting',
+            'frequency' => 'monthly',
             'effectiveness' => 'effective',
         ]);
 
@@ -82,12 +82,12 @@ test('can create an internal control', function (): void {
 });
 
 test('can update an internal control', function (): void {
-    $user       = makeAdminUser();
+    $user = makeAdminUser();
     $engagement = makeEngagement($user);
-    $control    = InternalControl::create([
+    $control = InternalControl::create([
         'engagement_id' => $engagement->id,
-        'name'          => 'Access Control Review',
-        'control_type'  => 'preventive',
+        'name' => 'Access Control Review',
+        'control_type' => 'preventive',
     ]);
 
     $response = $this->actingAs($user)
@@ -100,12 +100,12 @@ test('can update an internal control', function (): void {
 });
 
 test('can delete an internal control', function (): void {
-    $user       = makeAdminUser();
+    $user = makeAdminUser();
     $engagement = makeEngagement($user);
-    $control    = InternalControl::create([
+    $control = InternalControl::create([
         'engagement_id' => $engagement->id,
-        'name'          => 'To Be Deleted',
-        'control_type'  => 'corrective',
+        'name' => 'To Be Deleted',
+        'control_type' => 'corrective',
     ]);
 
     $response = $this->actingAs($user)
@@ -118,19 +118,19 @@ test('can delete an internal control', function (): void {
 // ─── Control Risks ────────────────────────────────────────────────────────────
 
 test('can add a risk to an internal control', function (): void {
-    $user       = makeAdminUser();
+    $user = makeAdminUser();
     $engagement = makeEngagement($user);
-    $control    = InternalControl::create([
+    $control = InternalControl::create([
         'engagement_id' => $engagement->id,
-        'name'          => 'AP Approval Control',
-        'control_type'  => 'preventive',
+        'name' => 'AP Approval Control',
+        'control_type' => 'preventive',
     ]);
 
     $response = $this->actingAs($user)
         ->postJson("/api/v1/engagements/{$engagement->id}/internal-controls/{$control->id}/risks", [
-            'risk_name'   => 'Unauthorised payment',
-            'likelihood'  => 'high',
-            'impact'      => 'high',
+            'risk_name' => 'Unauthorised payment',
+            'likelihood' => 'high',
+            'impact' => 'high',
             'residual_risk' => 'medium',
         ]);
 

@@ -11,7 +11,6 @@ use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
-use Illuminate\Support\Facades\Storage;
 use Maatwebsite\Excel\Facades\Excel;
 
 final class ImportJournalsJob implements ShouldQueue
@@ -25,7 +24,7 @@ final class ImportJournalsJob implements ShouldQueue
         private readonly int $companyId,
         private readonly int $batchId,
         private readonly string $filePath,
-        private readonly int $userId
+        private readonly int $userId,
     ) {}
 
     public function handle(): void
@@ -36,8 +35,7 @@ final class ImportJournalsJob implements ShouldQueue
         }
 
         try {
-            $realPath = Storage::disk('local')->path($this->filePath);
-            Excel::import(new JournalsImport($this->companyId, $batch, $this->userId), $realPath);
+            Excel::import(new JournalsImport($this->companyId, $batch, $this->userId), $this->filePath, 'private');
         } catch (\Throwable $e) {
             $batch->update([
                 'status' => 'failed',

@@ -1,6 +1,7 @@
 <?php
 
 use App\Console\Commands\MarkOverdueDocumentRequests;
+use App\Jobs\WeeklyDigestJob;
 use Illuminate\Foundation\Inspiring;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Schedule;
@@ -13,11 +14,8 @@ Artisan::command('inspire', function () {
 Schedule::command(MarkOverdueDocumentRequests::class)->dailyAt('00:00');
 
 // EPIC 10: Dispatch weekly notifications digest
-Schedule::job(new \App\Jobs\WeeklyDigestJob)->weekly();
+Schedule::job(new WeeklyDigestJob)->weekly();
 
-// EPIC 14: Purge audit logs older than 7 years (retention policy)
-Schedule::call(function () {
-    \Illuminate\Support\Facades\DB::table('audit_logs')
-        ->where('created_at', '<', now()->subYears(7))
-        ->delete();
-})->daily();
+// Audit logs are append-only. Retention must be handled by an approved archive
+// process outside the application; never delete evidence of a sensitive action
+// from the scheduler.

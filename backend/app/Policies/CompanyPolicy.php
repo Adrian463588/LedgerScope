@@ -29,7 +29,7 @@ final class CompanyPolicy
         }
 
         // User must belong to the company (for non-admins)
-        if ($user->hasRole('firm_admin') || $user->hasRole('super_admin')) {
+        if ($user->hasRole('super_admin')) {
             return true;
         }
 
@@ -44,16 +44,18 @@ final class CompanyPolicy
     public function update(User $user, Company $company): bool
     {
         return $user->hasPermission('company.update')
-            && ($user->hasRole('firm_admin') || $user->companies()->where('companies.id', $company->id)->exists());
+            && ($user->hasRole('super_admin') || $user->companies()->where('companies.id', $company->id)->exists());
     }
 
     public function delete(User $user, Company $company): bool
     {
-        return $user->hasPermission('company.delete');
+        return $user->hasPermission('company.delete')
+            && ($user->hasRole('super_admin') || $user->companies()->whereKey($company->id)->exists());
     }
 
     public function manageUsers(User $user, Company $company): bool
     {
-        return $user->hasPermission('company.manage_users');
+        return $user->hasPermission('company.manage_users')
+            && ($user->hasRole('super_admin') || $user->companies()->whereKey($company->id)->exists());
     }
 }

@@ -1,21 +1,27 @@
 <script setup lang="ts">
-import { computed } from 'vue';
-import { AlertCircle, CheckCircle2 } from 'lucide-vue-next';
+import { computed } from "vue";
+import { AlertCircle, CheckCircle2 } from "lucide-vue-next";
+import { compareDecimals, formatDecimal } from "@/utils/decimal";
 
 const props = defineProps<{
-  debit: number;
-  credit: number;
+  debit: string;
+  credit: string;
 }>();
 
-const balanced = computed(() => props.debit === props.credit);
+const balanced = computed(
+  () => compareDecimals(props.debit, props.credit) === 0,
+);
 </script>
 
 <template>
   <div class="balance-indicator" :class="{ balanced, unbalanced: !balanced }">
     <CheckCircle2 v-if="balanced" aria-hidden="true" />
     <AlertCircle v-else aria-hidden="true" />
-    <strong>{{ balanced ? 'Journal Balanced' : 'Journal Unbalanced' }}</strong>
-    <span>Debit {{ debit.toLocaleString('id-ID') }} · Credit {{ credit.toLocaleString('id-ID') }}</span>
+    <strong>{{ balanced ? "Journal Balanced" : "Journal Unbalanced" }}</strong>
+    <span
+      >Debit {{ formatDecimal(debit) }} · Credit
+      {{ formatDecimal(credit) }}</span
+    >
   </div>
 </template>
 
@@ -46,6 +52,6 @@ svg {
 span {
   margin-left: auto;
   color: var(--text-secondary);
-  font-family: 'IBM Plex Mono', monospace;
+  font-family: "IBM Plex Mono", monospace;
 }
 </style>

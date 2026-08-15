@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace App\Http\Responses;
 
+use Closure;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\Resources\Json\ResourceCollection;
 use Illuminate\Pagination\LengthAwarePaginator;
 
 final class ApiResponse
@@ -31,26 +31,26 @@ final class ApiResponse
      * Return a paginated JSON response.
      */
     public static function paginated(
-        LengthAwarePaginator|ResourceCollection $data,
+        LengthAwarePaginator $data,
         string $message = 'Resources loaded.',
+        ?Closure $transform = null,
     ): JsonResponse {
-        if ($data instanceof ResourceCollection) {
-            $paginator = $data->resource;
-        } else {
-            $paginator = $data;
-        }
+        $items = collect($data->items())
+            ->map($transform ?? static fn (mixed $item): mixed => $item)
+            ->values()
+            ->all();
 
         return response()->json([
             'success' => true,
             'message' => $message,
-            'data' => $data instanceof ResourceCollection ? $data->items() : $data->items(),
+            'data' => $items,
             'meta' => [
-                'current_page' => $paginator->currentPage(),
-                'last_page' => $paginator->lastPage(),
-                'per_page' => $paginator->perPage(),
-                'total' => $paginator->total(),
-                'from' => $paginator->firstItem(),
-                'to' => $paginator->lastItem(),
+                'current_page' => $data->currentPage(),
+                'last_page' => $data->lastPage(),
+                'per_page' => $data->perPage(),
+                'total' => $data->total(),
+                'from' => $data->firstItem(),
+                'to' => $data->lastItem(),
             ],
         ]);
     }
@@ -84,6 +84,7 @@ final class ApiResponse
     ): JsonResponse {
         return response()->json([
             'success' => false,
+            'code' => 'validation_failed',
             'message' => $message,
             'errors' => $errors,
         ], 422);
@@ -97,6 +98,7 @@ final class ApiResponse
     ): JsonResponse {
         return response()->json([
             'success' => false,
+            'code' => 'forbidden',
             'message' => $message,
         ], 403);
     }
@@ -109,6 +111,7 @@ final class ApiResponse
     ): JsonResponse {
         return response()->json([
             'success' => false,
+            'code' => 'not_found',
             'message' => $message,
         ], 404);
     }
@@ -122,27 +125,33 @@ final class ApiResponse
     ): JsonResponse {
         return response()->json([
             'success' => false,
+            'code' => 'domain_error',
             'message' => $message,
         ], $statusCode);
     }
 
     /**
-     * Return a generic error response with optional extra data.
+     * Return a generic error response with optional field or domain errors.
      *
-     * @param  array<string, mixed>|null  $data
+     * @param  array<string, mixed>|null  $errors
      */
     public static function error(
         string $message,
         int $statusCode = 422,
-        ?array $data = null,
+        ?array $errors = null,
+        ?string $code = null,
     ): JsonResponse {
         $payload = [
             'success' => false,
             'message' => $message,
         ];
 
-        if ($data !== null) {
-            $payload['data'] = $data;
+        if ($code !== null) {
+            $payload['code'] = $code;
+        }
+
+        if ($errors !== null) {
+            $payload['errors'] = $errors;
         }
 
         return response()->json($payload, $statusCode);
@@ -156,6 +165,7 @@ final class ApiResponse
     ): JsonResponse {
         return response()->json([
             'success' => false,
+            'code' => 'server_error',
             'message' => $message,
         ], 500);
     }
@@ -168,6 +178,7 @@ final class ApiResponse
     ): JsonResponse {
         return response()->json([
             'success' => false,
+            'code' => 'unauthorized',
             'message' => $message,
         ], 401);
     }
@@ -178,6 +189,15 @@ final class ApiResponse
     public static function badRequest(
         string $message = 'Bad request.',
     ): JsonResponse {
-        return self::error($message, 400);
+        return self::error($message, 400, null, 'bad_request');
+    }
+
+    /**
+     * Return an explicit response for a feature that is not implemented.
+     */
+    public static function unavailable(
+        string $message = 'This feature is not available yet.',
+    ): JsonResponse {
+        return self::error($message, 501, null, 'feature_unavailable');
     }
 }

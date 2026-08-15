@@ -34,7 +34,7 @@ h1 {
 
 p {
   margin: 0;
-  font-family: 'DM Serif Display', Georgia, serif;
+  font-family: "DM Serif Display", Georgia, serif;
   font-size: clamp(2.4rem, 5vw, 4.5rem);
   line-height: 1;
 }

@@ -71,4 +71,69 @@ final class Company extends Model
     {
         return $this->hasMany(CompanyContact::class);
     }
+
+    public function fiscalYears(): HasMany
+    {
+        return $this->hasMany(FiscalYear::class);
+    }
+
+    public function accountingPeriods(): HasMany
+    {
+        return $this->hasMany(AccountingPeriod::class);
+    }
+
+    public function quarters(): HasMany
+    {
+        return $this->hasMany(Quarter::class);
+    }
+
+    public function accounts(): HasMany
+    {
+        return $this->hasMany(ChartOfAccount::class);
+    }
+
+    public function journals(): HasMany
+    {
+        return $this->hasMany(JournalEntry::class);
+    }
+
+    public function reconciliations(): HasMany
+    {
+        return $this->hasMany(Reconciliation::class);
+    }
+
+    public function financialStatements(): HasMany
+    {
+        return $this->hasMany(FinancialStatement::class);
+    }
+
+    public function statementTemplates(): HasMany
+    {
+        return $this->hasMany(StatementTemplate::class);
+    }
+
+    public function trialBalances(): HasMany
+    {
+        return $this->hasMany(TrialBalance::class);
+    }
+
+    public function reports(): HasMany
+    {
+        return $this->hasMany(Report::class);
+    }
+
+    public function importBatches(): HasMany
+    {
+        return $this->hasMany(ImportBatch::class);
+    }
+
+    public function batches(): HasMany
+    {
+        return $this->importBatches();
+    }
+
+    public function engagements(): HasMany
+    {
+        return $this->hasMany(Engagement::class);
+    }
 }

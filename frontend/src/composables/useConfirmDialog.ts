@@ -1,6 +1,6 @@
-import { storeToRefs } from 'pinia';
+import { storeToRefs } from "pinia";
 
-import { useUiStore } from '@/stores/ui.store';
+import { useUiStore } from "@/stores/ui.store";
 
 export function useConfirmDialog() {
   const ui = useUiStore();

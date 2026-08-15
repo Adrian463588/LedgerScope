@@ -51,18 +51,21 @@ it('generates trial balance with correct debit/credit totals', function (): void
         'accounting_period_id' => $this->period->id,
         'description' => 'Revenue recognised',
         'journal_date' => '2024-01-15',
-        'journal_number' => 'JNL-1-2024-00001',
-        'status' => JournalStatus::Posted->value,
+        'status' => JournalStatus::Draft->value,
         'source_type' => 'manual',
         'created_by' => $this->user->id,
-        'posted_by' => $this->user->id,
-        'posted_at' => now(),
     ]);
 
     $journal->lines()->createMany([
         ['account_id' => $this->cash->id,    'debit' => '5000000', 'credit' => '0',       'currency' => 'IDR'],
         ['account_id' => $this->revenue->id, 'debit' => '0',       'credit' => '5000000', 'currency' => 'IDR'],
     ]);
+    $journal->forceFill([
+        'journal_number' => 'JNL-1-2024-00001',
+        'status' => JournalStatus::Posted->value,
+        'posted_by' => $this->user->id,
+        'posted_at' => now(),
+    ])->save();
 
     $tb = $this->service->generate($this->company, $this->period, $this->user);
 
@@ -174,18 +177,21 @@ it('calculates total ending balance with opening balance properly', function ():
         'accounting_period_id' => $this->period->id,
         'description' => 'Current period revenue',
         'journal_date' => '2024-01-15',
-        'journal_number' => 'JNL-1-2024-00001',
-        'status' => JournalStatus::Posted->value,
+        'status' => JournalStatus::Draft->value,
         'source_type' => 'manual',
         'created_by' => $this->user->id,
-        'posted_by' => $this->user->id,
-        'posted_at' => now(),
     ]);
 
     $journal->lines()->createMany([
         ['account_id' => $this->cash->id,    'debit' => '5000.00', 'credit' => '0.00', 'currency' => 'IDR'],
         ['account_id' => $this->revenue->id, 'debit' => '0.00',    'credit' => '5000.00', 'currency' => 'IDR'],
     ]);
+    $journal->forceFill([
+        'journal_number' => 'JNL-1-2024-00001',
+        'status' => JournalStatus::Posted->value,
+        'posted_by' => $this->user->id,
+        'posted_at' => now(),
+    ])->save();
 
     $tb = $this->service->generate($this->company, $this->period, $this->user);
 

@@ -7,7 +7,9 @@ namespace App\Models;
 use App\Enums\Audit\EngagementStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
@@ -45,6 +47,12 @@ final class Engagement extends Model
         return $this->hasMany(EngagementMember::class);
     }
 
+    public function users(): BelongsToMany
+    {
+        return $this->belongsToMany(User::class, 'engagement_members')
+            ->withPivot('role');
+    }
+
     public function workingPapers(): HasMany
     {
         return $this->hasMany(WorkingPaper::class);
@@ -58,6 +66,11 @@ final class Engagement extends Model
     public function evidenceFiles(): HasMany
     {
         return $this->hasMany(EvidenceFile::class);
+    }
+
+    public function evidences(): HasMany
+    {
+        return $this->evidenceFiles();
     }
 
     public function documentRequests(): HasMany
@@ -83,5 +96,20 @@ final class Engagement extends Model
     public function riskAssessments(): HasMany
     {
         return $this->hasMany(RiskAssessment::class);
+    }
+
+    public function reviewNotes(): HasManyThrough
+    {
+        return $this->hasManyThrough(ReviewNote::class, WorkingPaper::class);
+    }
+
+    public function auditPrograms(): HasMany
+    {
+        return $this->hasMany(AuditProgram::class);
+    }
+
+    public function internalControls(): HasMany
+    {
+        return $this->hasMany(InternalControl::class);
     }
 }

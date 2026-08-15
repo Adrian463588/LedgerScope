@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace App\Http\Controllers\Api\V1\Client;
 
 use App\Http\Controllers\Controller;
+use App\Http\Resources\Audit\DocumentRequestResource;
+use App\Http\Resources\Evidence\EvidenceFileResource;
 use App\Http\Responses\ApiResponse;
 use App\Models\DocumentRequest;
 use App\Models\Engagement;
@@ -48,7 +50,7 @@ final class ClientPortalController extends Controller
             ->orderByDesc('due_date')
             ->get();
 
-        return ApiResponse::success($requests);
+        return ApiResponse::success(DocumentRequestResource::collection($requests));
     }
 
     /**
@@ -59,10 +61,10 @@ final class ClientPortalController extends Controller
         $this->authorizeClientAccess($request, $documentRequest);
 
         if ($documentRequest->status === 'requested') {
-            $this->documentRequestService->startWork($documentRequest);
+            $this->documentRequestService->startWork($documentRequest, $request->user());
         }
 
-        return ApiResponse::success($documentRequest->fresh()->load(['engagement', 'requestedBy', 'evidenceFile']));
+        return ApiResponse::success(new DocumentRequestResource($documentRequest->fresh()->load(['engagement', 'requestedBy', 'evidenceFile'])));
     }
 
     /**
@@ -82,7 +84,7 @@ final class ClientPortalController extends Controller
         ]);
 
         $engagement = $documentRequest->engagement;
-        if (!$engagement instanceof Engagement) {
+        if (! $engagement instanceof Engagement) {
             return ApiResponse::domainError('Invalid engagement associated with document request.');
         }
 
@@ -98,8 +100,8 @@ final class ClientPortalController extends Controller
         $this->documentRequestService->submit($documentRequest, $evidenceFile->id, $request->user());
 
         return ApiResponse::success([
-            'document_request' => $documentRequest->fresh()->load('evidenceFile'),
-            'evidence_file' => $evidenceFile,
+            'document_request' => new DocumentRequestResource($documentRequest->fresh()->load(['engagement', 'evidenceFile'])),
+            'evidence_file' => new EvidenceFileResource($evidenceFile),
         ], 'Document submitted successfully.');
     }
 

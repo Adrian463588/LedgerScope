@@ -31,8 +31,8 @@ LedgerScope dirancang untuk menjembatani kebutuhan antara tim akuntan internal, 
 - **Language**: PHP 8.4
 - **Database**: PostgreSQL 17
 - **Caching & Queue**: Redis 7
-- **Testing**: Pest PHP 3
-- **Static Analysis**: PHPStan / Larastan 2 (level 8)
+- **Testing**: Pest PHP 4
+- **Static Analysis**: PHPStan / Larastan 3
 - **Code Style**: Laravel Pint (PSR-12)
 
 ### Frontend
@@ -69,7 +69,7 @@ AuditorAccountant/
 │   ├── routes/             # Definisi rute API & Web
 │   ├── tests/              # Test suite menggunakan Pest PHP
 │   ├── Dockerfile          # Docker setup untuk backend production
-│   └── docker-compose.yml  # Docker compose lokal khusus backend
+│   └── Dockerfile           # Development dan production image backend
 │
 ├── frontend/               # Aplikasi Frontend Vue 3 SPA
 │   ├── src/
@@ -84,7 +84,7 @@ AuditorAccountant/
 │   ├── vite.config.ts      # Konfigurasi build Vite & Proxy API
 │   └── tsconfig.json       # Konfigurasi TypeScript
 │
-├── docker-compose.yml      # Docker compose utama di root (Postgres, Redis, MinIO, Mailpit)
+├── docker-compose.yml      # Full stack: backend, worker, scheduler, frontend, DB, Redis, MinIO, Mailpit
 └── PRD.md                  # Product Requirement Document utama
 ```
 
@@ -95,99 +95,50 @@ AuditorAccountant/
 Pastikan Anda telah menginstal perangkat lunak berikut sebelum memulai:
 - [Docker & Docker Compose](https://www.docker.com/)
 - [PHP 8.4+](https://www.php.net/) dan [Composer](https://getcomposer.org/)
-- [Node.js (v18+)](https://nodejs.org/) dan npm
+- [Node.js 22 LTS](https://nodejs.org/) dan npm
 
 ---
 
-### Langkah 1: Jalankan Layanan Pendukung (Docker)
+### Langkah 1: Jalankan Full Stack (Docker)
 
-Di root folder proyek, jalankan Docker Compose untuk menyalakan database PostgreSQL, Redis cache, MinIO Object Storage, dan Mailpit SMTP server:
+Full Docker Compose adalah runtime utama LedgerScope. Dari root repository, jalankan:
 
 ```bash
-docker compose up -d
+docker compose up -d --build
 ```
 
-Layanan yang akan berjalan:
-- **PostgreSQL**: Port `5433` (lokal) -> `5432` (container)
-- **Redis**: Port `6379`
-- **MinIO**: Port `9000` (API) & `9001` (Web Console)
-- **Mailpit**: Port `1025` (SMTP) & `8025` (Web Mail UI)
+Compose menunggu dependency healthcheck sebelum menjalankan backend, worker, scheduler, dan frontend:
+
+- Frontend SPA: `http://localhost:5173`
+- Backend API/health: `http://localhost:8000/api/health`
+- PostgreSQL: `localhost:5433`
+- Redis: `localhost:6379`
+- MinIO API/Console: `localhost:9000` / `localhost:9001`
+- Mailpit SMTP/UI: `localhost:1025` / `localhost:8025`
 
 ---
 
-### Langkah 2: Setup & Jalankan Backend (Laravel)
+### Langkah 2: Migrasi dan Seed Database
 
-1. Masuk ke direktori `backend`:
-   ```bash
-   cd backend
-   ```
+Jika database masih kosong, jalankan migration dan seed melalui container backend:
 
-2. Salin file environment:
-   ```bash
-   cp .env.example .env
-   ```
+```bash
+docker compose exec backend php artisan migrate:fresh --seed --force
+```
 
-3. Sesuaikan konfigurasi database dan layanan di `.env` jika diperlukan. Secara bawaan, pengaturannya telah disesuaikan dengan Docker root:
-   ```env
-   DB_CONNECTION=pgsql
-   DB_HOST=127.0.0.1
-   DB_PORT=5433
-   DB_DATABASE=ledgerscope
-   DB_USERNAME=ledgerscope_user
-   DB_PASSWORD=secret
+Untuk menjalankan database testing yang terisolasi:
 
-   REDIS_HOST=127.0.0.1
-   REDIS_PORT=6379
-
-   FILESYSTEM_DISK=s3
-   AWS_ACCESS_KEY_ID=ledgerscope_minio
-   AWS_SECRET_ACCESS_KEY=minio_secret_key
-   AWS_DEFAULT_REGION=us-east-1
-   AWS_BUCKET=ledgerscope-evidence
-   AWS_ENDPOINT=http://127.0.0.1:9000
-   AWS_USE_PATH_STYLE_ENDPOINT=true
-   ```
-
-4. Instal dependensi PHP:
-   ```bash
-   composer install
-   ```
-
-5. Buat application key baru:
-   ```bash
-   php artisan key:generate
-   ```
-
-6. Jalankan migrasi database beserta data awal (seeder):
-   ```bash
-   php artisan migrate --seed
-   ```
-
-7. Jalankan server lokal Laravel:
-   ```bash
-   php artisan serve
-   ```
-   Server backend akan berjalan di **`http://127.0.0.1:8000`**.
+```bash
+docker compose --profile test run --rm backend-test php artisan migrate:fresh --seed --force
+```
 
 ---
 
-### Langkah 3: Setup & Jalankan Frontend (Vue 3)
+### Langkah 3: Akses Frontend SPA
 
-1. Buka terminal baru dan masuk ke direktori `frontend`:
-   ```bash
-   cd frontend
-   ```
+Buka **`http://localhost:5173/login`**. Proxy Vite mengarahkan request `/api` ke service backend melalui jaringan Compose. Nilai `APP_KEY`, Sanctum, cookie, database, Redis, MinIO, dan Mailpit disediakan oleh environment Compose; gunakan `.env.example` hanya sebagai template lokal.
 
-2. Instal dependensi Node:
-   ```bash
-   npm install
-   ```
-
-3. Jalankan server pengembangan Vite:
-   ```bash
-   npm run dev
-   ```
-   Aplikasi frontend akan berjalan di **`http://localhost:5173`**. Rute API eksternal secara otomatis diproksi ke `http://127.0.0.1:8000` melalui konfigurasi proxy Vite.
+Untuk iterasi frontend tanpa Compose, jalankan `npm ci` lalu `npm run dev` dari direktori `frontend` dan pastikan backend API berjalan di port `8000`.
 
 ---
 
@@ -209,14 +160,15 @@ Setelah database berhasil dimigrasi dengan `--seed`, Anda dapat menggunakan akun
 Untuk menjaga kualitas kode tetap prima, jalankan pengujian dan penataan kode berikut secara berkala:
 
 ```bash
-# Menjalankan seluruh unit & feature test secara parallel
-php artisan test --parallel
+# Validasi dependency dan code style
+composer validate --strict
+./vendor/bin/pint --test
 
-# Menjalankan static analysis (Larastan Level 8)
+# Static analysis
 ./vendor/bin/phpstan analyse
 
-# Merapikan gaya penulisan kode sesuai PSR-12
-./vendor/bin/pint
+# Menjalankan seluruh unit & feature test pada database test terisolasi
+php artisan test
 ```
 
 ### Frontend (Vitest & Cypress)
@@ -230,6 +182,10 @@ npm run test:e2e
 
 # Memeriksa linting kode TS dan Vue
 npm run lint
+
+# Type-check dan production build
+npm run typecheck
+npm run build
 
 # Memeriksa format file
 npm run format:check

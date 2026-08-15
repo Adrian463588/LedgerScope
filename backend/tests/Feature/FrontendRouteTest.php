@@ -1,19 +1,16 @@
 <?php
 
-test('dashboard page renders via inertia', function () {
-    $this->withoutVite();
-    $response = $this->get('/dashboard');
-    $response->assertStatus(200);
+test('backend root exposes the service health contract', function () {
+    $response = $this->getJson('/');
+
+    $response->assertOk()
+        ->assertJsonPath('status', 'online')
+        ->assertJsonPath('service', 'LedgerScope API Backend');
 });
 
-test('journal entries page renders via inertia', function () {
-    $this->withoutVite();
-    $response = $this->get('/accounting/journals');
-    $response->assertStatus(200);
-});
+test('api health exposes dependency statuses', function () {
+    $response = $this->getJson('/api/health');
 
-test('create journal entry page renders via inertia', function () {
-    $this->withoutVite();
-    $response = $this->get('/accounting/journals/create');
-    $response->assertStatus(200);
+    $response->assertOk()
+        ->assertJsonStructure(['status', 'timestamp', 'database', 'redis', 'queue', 'storage']);
 });

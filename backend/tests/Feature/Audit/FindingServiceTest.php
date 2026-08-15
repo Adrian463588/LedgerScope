@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use App\Enums\Audit\EngagementStatus;
 use App\Enums\Audit\FindingSeverity;
+use App\Enums\Audit\FindingStatus;
 use App\Models\Company;
 use App\Models\Engagement;
 use App\Models\Finding;
@@ -39,7 +40,7 @@ it('creates a finding on open status', function (): void {
     ], $this->engagement, $this->auditor);
 
     expect($finding)->toBeInstanceOf(Finding::class);
-    expect($finding->status)->toBe(App\Enums\Audit\FindingStatus::Open);
+    expect($finding->status)->toBe(FindingStatus::Open);
     expect($finding->severity)->toBe(FindingSeverity::High);
     expect($finding->engagement_id)->toBe($this->engagement->id);
 });
@@ -69,7 +70,7 @@ it('closes finding when resolved', function (): void {
 
     $this->service->resolve($finding, $this->auditor);
 
-    expect($finding->fresh()->status)->toBe(App\Enums\Audit\FindingStatus::Resolved);
+    expect($finding->fresh()->status)->toBe(FindingStatus::Resolved);
 });
 
 it('cannot resolve an already resolved finding', function (): void {

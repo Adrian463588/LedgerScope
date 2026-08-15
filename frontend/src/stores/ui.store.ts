@@ -1,19 +1,25 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { defineStore } from "pinia";
+import { ref } from "vue";
 
 export interface ConfirmDialogState {
   open: boolean;
   title: string;
   message: string;
-  tone: 'danger' | 'primary';
+  tone: "danger" | "primary";
   confirmLabel: string;
 }
 
-export const useUiStore = defineStore('ui', () => {
+export const useUiStore = defineStore("ui", () => {
   const sidebarCollapsed = ref(false);
   const mobileSidebarOpen = ref(false);
-  const breadcrumbs = ref<string[]>(['Dashboard']);
-  const confirmDialog = ref<ConfirmDialogState>({ open: false, title: '', message: '', tone: 'primary', confirmLabel: 'Confirm' });
+  const breadcrumbs = ref<string[]>(["Dashboard"]);
+  const confirmDialog = ref<ConfirmDialogState>({
+    open: false,
+    title: "",
+    message: "",
+    tone: "primary",
+    confirmLabel: "Confirm",
+  });
   const resolver = ref<((value: boolean) => void) | null>(null);
 
   function toggleSidebar(): void {
@@ -28,7 +34,9 @@ export const useUiStore = defineStore('ui', () => {
     breadcrumbs.value = next;
   }
 
-  function confirm(options: Omit<ConfirmDialogState, 'open'>): Promise<boolean> {
+  function confirm(
+    options: Omit<ConfirmDialogState, "open">,
+  ): Promise<boolean> {
     confirmDialog.value = { ...options, open: true };
     return new Promise((resolve) => {
       resolver.value = resolve;
@@ -47,5 +55,16 @@ export const useUiStore = defineStore('ui', () => {
     resolver.value = null;
   }
 
-  return { sidebarCollapsed, mobileSidebarOpen, breadcrumbs, confirmDialog, toggleSidebar, setMobileSidebar, setBreadcrumbs, confirm, resolveConfirm, cancelConfirm };
+  return {
+    sidebarCollapsed,
+    mobileSidebarOpen,
+    breadcrumbs,
+    confirmDialog,
+    toggleSidebar,
+    setMobileSidebar,
+    setBreadcrumbs,
+    confirm,
+    resolveConfirm,
+    cancelConfirm,
+  };
 });

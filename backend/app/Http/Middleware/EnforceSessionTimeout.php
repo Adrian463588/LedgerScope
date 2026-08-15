@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace App\Http\Middleware;
 
+use App\Http\Responses\ApiResponse;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -21,7 +22,7 @@ final class EnforceSessionTimeout
     {
         if (Auth::check() && $request->hasSession()) {
             $lastActivity = $request->session()->get('last_activity');
-            
+
             // Security requirement: Cap inactivity timeout at 15 minutes
             $timeoutMinutes = min((int) config('session.lifetime', 120), 15);
             $timeoutSeconds = $timeoutMinutes * 60;
@@ -37,11 +38,7 @@ final class EnforceSessionTimeout
                 $request->session()->invalidate();
                 $request->session()->regenerateToken();
 
-                return response()->json([
-                    'success' => false,
-                    'code' => 'session_expired',
-                    'message' => 'Your session has expired due to inactivity.',
-                ], 401);
+                return ApiResponse::error('Your session has expired due to inactivity.', 401, null, 'session_expired');
             }
 
             $request->session()->put('last_activity', time());

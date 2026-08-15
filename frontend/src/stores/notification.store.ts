@@ -1,17 +1,17 @@
-import { defineStore } from 'pinia';
-import { ref } from 'vue';
+import { defineStore } from "pinia";
+import { ref } from "vue";
 
 export interface NotificationItem {
   id: number;
-  type: 'success' | 'error' | 'info';
+  type: "success" | "error" | "info";
   message: string;
 }
 
-export const useNotificationStore = defineStore('notification', () => {
+export const useNotificationStore = defineStore("notification", () => {
   const notifications = ref<NotificationItem[]>([]);
   let nextId = 1;
 
-  function push(type: NotificationItem['type'], message: string): void {
+  function push(type: NotificationItem["type"], message: string): void {
     const item = { id: nextId, type, message };
     nextId += 1;
     notifications.value.push(item);
@@ -19,15 +19,15 @@ export const useNotificationStore = defineStore('notification', () => {
   }
 
   function success(message: string): void {
-    push('success', message);
+    push("success", message);
   }
 
   function error(message: string): void {
-    push('error', message);
+    push("error", message);
   }
 
   function info(message: string): void {
-    push('info', message);
+    push("info", message);
   }
 
   function remove(id: number): void {

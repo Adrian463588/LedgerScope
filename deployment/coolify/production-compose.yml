@@ -1,9 +1,56 @@
 # LedgerScope Production Docker Compose for Coolify
 # Copy and import this into Coolify's Application Stack Editor.
 
-version: '3.8'
-
 services:
+  # 0. Additive migrations and system-role seed. The optional bootstrap admin
+  # is created only when LEDGERSCOPE_SUPERADMIN_* variables are supplied.
+  ledgerscope-migrate:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    restart: "no"
+    command: php artisan migrate --seed --force
+    environment:
+      - APP_NAME=LedgerScope
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_KEY=${APP_KEY:?APP_KEY must be set}
+      - APP_URL=${APP_BACKEND_URL:?APP_BACKEND_URL must be set}
+      - FRONTEND_URL=${APP_FRONTEND_URL:?APP_FRONTEND_URL must be set}
+      - DB_CONNECTION=pgsql
+      - DB_HOST=ledgerscope-db
+      - DB_PORT=5432
+      - DB_DATABASE=ledgerscope
+      - DB_USERNAME=ledgerscope_user
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be set}
+      - CACHE_STORE=redis
+      - QUEUE_CONNECTION=redis
+      - REDIS_HOST=ledgerscope-redis
+      - REDIS_PORT=6379
+      - REDIS_URL=redis://ledgerscope-redis:6379
+      - REDIS_QUEUE_CONNECTION=default
+      - FILESYSTEM_DISK=${FILESYSTEM_DISK:-s3}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:?AWS_ACCESS_KEY_ID must be set}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:?AWS_SECRET_ACCESS_KEY must be set}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - AWS_BUCKET=${AWS_BUCKET:-ledgerscope-private}
+      - PRIVATE_FILESYSTEM_DISK=s3
+      - AWS_ENDPOINT=${AWS_ENDPOINT:?AWS_ENDPOINT must be set}
+      - AWS_USE_PATH_STYLE_ENDPOINT=true
+      - LEDGERSCOPE_SUPERADMIN_NAME=${LEDGERSCOPE_SUPERADMIN_NAME:-Super Admin}
+      - LEDGERSCOPE_SUPERADMIN_EMAIL=${LEDGERSCOPE_SUPERADMIN_EMAIL:-}
+      - LEDGERSCOPE_SUPERADMIN_PASSWORD=${LEDGERSCOPE_SUPERADMIN_PASSWORD:-}
+    depends_on:
+      ledgerscope-db:
+        condition: service_healthy
+      ledgerscope-redis:
+        condition: service_healthy
+      ledgerscope-minio-init:
+        condition: service_completed_successfully
+    networks:
+      - ledgerscope-network
+
   # 1. Backend Service (Laravel 13 + PHP 8.4 + Horizon + Nginx)
   ledgerscope-backend:
     build:
@@ -12,14 +59,19 @@ services:
     container_name: ledgerscope-backend-prod
     restart: unless-stopped
     labels:
-      - "coolify.fqdn=${APP_BACKEND_URL}"
+      - "coolify.fqdn=${APP_BACKEND_URL:?APP_BACKEND_URL must be set}"
       - "coolify.port=8080"
     environment:
       - APP_NAME=LedgerScope
       - APP_ENV=production
       - APP_DEBUG=false
-      - APP_KEY=${APP_KEY} # Securely managed in Coolify Secrets
-      - APP_URL=${APP_BACKEND_URL}
+      - APP_KEY=${APP_KEY:?APP_KEY must be set}
+      - APP_URL=${APP_BACKEND_URL:?APP_BACKEND_URL must be set}
+      - FRONTEND_URL=${APP_FRONTEND_URL:?APP_FRONTEND_URL must be set}
+      - SANCTUM_STATEFUL_DOMAINS=${SANCTUM_STATEFUL_DOMAINS:?SANCTUM_STATEFUL_DOMAINS must be set}
+      - SESSION_DOMAIN=${SESSION_DOMAIN:-}
+      - SESSION_SECURE_COOKIE=${SESSION_SECURE_COOKIE:-true}
+      - SESSION_SAME_SITE=${SESSION_SAME_SITE:-lax}
       
       # Database connection (internal Coolify network)
       - DB_CONNECTION=pgsql
@@ -27,7 +79,7 @@ services:
       - DB_PORT=5432
       - DB_DATABASE=ledgerscope
       - DB_USERNAME=ledgerscope_user
-      - DB_PASSWORD=${DB_PASSWORD}
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be set}
       
       # Cache & Queue (Redis internal)
       - CACHE_STORE=redis
@@ -35,24 +87,37 @@ services:
       - SESSION_DRIVER=redis
       - REDIS_HOST=ledgerscope-redis
       - REDIS_PORT=6379
+      - REDIS_URL=redis://ledgerscope-redis:6379
+      - REDIS_QUEUE_CONNECTION=default
       
       # S3 / Object Storage Configuration
       # (Set to 's3' for GCS Interoperability or self-hosted MinIO)
       - FILESYSTEM_DISK=${FILESYSTEM_DISK:-s3}
-      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID}
-      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:?AWS_ACCESS_KEY_ID must be set}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:?AWS_SECRET_ACCESS_KEY must be set}
       - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
-      - AWS_BUCKET=${AWS_BUCKET:-ledgerscope-evidence}
-      - AWS_ENDPOINT=${AWS_ENDPOINT} # e.g. https://storage.googleapis.com or http://ledgerscope-minio:9000
+      - AWS_BUCKET=${AWS_BUCKET:-ledgerscope-private}
+      - PRIVATE_FILESYSTEM_DISK=s3
+      - AWS_ENDPOINT=${AWS_ENDPOINT:?AWS_ENDPOINT must be set} # e.g. https://storage.googleapis.com or http://ledgerscope-minio:9000
       - AWS_USE_PATH_STYLE_ENDPOINT=true
 
     volumes:
       - backend-storage:/var/www/html/storage
     depends_on:
+      ledgerscope-migrate:
+        condition: service_completed_successfully
       ledgerscope-db:
         condition: service_healthy
       ledgerscope-redis:
         condition: service_healthy
+      ledgerscope-minio-init:
+        condition: service_completed_successfully
+    healthcheck:
+      test: ["CMD-SHELL", "curl --fail --silent http://localhost:8080/api/health > /dev/null"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     networks:
       - ledgerscope-network
 
@@ -64,11 +129,62 @@ services:
     container_name: ledgerscope-frontend-prod
     restart: unless-stopped
     depends_on:
-      - ledgerscope-backend
+      ledgerscope-backend:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget --quiet --output-document=/dev/null http://localhost:8080/"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
     labels:
       # Coolify dynamic domain assignment and reverse proxy configuration
-      - "coolify.fqdn=${APP_FRONTEND_URL}"
+      - "coolify.fqdn=${APP_FRONTEND_URL:?APP_FRONTEND_URL must be set}"
       - "coolify.port=8080"
+    networks:
+      - ledgerscope-network
+
+  # 2b. Scheduler service — runs Laravel scheduled jobs independently from Horizon.
+  ledgerscope-scheduler:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+      target: production
+    container_name: ledgerscope-scheduler-prod
+    restart: unless-stopped
+    command: php artisan schedule:work
+    environment:
+      - APP_NAME=LedgerScope
+      - APP_ENV=production
+      - APP_DEBUG=false
+      - APP_KEY=${APP_KEY:?APP_KEY must be set}
+      - FRONTEND_URL=${APP_FRONTEND_URL:?APP_FRONTEND_URL must be set}
+      - APP_URL=${APP_BACKEND_URL:?APP_BACKEND_URL must be set}
+      - DB_CONNECTION=pgsql
+      - DB_HOST=ledgerscope-db
+      - DB_PORT=5432
+      - DB_DATABASE=ledgerscope
+      - DB_USERNAME=ledgerscope_user
+      - DB_PASSWORD=${DB_PASSWORD:?DB_PASSWORD must be set}
+      - CACHE_STORE=redis
+      - QUEUE_CONNECTION=redis
+      - REDIS_HOST=ledgerscope-redis
+      - REDIS_PORT=6379
+      - FILESYSTEM_DISK=${FILESYSTEM_DISK:-s3}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:?AWS_ACCESS_KEY_ID must be set}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:?AWS_SECRET_ACCESS_KEY must be set}
+      - AWS_DEFAULT_REGION=${AWS_DEFAULT_REGION:-us-east-1}
+      - AWS_BUCKET=${AWS_BUCKET:-ledgerscope-private}
+      - PRIVATE_FILESYSTEM_DISK=s3
+      - AWS_ENDPOINT=${AWS_ENDPOINT:?AWS_ENDPOINT must be set}
+      - AWS_USE_PATH_STYLE_ENDPOINT=true
+    depends_on:
+      ledgerscope-backend:
+        condition: service_healthy
+      ledgerscope-db:
+        condition: service_healthy
+      ledgerscope-redis:
+        condition: service_healthy
     networks:
       - ledgerscope-network
 
@@ -114,18 +230,36 @@ services:
     restart: unless-stopped
     environment:
       - MINIO_ROOT_USER=${MINIO_ROOT_USER:-ledgerscope_minio}
-      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD must be set}
     volumes:
       - minio-data:/data
     command: server /data --console-address ":9001"
     labels:
       # Coolify subdomains for Object Storage API and Console
-      - "coolify.fqdn=${MINIO_API_URL},${MINIO_CONSOLE_URL}"
+      - "coolify.fqdn=${MINIO_API_URL:?MINIO_API_URL must be set},${MINIO_CONSOLE_URL:?MINIO_CONSOLE_URL must be set}"
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"]
       interval: 10s
       timeout: 5s
       retries: 5
+    networks:
+      - ledgerscope-network
+
+  ledgerscope-minio-init:
+    image: minio/mc:latest
+    restart: "no"
+    environment:
+      MINIO_ROOT_USER: ${MINIO_ROOT_USER:-ledgerscope_minio}
+      MINIO_ROOT_PASSWORD: ${MINIO_ROOT_PASSWORD:?MINIO_ROOT_PASSWORD must be set}
+      AWS_BUCKET: ${AWS_BUCKET:-ledgerscope-private}
+    entrypoint: ["/bin/sh", "-c"]
+    command: >-
+      mc alias set local http://ledgerscope-minio:9000 "$${MINIO_ROOT_USER}" "$${MINIO_ROOT_PASSWORD}" &&
+      mc mb --ignore-existing "local/$${AWS_BUCKET}" &&
+      mc anonymous set none "local/$${AWS_BUCKET}"
+    depends_on:
+      ledgerscope-minio:
+        condition: service_healthy
     networks:
       - ledgerscope-network
 

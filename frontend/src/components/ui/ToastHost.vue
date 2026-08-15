@@ -1,12 +1,18 @@
 <script setup lang="ts">
-import { useNotification } from '@/composables/useNotification';
+import { useNotification } from "@/composables/useNotification";
 
 const { notifications, remove } = useNotification();
 </script>
 
 <template>
   <div class="toast-host" aria-live="polite">
-    <button v-for="item in notifications" :key="item.id" class="toast" :class="`toast--${item.type}`" @click="remove(item.id)">
+    <button
+      v-for="item in notifications"
+      :key="item.id"
+      class="toast"
+      :class="`toast--${item.type}`"
+      @click="remove(item.id)"
+    >
       {{ item.message }}
     </button>
   </div>
