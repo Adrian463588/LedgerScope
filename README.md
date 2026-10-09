@@ -24,9 +24,22 @@ LedgerScope dirancang untuk menjembatani kebutuhan antara tim akuntan internal, 
 
 ---
 
-## 🛠️ Tech Stack
+## 📦 Download Aplikasi & Rilis Historis
+
+Untuk mempermudah penggunaan dan deployment, Anda dapat mengunduh source code atau release bundle secara langsung:
+
+| Versi                | Status     | Catatan Rilis                                                                         | Link Unduhan (Source Code)                                                                                                                                                                     |
+| -------------------- | ---------- | ------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **v1.0.2** (Terbaru) | 🟢 Stable  | Mobile responsive drawer, strict TypeScript BDD test suite, zero-warning linter gate. | [⬇️ Download v1.0.2 (.zip)](https://github.com/Adrian463588/LedgerScope/archive/refs/tags/v1.0.2.zip) • [Tarball](https://github.com/Adrian463588/LedgerScope/archive/refs/tags/v1.0.2.tar.gz) |
+| **v1.0.1**           | 🟡 Patch   | Perbaikan fatal white screen pada dashboard & isolasi client-side SPA routing.        | [⬇️ Download v1.0.1 (.zip)](https://github.com/Adrian463588/LedgerScope/archive/refs/tags/v1.0.1.zip) • [Tarball](https://github.com/Adrian463588/LedgerScope/archive/refs/tags/v1.0.1.tar.gz) |
+| **v1.0.0**           | ⚪ Initial | Rilis perdana platform accounting & audit monorepo.                                   | [⬇️ Download v1.0.0 (.zip)](https://github.com/Adrian463588/LedgerScope/archive/refs/tags/v1.0.0.zip) • [Tarball](https://github.com/Adrian463588/LedgerScope/archive/refs/tags/v1.0.0.tar.gz) |
+
+> 💡 **Info Detail**: Lihat [CHANGELOG.md](CHANGELOG.md) untuk rincian riwayat perubahan tiap versi.
+
+---
 
 ### Backend
+
 - **Framework**: Laravel 13
 - **Language**: PHP 8.4
 - **Database**: PostgreSQL 17
@@ -36,6 +49,7 @@ LedgerScope dirancang untuk menjembatani kebutuhan antara tim akuntan internal, 
 - **Code Style**: Laravel Pint (PSR-12)
 
 ### Frontend
+
 - **Framework**: Vue 3 SPA (Single Page Application)
 - **Build Tool**: Vite 8
 - **Styling**: TailwindCSS v4
@@ -93,6 +107,7 @@ AuditorAccountant/
 ## 💻 Cara Menjalankan Proyek
 
 Pastikan Anda telah menginstal perangkat lunak berikut sebelum memulai:
+
 - [Docker & Docker Compose](https://www.docker.com/)
 - [PHP 8.4+](https://www.php.net/) dan [Composer](https://getcomposer.org/)
 - [Node.js 22 LTS](https://nodejs.org/) dan npm
@@ -146,10 +161,10 @@ Untuk iterasi frontend tanpa Compose, jalankan `npm ci` lalu `npm run dev` dari 
 
 Setelah database berhasil dimigrasi dengan `--seed`, Anda dapat menggunakan akun demo berikut untuk masuk ke sistem:
 
-| Peran (Role) | Email | Password | Keterangan |
-|---|---|---|---|
-| **Super Admin** | `superadmin@ledgerscope.test` | `Admin@LedgerScope2026!` | Hak akses penuh di seluruh sistem. |
-| **Firm Admin (Demo)** | `rina@ledgerscope.test` | `password` | Login sebagai pengguna Rina Sari, admin di perusahaan demo `PT Tech Nusantara`. |
+| Peran (Role)          | Email                         | Password                 | Keterangan                                                                      |
+| --------------------- | ----------------------------- | ------------------------ | ------------------------------------------------------------------------------- |
+| **Super Admin**       | `superadmin@ledgerscope.test` | `Admin@LedgerScope2026!` | Hak akses penuh di seluruh sistem.                                              |
+| **Firm Admin (Demo)** | `rina@ledgerscope.test`       | `password`               | Login sebagai pengguna Rina Sari, admin di perusahaan demo `PT Tech Nusantara`. |
 
 ---
 
